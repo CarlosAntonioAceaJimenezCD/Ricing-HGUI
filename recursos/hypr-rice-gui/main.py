@@ -470,7 +470,7 @@ def on_activate(app: Adw.Application) -> None:
         for b in binds_cache:
             label = b.get("source_key") or f"{b['mods']} + {b['key']}"
             action = b.get("source_action") or b["dispatcher"]
-            cat, desc = kb.describe(action)
+            cat, desc = kb.describe(action, b["dispatcher"])
             por_cat.setdefault(cat, []).append({"key": label, "desc": desc, "action": action})
         for cat, items in sorted(por_cat.items()):
             folder = Adw.ExpanderRow(title=cat, subtitle=_("{n} atajo(s)").format(n=len(items)))
@@ -750,6 +750,16 @@ def on_activate(app: Adw.Application) -> None:
     m_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
     m_actions.append(make_button(_("Redetectar"), lambda _b: refresh_monitors()))
     m_actions.append(make_button(_("Escribir MONITOR1..3"), save_monitors))
+
+    def adapt_monitors(_btn: Gtk.Button | None = None) -> None:
+        rep = mon.sync_monitor_config(len(detected))
+        if rep["cambios"]:
+            m_status.set_label(_("Config adaptada a {n} monitor(es): ").format(n=rep["detectados"])
+                               + ", ".join(f"{k} ({v})" for k, v in rep["archivos"].items()))
+        else:
+            m_status.set_label(_("Config ya coherente con {n} monitor(es)").format(n=rep["detectados"]))
+
+    m_actions.append(make_button(_("Adaptar config a monitores"), adapt_monitors))
     m_group.add(m_actions)
     m_outer.append(m_status)
 
@@ -1025,6 +1035,7 @@ def on_activate(app: Adw.Application) -> None:
     refresh_history()
     reload_binds()       # informe de debug: cargar atajos al arrancar
     refresh_monitors()
+    adapt_monitors()   # detecta N monitores y comenta referencias a MONITOR>n
     refresh_connectors()
     _ready["value"] = True
     s = bm.get_settings()

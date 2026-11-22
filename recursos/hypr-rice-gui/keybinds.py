@@ -90,8 +90,15 @@ def parse_source_binds() -> list[dict[str, str]]:
                           lambda m: f"code:{9 + int(m.group(1)) if int(m.group(1)) else 19}", expr)
         for name, value in variables.items():
             expr = re.sub(rf"\b{re.escape(name)}\b", f'"{value}"', expr)
-        parts = re.findall(r'"([^"]*)"', expr)
-        return "".join(parts) if len(parts) > 1 else expr.strip()
+        # Sólo concatenar si la expresión es realmente una concatenación
+        # Lua (".."): si no, conservar el código (p. ej. hl.dsp.exec_cmd("kitty"))
+        # en lugar de quedarse sólo con el texto entre comillas.
+        if ".." in expr:
+            return "".join(re.findall(r'"([^"]*)"', expr))
+        clean = expr.strip()
+        if clean.startswith('"') and clean.endswith('"') and clean.count('"') == 2:
+            clean = clean[1:-1]  # "XF86AudioRaiseVolume" -> XF86AudioRaiseVolume
+        return clean
 
     out = []
     for line in SOURCE_BINDS.read_text(encoding="utf-8").splitlines():
@@ -107,17 +114,28 @@ def parse_source_binds() -> list[dict[str, str]]:
 
 def enriched_binds() -> list[dict[str, Any]]:
     """Atajos en runtime enriquecidos con la acción legible de binds.lua cuando existe."""
-    source = {b["key"].lower(): b for b in parse_source_binds()}
+    # AUDITORÍA: hyprctl devuelve la tecla suelta ("Escape"), mientras que
+    # binds.lua guarda la combinación completa ("SUPER + Escape"). Emparejar
+    # por la CADENA COMPLETA nunca coincidía y la descripción caía en genérica.
+    # Se indexa por el último token (la tecla real).
+    source: dict[str, list[dict[str, str]]] = {}
+    for sb in parse_source_binds():
+        last = sb["key"].split("+")[-1].strip().lower()
+        source.setdefault(last, []).append(sb)
+
     result = list_binds()
     for b in result:
-        match = source.get(b["key"].lower())
+        candidates = source.get(b["key"].lower(), [])
+        # Preferir el que tenga modifiers (evita binds de tecla suelta).
+        match = next((c for c in candidates if "+" in c["key"]),
+                     candidates[0] if candidates else None)
         if match:
             b["source_action"] = match["action"]
-            # Clave EXACTA del config (p. ej. "SUPER + Q"), mejor que la
-            # reconstruida desde modmask, que puede decodificar mal los bits.
+            # Clave EXACTA del config: hl.unbind es sensible a mayúsculas.
             b["source_key"] = match["key"]
         else:
-            b["source_action"] = b["dispatcher"] + (" " + str(b["arg"]) if b["arg"] else "")
+            b["source_action"] = ""
+        b["dispatcher_name"] = re.sub(r"^HL\.Dispatcher\(([^)]+)\).*$", r"\1", b["dispatcher"])
     return result
 
 
@@ -163,10 +181,34 @@ def normalize_key(key: str) -> str:
     return "+".join(sorted(parts))
 
 
-def describe(action: str) -> tuple[str, str]:
-    """Devuelve (categoría, descripción legible) de una acción Lua/exec."""
-    a = action or ""
+def describe(action: str, dispatcher: str = "") -> tuple[str, str]:
+    """Devuelve (categoría, descripción legible) de una acción Lua/exec.
+
+    Acepta tanto el texto de binds.lua como el dispatcher opaco de hyprctl
+    ('HL.Dispatcher(close) 10'), para que NINGÚN atajo diga sólo "ejecutar".
+    """
+    a = (action or "").strip()
     low = a.lower()
+    if not a and dispatcher:
+        a = dispatcher
+        low = a.lower()
+
+    # Dispatchers de hyprctl (cuando no hay texto fuente disponible).
+    disp_table = {
+        "close": ("Ventanas", "Cerrar la ventana activa"),
+        "float": ("Ventanas", "Alternar ventana flotante"),
+        "fullscreen": ("Ventanas", "Alternar pantalla completa"),
+        "focus": ("Ventanas", "Mover el foco de ventana"),
+        "layout": ("Ventanas", "Cambiar la disposición (split)"),
+        "cycle_next": ("Ventanas", "Pasar a la siguiente ventana"),
+        "workspace": ("Workspaces", "Cambiar de workspace"),
+        "movetoworkspace": ("Workspaces", "Mover ventana a otro workspace"),
+        "exec_cmd": ("Otros", "Ejecutar una acción"),
+        "kill": ("Sesión", "Cerrar Hyprland"),
+    }
+    m = re.match(r"HL\.Dispatcher\(([^)]+)\)", a)
+    if m and m.group(1) in disp_table:
+        return disp_table[m.group(1)]
     if "noctalia msg" in low:
         msg = low.split("noctalia msg", 1)[-1].strip().strip('"')
         table = {
@@ -191,6 +233,40 @@ def describe(action: str) -> tuple[str, str]:
             if msg.startswith(k):
                 return v
         return ("Noctalia", f"Enviar a Noctalia: {msg[:40]}")
+
+    # Comando en texto plano (p. ej. 'uwsm app -- firefox' desde binds.lua).
+    if a and not a.startswith("hl.") and "HL.Dispatcher" not in a:
+        cmd = a.replace("uwsm app -- ", "").strip()
+        table = {
+            "hyprctl kill": ("Sesión", "Cerrar Hyprland"),
+            "kitty": ("Launcher", "Abrir terminal (kitty)"),
+            "alacritty": ("Launcher", "Abrir terminal (Alacritty)"),
+            "dolphin": ("Launcher", "Abrir gestor de archivos (Dolphin)"),
+            "firefox": ("Launcher", "Abrir navegador (Firefox)"),
+            "gnome-text-editor": ("Launcher", "Abrir editor de texto"),
+            "gnome-calculator": ("Utilidades", "Abrir calculadora"),
+            "btop": ("Utilidades", "Abrir monitor de recursos"),
+            "swash": ("Capturas", "Capturar pantalla (Swash)"),
+        }
+        for k, v in table.items():
+            if cmd.lower().startswith(k):
+                return v
+        return ("Launcher", "Ejecutar: " + cmd[:45])
+
+    # Expresiones Lua crudas que aparecen en binds.lua.
+    if "window.move" in low:
+        mon = re.search(r'monitor\s*=\s*"([^"]+)"', a)
+        target = mon.group(1) if mon else "otro monitor"
+        pretty = {"-1": "anterior", "+1": "siguiente"}.get(target, target)
+        return ("Workspaces", f"Mover ventana al monitor {pretty}")
+    if "layout" in low:
+        return ("Ventanas", "Alternar la disposición (split)")
+    if "window.drag" in low:
+        return ("Ventanas", "Arrastrar ventana con el ratón")
+    if "window.resize" in low:
+        return ("Ventanas", "Redimensionar ventana con el ratón")
+    if "dsp.workspace" in low or "workspace.toggle" in low:
+        return ("Workspaces", "Alternar workspace especial")
     if "window.close" in low:
         return ("Ventanas", "Cerrar la ventana activa")
     if "window.fullscreen" in low:
@@ -203,14 +279,29 @@ def describe(action: str) -> tuple[str, str]:
         return ("Workspaces", "Cambiar de workspace")
     if "focus" in low or "cyclenext" in low:
         return ("Ventanas", "Cambiar el foco de ventana")
-    if any(x in low for x in ("kitty", "alacritty", "terminal", "konsole")):
-        return ("Launcher", "Abrir terminal")
-    if any(x in low for x in ("dolphin", "nautilus", "thunar")):
-        return ("Launcher", "Abrir gestor de archivos")
-    if "firefox" in low or "chromium" in low:
-        return ("Launcher", "Abrir navegador")
+    # Comando real dentro de hl.dsp.exec_cmd("..."): nunca dejarlo genérico.
+    m = re.search(r'hl\.dsp\.exec_cmd\("([^"]*)"\)', a)
+    if m:
+        cmd = m.group(1).strip()
+        if cmd.startswith("uwsm app -- "):
+            cmd = cmd[len("uwsm app -- "):]
+        pref = {
+            "hyprctl kill": ("Sesión", "Cerrar Hyprland"),
+            "kitty": ("Launcher", "Abrir terminal (kitty)"),
+            "alacritty": ("Launcher", "Abrir terminal (Alacritty)"),
+            "dolphin": ("Launcher", "Abrir gestor de archivos (Dolphin)"),
+            "firefox": ("Launcher", "Abrir navegador (Firefox)"),
+            "gnome-text-editor": ("Launcher", "Abrir editor de texto"),
+            "gnome-calculator": ("Utilidades", "Abrir calculadora"),
+            "btop": ("Utilidades", "Abrir monitor de recursos"),
+            "swash": ("Capturas", "Capturar pantalla (Swash)"),
+        }
+        for k, v in pref.items():
+            if cmd.lower().startswith(k):
+                return v
+        return ("Launcher", "Ejecutar: " + cmd[:45])
     if "exec_cmd" in low:
-        return ("Launcher", "Ejecutar un programa")
+        return ("Otros", "Ejecutar una acción")
     return ("Otros", a[:50])
 
 
