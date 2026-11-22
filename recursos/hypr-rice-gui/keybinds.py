@@ -34,8 +34,12 @@ LUA_MODULE = Path.home() / ".config/hypr/config/ui-bindings.lua"
 SOURCE_BINDS = Path.home() / ".config/hypr/config/binds.lua"
 SOURCE_VARS = Path.home() / ".config/hypr/config/variables.lua"
 
+# AUDITORÍA: máscara real de Hyprland (hyprland/src/config/...):
+# SHIFT=1, CAPS=2, CTRL=4, ALT=8, SUPER=64, HYPER=128, MEGA=256.
+# El mapping anterior (0x40->CTRL) hacía que TODOS los atajos salieran
+# como "CTRL + ..." y no emparejaran con binds.lua.
 MODS = [
-    (0x10, "SUPER"), (0x20, "ALT"), (0x40, "CTRL"), (0x80, "SHIFT"),
+    (0x01, "SHIFT"), (0x04, "CTRL"), (0x08, "ALT"), (0x40, "SUPER"),
 ]
 
 
@@ -56,8 +60,14 @@ def list_binds() -> list[dict[str, Any]]:
     result = []
     for b in data:
         mods = [name for bit, name in MODS if b.get("modmask", 0) & bit]
+        # AUDITORÍA: Hyprland 0.57 reporta key="" y un `keycode` para los binds
+        # creados con code:N (el fix AZERTY del usuario). Sin esto, 44 atajos
+        # aparecían como "SUPER + SHIFT + " repetidos.
+        key = b.get("key", "")
+        if not key and b.get("keycode"):
+            key = f"code:{b['keycode']}"
         result.append({
-            "key": b.get("key", ""),
+            "key": key,
             "mods": " + ".join(mods) if mods else "(sin modifier)",
             "dispatcher": b.get("dispatcher", ""),
             "arg": b.get("arg", ""),
@@ -85,19 +95,26 @@ def parse_source_binds() -> list[dict[str, str]]:
             variables[name] = value
 
     def resolve(expr: str) -> str:
+        # AUDITORÍA: los binds por código usan digitCode(d) -> code:(9+d),
+        # con 0 -> code:19. Se inserta COMO LITERAL ENTRE COMILLAS para que
+        # la concatenación Lua no lo pierda (antes daba "SUPER + SHIFT + ").
         if "digitCode(" in expr:
-            expr = re.sub(r"digitCode\((\d+)\)",
-                          lambda m: f"code:{9 + int(m.group(1)) if int(m.group(1)) else 19}", expr)
+            expr = re.sub(
+                r"digitCode\((\d+)\)",
+                lambda m: '"code:' + str(9 + int(m.group(1)) if int(m.group(1)) else 19) + '"',
+                expr,
+            )
+        # digitCode(key) dentro de bucles no es resoluble estáticamente:
+        # se marca para descartar en vez de generar una clave engañosa.
+        if re.search(r"digitCode\(", expr):
+            return ""
         for name, value in variables.items():
             expr = re.sub(rf"\b{re.escape(name)}\b", f'"{value}"', expr)
-        # Sólo concatenar si la expresión es realmente una concatenación
-        # Lua (".."): si no, conservar el código (p. ej. hl.dsp.exec_cmd("kitty"))
-        # en lugar de quedarse sólo con el texto entre comillas.
         if ".." in expr:
             return "".join(re.findall(r'"([^"]*)"', expr))
         clean = expr.strip()
         if clean.startswith('"') and clean.endswith('"') and clean.count('"') == 2:
-            clean = clean[1:-1]  # "XF86AudioRaiseVolume" -> XF86AudioRaiseVolume
+            clean = clean[1:-1]
         return clean
 
     out = []
@@ -107,35 +124,97 @@ def parse_source_binds() -> list[dict[str, str]]:
             continue
         key = resolve(m.group(1)).strip()
         action = resolve(m.group(2)).strip()
-        if key:
+        # Descartar claves truncadas ("SUPER + SHIFT + ") o sin resolver.
+        if key and not key.rstrip().endswith("+") and "digitCode(" not in key:
             out.append({"key": key, "action": action, "source": "binds.lua"})
     return out
 
 
+def expand_workspace_loops() -> dict[tuple[frozenset, str], str]:
+    """Expande los `for i=1,NUM_WPM` de binds.lua que crean binds de workspace.
+
+    AUDITORÍA: son 4 bucles (mover a workspace, mover sin follow, enfocar
+    workspace, enfocar relativo). El parser estático no puede resolver
+    `digitCode(key)`; aquí se acota a esos patrones conocidos y se genera
+    una entrada por i con su code:N y su acción ya resuelta.
+    """
+    if not SOURCE_BINDS.exists():
+        return {}
+    text = SOURCE_BINDS.read_text(encoding="utf-8")
+    num_wpm = 3
+    if SOURCE_VARS.exists():
+        m = re.search(r"(?m)^NUM_WPM\s*=\s*(\d+)", SOURCE_VARS.read_text(encoding="utf-8"))
+        if m:
+            num_wpm = min(int(m.group(1)), 10)
+
+    result: dict[tuple[frozenset, str], str] = {}
+    for line in text.splitlines():
+        if "digitCode(key)" not in line or "workspace" not in line:
+            continue
+        m = re.match(r"\s*hl\.bind\(\s*(.+?)\s*,\s*(.+?)\s*\)", line)
+        if not m:
+            continue
+        key_expr, action_expr = m.group(1), m.group(2)
+        mods = set()
+        if "mainMod" in key_expr or "SUPER" in key_expr:
+            mods.add("SUPER")
+        if "CONTROL" in key_expr or "CTRL" in key_expr:
+            mods.add("CTRL")
+        for name in ("SHIFT", "ALT"):
+            if name in key_expr:
+                mods.add(name)
+        for i in range(1, num_wpm + 1):
+            d = i % 10
+            code = f"code:{19 if d == 0 else 9 + d}"
+            action = re.sub(r"\bi\b", str(i), action_expr)
+            action = action.replace('"m~" .. ' + str(i), f'"m~{i}"')
+            parts = re.findall(r'"([^"]*)"', action)
+            readable = "".join(parts) if parts else action
+            result[(frozenset(mods), code)] = readable
+    return result
+
+
 def enriched_binds() -> list[dict[str, Any]]:
     """Atajos en runtime enriquecidos con la acción legible de binds.lua cuando existe."""
-    # AUDITORÍA: hyprctl devuelve la tecla suelta ("Escape"), mientras que
-    # binds.lua guarda la combinación completa ("SUPER + Escape"). Emparejar
-    # por la CADENA COMPLETA nunca coincidía y la descripción caía en genérica.
-    # Se indexa por el último token (la tecla real).
-    source: dict[str, list[dict[str, str]]] = {}
+    # AUDITORÍA: emparejar por el último token causaba 44 falsos positivos
+    # (todos los binds por código terminaban en la misma clave truncada).
+    # Ahora se indexa por la CLAVE COMPLETA normalizada y se deduplican los
+    # atajos idénticos que hyprctl puede repetir.
+    source: dict[str, dict[str, str]] = {}
     for sb in parse_source_binds():
-        last = sb["key"].split("+")[-1].strip().lower()
-        source.setdefault(last, []).append(sb)
+        k = normalize_key(sb["key"])
+        old = source.get(k)
+        # Si la misma tecla tiene varios binds, preferir el de workspace:
+        # en esta config hay binds de monitor y de workspace con la misma
+        # combinación y el primero ocultaba al otro.
+        if old is None or ("workspace" in sb["action"].lower()
+                           and "workspace" not in old["action"].lower()):
+            source[k] = sb
+    loops = expand_workspace_loops()
 
-    result = list_binds()
-    for b in result:
-        candidates = source.get(b["key"].lower(), [])
-        # Preferir el que tenga modifiers (evita binds de tecla suelta).
-        match = next((c for c in candidates if "+" in c["key"]),
-                     candidates[0] if candidates else None)
-        if match:
-            b["source_action"] = match["action"]
-            # Clave EXACTA del config: hl.unbind es sensible a mayúsculas.
-            b["source_key"] = match["key"]
-        else:
-            b["source_action"] = ""
+    seen: set[tuple] = set()
+    result = []
+    for b in list_binds():
+        label = f"{b['mods']} + {b['key']}" if b["mods"] and b["mods"] != "(sin modifier)" else b["key"]
+        signature = (label, b["dispatcher"], b["arg"])
+        if signature in seen:
+            continue
+        seen.add(signature)
+
         b["dispatcher_name"] = re.sub(r"^HL\.Dispatcher\(([^)]+)\).*$", r"\1", b["dispatcher"])
+        match = source.get(normalize_key(label))
+        b["source_action"] = match["action"] if match else ""
+        b["source_key"] = match["key"] if match else label
+
+        # Los binds de workspace de los bucles se resolvían contra la primera
+        # clave code:N (monitor=VGA-1). La expansión acotada corrige eso.
+        if b["key"].startswith("code:") and b["dispatcher_name"] in {"focus", "move"}:
+            mods_set = frozenset(t for t in b["mods"].split(" + ") if t)
+            override = loops.get((mods_set, b["key"]))
+            if override:
+                b["source_action"] = override
+        b["label"] = label
+        result.append(b)
     return result
 
 
@@ -179,6 +258,20 @@ def normalize_key(key: str) -> str:
     """Clave canónica para comparar solapes (ordena modificadores y baja a minúsculas)."""
     parts = [p.strip().lower() for p in (key or "").split("+") if p.strip()]
     return "+".join(sorted(parts))
+
+
+def _workspace_label(expr: str) -> str:
+    """Traduce el destino de un workspace a texto legible."""
+    m = re.search(r'workspace\s*=\s*"([^"]+)"', expr) or re.search(r"workspace\s*=\s*(\d+)", expr)
+    target = (m.group(1) if m else "") or "otro"
+    table = {"m+1": "siguiente", "m-1": "anterior", "emptym": "vacío",
+             "special": "especial", "e+1": "siguiente", "e-1": "anterior"}
+    if target in table:
+        return table[target]
+    mm = re.match(r"m~(\d+)$", target)
+    if mm:
+        return f"{mm.group(1)} de este monitor"
+    return f"{target}"
 
 
 def describe(action: str, dispatcher: str = "") -> tuple[str, str]:
@@ -252,6 +345,21 @@ def describe(action: str, dispatcher: str = "") -> tuple[str, str]:
             if cmd.lower().startswith(k):
                 return v
         return ("Launcher", "Ejecutar: " + cmd[:45])
+
+    # Workspaces: los atajos del usuario usan focus({workspace=...}) y
+    # window.move({workspace=...}), no un dispatcher llamado "workspace".
+    if "workspace.toggle_special" in low:
+        return ("Workspaces", "Alternar workspace especial (scratchpad)")
+    if "focus" in low and "workspace" in low:
+        return ("Workspaces", "Ir al workspace " + _workspace_label(a))
+    if "window.move" in low and "workspace" in low:
+        return ("Workspaces", "Mover ventana al workspace " + _workspace_label(a))
+
+    # Movimiento de ventana por dirección (no es cambio de monitor).
+    if "window.move" in low and "direction" in low:
+        d = re.search(r'direction\s*=\s*"([^"]+)"', a)
+        dirs = {"u": "arriba", "d": "abajo", "l": "a la izquierda", "r": "a la derecha"}
+        return ("Ventanas", "Mover ventana hacia " + dirs.get(d.group(1) if d else "", "otro lado"))
 
     # Expresiones Lua crudas que aparecen en binds.lua.
     if "window.move" in low:

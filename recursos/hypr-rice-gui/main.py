@@ -497,7 +497,7 @@ def on_activate(app: Adw.Application) -> None:
                 kb_group.remove(child)
         por_cat: dict[str, list[dict]] = {}
         for b in binds_cache:
-            label = b.get("source_key") or f"{b['mods']} + {b['key']}"
+            label = b.get("label") or f"{b['mods']} + {b['key']}"
             action = b.get("source_action") or b["dispatcher"]
             cat, desc = kb.describe(action, b["dispatcher"])
             por_cat.setdefault(cat, []).append({"key": label, "desc": desc, "action": action})
@@ -666,7 +666,7 @@ def on_activate(app: Adw.Application) -> None:
     def on_edit_action(_a, param):
         key = param.get_string()
         for b in binds_cache:
-            label = b.get("source_key") or f"{b['mods']} + {b['key']}"
+            label = b.get("label") or f"{b['mods']} + {b['key']}"
             if label == key:
                 edit_dialog(key, b.get("source_action") or b["dispatcher"])
                 return
