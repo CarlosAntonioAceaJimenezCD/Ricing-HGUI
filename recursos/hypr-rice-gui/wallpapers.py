@@ -1,4 +1,14 @@
 #!/usr/bin/env python3
+# =============================================================================
+# AUDITORÍA · wallpapers.py — proveedores de fondos y aplicación
+# -----------------------------------------------------------------------------
+# Red: sólo dos proveedores; Wallhaven API pública (sin clave) y archivos
+# locales de /usr/share/wallpapers. No se envían datos del usuario a la API
+# salvo el término de búsqueda que escribe el usuario.
+# Efectos externos: descarga archivos a ~/Imágenes/ricing-wallpapers y ejecuta
+# `noctalia msg wallpaper-set [connector] <path>` (IPC oficial, documentado).
+# Picsum quedó descartado porque responde "Geoblocked" desde esta máquina.
+# =============================================================================
 """Integración con sitios de wallpapers y aplicación vía Noctalia IPC.
 
 Proveedores:

@@ -1,4 +1,17 @@
 #!/usr/bin/env python3
+# =============================================================================
+# AUDITORÍA · config_model.py — única fuente de verdad de las opciones
+# -----------------------------------------------------------------------------
+# Cada Option declara su ruta REAL (path), tipo, rango y origen. La GUI genera
+# los widgets desde esta lista; no hay controles escritos a mano.
+# Efectos externos:
+#   - lectura: `hyprctl getoption` y ~/.config/noctalia/config.toml (tomllib);
+#   - aplicación en vivo: `hyprctl eval "hl.config({...})"` (API Lua de 0.57;
+#     `hyprctl keyword` está obsoleto y devuelve "unknown request");
+#   - persistencia: ~/.config/hypr/config/ui-settings.lua y config.toml.
+# Invariantes: los IDs son únicos; `by_id` devuelve None si no existe (nunca
+# lanza excepciones que puedan romper el bucle de eventos de GTK).
+# =============================================================================
 """Modelo declarativo de opciones de configuración para Ricing HGUI.
 
 Cada opción define: ruta real, tipo, rango/valores, si es toggle o intensidad,
@@ -115,8 +128,9 @@ OPTIONS: list[Option] = [
 
 
 # --------------------------------------------------------------------------- utilidades
-def by_id(option_id: str) -> Option:
-    return next(o for o in OPTIONS if o.id == option_id)
+def by_id(option_id: str) -> Option | None:
+    """Devuelve la opción o None si el ID no existe (nunca lanza StopIteration)."""
+    return next((o for o in OPTIONS if o.id == option_id), None)
 
 
 def categories() -> dict[str, list[Option]]:
@@ -210,7 +224,7 @@ def build_hypr_config(values: dict[str, Any]) -> str:
     tree: dict = {}
     for oid, value in values.items():
         opt = by_id(oid)
-        if opt.source != "hyprland" or value is None:
+        if opt is None or opt.source != "hyprland" or value is None:
             continue
         tree = _deep_merge(tree, _nest(opt.path, value))
     return "hl.config({\n" + _lua_table(tree, 1) + "\n})"
@@ -233,7 +247,7 @@ def persist(values: dict[str, Any]) -> None:
     noct_values = {}
     for oid, value in values.items():
         opt = by_id(oid)
-        if value is None:
+        if opt is None or value is None:
             continue
         (noct_values if opt.source == "noctalia" else hypr_values)[oid] = value
 

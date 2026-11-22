@@ -1,4 +1,19 @@
 #!/usr/bin/env python3
+# =============================================================================
+# AUDITORÍA · keybinds.py — atajos existentes, edición, desactivado y borrado
+# -----------------------------------------------------------------------------
+# Fuentes:
+#   - en vivo: `hyprctl binds -j` (84+ atajos; la acción aparece como closure
+#     opaca HL.Dispatcher(...), por eso también se lee binds.lua para texto);
+#   - texto: binds.lua se parsea con regex para mostrar la acción legible.
+# Efectos externos: ejecuta `hl.bind` / `hl.unbind` vía `hyprctl eval`; escribe
+# ~/.config/hypr/config/ui-bindings.lua y ~/.local/share/.../keybinds.json.
+# Invariantes:
+#   1. "Desactivar" conserva la entrada y genera un `hl.unbind` persistente.
+#   2. "Eliminar" añade una entrada de supresión para que no reaparezca al
+#      recargar el config (los atajos de binds.lua no se pueden borrar del todo).
+#   3. Para editar un atajo existente se desvincula la tecla antigua primero.
+# =============================================================================
 """Gestión de keybindings para Ricing HGUI.
 
 - Lista los atajos actuales desde `hyprctl binds -j` (fuente oficial en vivo).
@@ -9,12 +24,15 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
 
 DATA = Path.home() / ".local/share/hypr-rice-gui/keybinds.json"
 LUA_MODULE = Path.home() / ".config/hypr/config/ui-bindings.lua"
+SOURCE_BINDS = Path.home() / ".config/hypr/config/binds.lua"
+SOURCE_VARS = Path.home() / ".config/hypr/config/variables.lua"
 
 MODS = [
     (0x10, "SUPER"), (0x20, "ALT"), (0x40, "CTRL"), (0x80, "SHIFT"),
@@ -48,6 +66,55 @@ def list_binds() -> list[dict[str, Any]]:
             "locked": b.get("locked", False),
             "raw": b,
         })
+    return result
+
+
+def parse_source_binds() -> list[dict[str, str]]:
+    """Lee binds.lua y devuelve atajos legibles (clave + acción en texto).
+
+    AUDITORÍA: es un parser de líneas con regex, no un intérprete Lua. Resuelve
+    los casos presentes en esta config (mainMod, noctCall, digitCode, variables
+    de variables.lua). Bucles y funciones complejas pueden no aparecer: para eso
+    está la lista en vivo de `hyprctl binds -j`.
+    """
+    if not SOURCE_BINDS.exists():
+        return []
+    variables = {"mainMod": "SUPER", "noctCall": "noctalia msg ", "launchPrefix": "uwsm app -- "}
+    if SOURCE_VARS.exists():
+        for name, value in re.findall(r'(?m)^(\w+)\s*=\s*"([^"]*)"', SOURCE_VARS.read_text(encoding="utf-8")):
+            variables[name] = value
+
+    def resolve(expr: str) -> str:
+        if "digitCode(" in expr:
+            expr = re.sub(r"digitCode\((\d+)\)",
+                          lambda m: f"code:{9 + int(m.group(1)) if int(m.group(1)) else 19}", expr)
+        for name, value in variables.items():
+            expr = re.sub(rf"\b{re.escape(name)}\b", f'"{value}"', expr)
+        parts = re.findall(r'"([^"]*)"', expr)
+        return "".join(parts) if len(parts) > 1 else expr.strip()
+
+    out = []
+    for line in SOURCE_BINDS.read_text(encoding="utf-8").splitlines():
+        m = re.search(r"hl\.bind\(\s*(.+?)\s*,\s*(.+?)\s*(?:,\s*\{[^}]*\})?\s*\)\s*$", line)
+        if not m:
+            continue
+        key = resolve(m.group(1)).strip()
+        action = resolve(m.group(2)).strip()
+        if key:
+            out.append({"key": key, "action": action, "source": "binds.lua"})
+    return out
+
+
+def enriched_binds() -> list[dict[str, Any]]:
+    """Atajos en runtime enriquecidos con la acción legible de binds.lua cuando existe."""
+    source = {b["key"].lower(): b for b in parse_source_binds()}
+    result = list_binds()
+    for b in result:
+        match = source.get(b["key"].lower())
+        if match:
+            b["source_action"] = match["action"]
+        else:
+            b["source_action"] = b["dispatcher"] + (" " + str(b["arg"]) if b["arg"] else "")
     return result
 
 
@@ -103,10 +170,39 @@ def add_or_update(entry: dict[str, str]) -> tuple[bool, str]:
     return True, "atajo aplicado y guardado"
 
 
+def set_disabled(key: str, disabled: bool) -> tuple[bool, str]:
+    """Desactiva un atajo sin borrarlo (o lo reactiva)."""
+    entries = stored()
+    entry = next((e for e in entries if e.get("key") == key), None)
+    if disabled:
+        # Quitar el bind en vivo; conservar el entry para poder reactivarlo.
+        esc = key.replace("\\", "\\\\").replace('"', '\\"')
+        res = hyprctl("eval", f'hl.unbind("{esc}")')
+        if entry:
+            entry["disabled"] = True
+        else:
+            entry = {"key": key, "kind": "exec", "action": "", "description": "desactivado",
+                     "repeat": False, "locked": False, "disabled": True}
+            entries.append(entry)
+        _write_stored(entries)
+        return True, "atajo desactivado (conservado)"
+    # Reactivar: necesita una acción guardada.
+    if not entry or not entry.get("action"):
+        return False, "no hay acción guardada para reactivar; vuelve a crear el atajo"
+    entry["disabled"] = False
+    _write_stored(entries)
+    return apply_bind(entry)
+
+
 def delete(key: str) -> tuple[bool, str]:
+    """Elimina el atajo en vivo y guarda una supresión para que no reaparezca al reiniciar."""
     esc = key.replace("\\", "\\\\").replace('"', '\\"')
     res = hyprctl("eval", f'hl.unbind("{esc}")')
     entries = [e for e in stored() if e.get("key") != key]
+    # Si el atajo venía de binds.lua, necesitamos un hl.unbind persistente.
+    entries.append({"key": key, "kind": "exec", "action": "", "description": "eliminado",
+                    "repeat": False, "locked": False, "disabled": True,
+                    "old_key": key, "suppression": True})
     _write_stored(entries)
     return res.strip().lower() == "ok", res.strip() or "eliminado"
 
@@ -120,6 +216,12 @@ def _generate_lua(entries: list[dict[str, str]]) -> None:
     for i, e in enumerate(entries, 1):
         old = e.get("old_key", "")
         lines.append(f"-- [{i}] {e.get('description', '') or e['key']}")
+        # Un atajo desactivado/eliminado se representa sólo con hl.unbind.
+        if e.get("disabled") or not e.get("action"):
+            target = old or e["key"]
+            lines.append(f'hl.unbind("{target}")  -- desactivado/eliminado')
+            lines.append("")
+            continue
         if old:
             lines.append(f'hl.unbind("{old}")')
         lines.append(f'hl.bind("{e["key"]}", {_lua_action(e.get("kind", "exec"), e.get("action", ""))})')

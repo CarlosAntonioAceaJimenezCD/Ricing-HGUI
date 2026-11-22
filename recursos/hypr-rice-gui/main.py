@@ -1,4 +1,22 @@
 #!/usr/bin/env python3
+# =============================================================================
+# AUDITORÍA · main.py — punto de entrada de la GUI Ricing HGUI
+# -----------------------------------------------------------------------------
+# Qué hace: construye una ventana GTK4/libadwaita con pestañas y delega la
+# lógica a módulos pequeños (backup_manager, config_model, keybinds, monitors,
+# wallpapers). NO contiene lógica de negocio duplicada: toda opción proviene de
+# config_model y todo guardado pasa por backup_manager.
+#
+# Efectos externos:
+#   - ejecuta `hyprctl` (eval/getoption/monitors/binds) vía los módulos;
+#   - escribe ~/.config/hypr/config/ui-settings.lua y ui-bindings.lua;
+#   - escribe ~/.config/noctalia/config.toml al guardar opciones de Noctalia;
+#   - descarga wallpapers a ~/Imágenes/ricing-wallpapers;
+#   - crea backups en ~/.local/share/hypr-rice-gui/backups.
+# Seguridad: no usa root, no lee secretos, no ejecuta código remoto; todas las
+# acciones son locales salvo la API pública de Wallhaven.
+# Invariante: `pending`/`dirty` son la única fuente de cambios sin guardar.
+# =============================================================================
 """Prototipo de GUI de ricing para Hyprland 0.57 + Noctalia.
 
 - Vista previa EN VIVO con hyprctl eval + hl.config (sintaxis de 0.57).
@@ -11,10 +29,6 @@ Ejecutar: python3 main.py
 """
 import gettext
 import os
-import re
-import subprocess
-from pathlib import Path
-
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -32,43 +46,7 @@ gettext.bindtextdomain("hypr-rice-gui", os.path.expanduser("~/.local/share/local
 gettext.textdomain("hypr-rice-gui")
 _ = gettext.gettext
 
-STATE = Path.home() / ".config/hypr/config/ui-settings.lua"
 _timer_id: int | None = None
-
-
-# --------------------------------------------------------------------------- Hyprland
-def hyprctl(*args: str) -> str:
-    try:
-        return subprocess.run(["hyprctl", *args], capture_output=True,
-                              text=True, timeout=5).stdout.strip()
-    except (OSError, subprocess.SubprocessError):
-        return ""
-
-
-def set_live(rounding: int, blur: bool) -> None:
-    """Aplica en vivo con la API Lua de Hyprland 0.57 (hyprctl keyword ya no sirve)."""
-    code = f"hl.config({{decoration={{rounding={int(rounding)}, blur={{enabled={str(blur).lower()}}}}}}})"
-    hyprctl("eval", code)
-
-
-def current_rounding() -> int:
-    out = hyprctl("getoption", "decoration:rounding")
-    m = re.search(r"(?:int|float):\s*(-?[\d.]+)", out)
-    return int(float(m.group(1))) if m else 10
-
-
-def save_state(rounding: int, blur: bool, size: int, passes: int) -> None:
-    STATE.parent.mkdir(parents=True, exist_ok=True)
-    STATE.write_text(
-        "-- Generado por hypr-rice-gui. NO EDITAR A MANO.\n"
-        "return {\n"
-        f"  rounding = {rounding},\n"
-        f"  blur = {str(blur).lower()},\n"
-        f"  blur_size = {size},\n"
-        f"  blur_passes = {passes},\n"
-        "}\n",
-        encoding="utf-8",
-    )
 
 
 # --------------------------------------------------------------------------- widgets
@@ -116,53 +94,13 @@ def on_activate(app: Adw.Application) -> None:
     switcher.set_stack(stack)
     switcher.set_halign(Gtk.Align.CENTER)
 
-    # ============ Pestaña 1: Apariencia ============
-    box_app, page_app = new_tab(stack, "apariencia", _("Apariencia"))
-    group = Adw.PreferencesGroup(title=_("Apariencia de ventanas"))
-    page_app.add(group)
-
-    row_r = Adw.ActionRow(title=_("Redondeo"), subtitle=_("Radio de esquinas (px)"))
-    scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 30, 1)
-    scale.set_value(current_rounding())
-    scale.set_hexpand(True)
-    row_r.add_suffix(scale)
-    group.add(row_r)
-
-    row_b = Adw.ActionRow(title=_("Blur"), subtitle=_("Desenfoque de ventanas"))
-    switch = Gtk.Switch()
-    switch.set_active(True)
-    switch.set_valign(Gtk.Align.CENTER)
-    row_b.add_suffix(switch)
-    group.add(row_b)
-
-    status = Gtk.Label(label=_("Ajusta los controles: cambios en vivo"), margin_top=6, wrap=True)
-
-    _live_timer: int | None = None
+    # AUDITORÍA: antes existía una pestaña "Apariencia" con slider de rounding y
+    # switch de blur que duplicaban las opciones del modelo. Se eliminó; ahora
+    # rounding y blur SIEMPRE se editan en la pestaña "Opciones" (categorías
+    # "Decoración" y "Blur"). `status` se muestra allí.
     _opt_timer: int | None = None
     _ready = {"value": False}
-
-    def apply_live_now() -> bool:
-        nonlocal _live_timer
-        _live_timer = None
-        r, b = int(scale.get_value()), switch.get_active()
-        set_live(r, b)
-        # sincronizar con el modelo (sin disparar otro timer)
-        pending["rounding"] = r
-        pending["blur_enabled"] = b
-        dirty.update({"rounding", "blur_enabled"})
-        status.set_label(_("Vista previa en vivo · aún sin guardar"))
-        return False
-
-    def schedule_live(*_args) -> None:
-        nonlocal _live_timer
-        if not _ready["value"]:
-            return
-        if _live_timer is not None:
-            GLib.source_remove(_live_timer)
-        _live_timer = GLib.timeout_add(120, apply_live_now)
-
-    scale.connect("value-changed", schedule_live)
-    switch.connect("notify::active", schedule_live)
+    status = Gtk.Label(label=_("Ajusta las opciones: cambios en vivo"), margin_top=6, wrap=True)
 
     # ============ Pestaña 2: Backups ============
     _box_bk, page_bk = new_tab(stack, "backups", _("Backups"))
@@ -383,6 +321,8 @@ def on_activate(app: Adw.Application) -> None:
     dirty: set[str] = set()
     opt_widgets: dict[str, tuple[object, object]] = {}
 
+    # AUDITORÍA: el cambio se applying en vivo con un debounce de 150 ms.
+    # Esto evita lanzar un `hyprctl eval` por cada píxel que se arrastra el slider.
     def schedule_option_live() -> None:
         nonlocal _opt_timer
         if not _ready["value"]:
@@ -394,23 +334,21 @@ def on_activate(app: Adw.Application) -> None:
     def apply_options_live() -> bool:
         nonlocal _opt_timer
         _opt_timer = None
-        hypr = {oid: pending[oid] for oid in dirty
-                if cm.by_id(oid).source == "hyprland" and pending.get(oid) is not None}
+        known = [(oid, cm.by_id(oid)) for oid in dirty]
+        hypr = {oid: pending[oid] for oid, opt in known
+                if opt is not None and opt.source == "hyprland" and pending.get(oid) is not None}
         if hypr:
             cm.apply_live(hypr)
-        noct = sum(1 for oid in dirty if cm.by_id(oid).source == "noctalia")
+        noct = sum(1 for oid, opt in known if opt is not None and opt.source == "noctalia")
         extra = f" · {noct} de Noctalia al guardar" if noct else ""
         status.set_label(_("Vista previa en vivo ✓") + extra)
         return False
 
     def mark_dirty(oid: str, value) -> None:
+        if cm.by_id(oid) is None:
+            return
         pending[oid] = value
         dirty.add(oid)
-        # mantener sincronizados los controles rápidos
-        if oid == "rounding":
-            scale.set_value(float(value))
-        elif oid == "blur_enabled":
-            switch.set_active(bool(value))
         schedule_option_live()
 
     def on_scale(scale_widget, oid: str, label: Gtk.Label, opt: cm.Option) -> None:
@@ -496,6 +434,7 @@ def on_activate(app: Adw.Application) -> None:
         status.set_label(_("Opciones guardadas ✓"))
         refresh_history()
 
+    opt_outer.append(status)
     opt_outer.append(make_button(_("Guardar todas las opciones"), save_options))
 
     # ============ Pestaña 6: Keybinds ============
@@ -559,9 +498,10 @@ def on_activate(app: Adw.Application) -> None:
 
     def refresh_binds() -> None:
         kb_list.remove_all()
-        for b in kb.list_binds():
+        for b in kb.enriched_binds():
             label = f"{b['mods']} + {b['key']}"
-            row = Adw.ActionRow(title=label, subtitle=b["dispatcher"].replace("HL.Dispatcher(", "")[:60])
+            subtitle = b.get("source_action") or b["dispatcher"]
+            row = Adw.ActionRow(title=label, subtitle=subtitle[:80])
             row.set_name(label)
             row.set_activatable(True)
             kb_list.append(row)
@@ -572,8 +512,15 @@ def on_activate(app: Adw.Application) -> None:
         label = row.get_name()
         editing["old_key"] = label.split(" + ")[-1]
         key_entry.set_text(label)
+        source_action = ""
+        for b in kb.enriched_binds():
+            if f"{b['mods']} + {b['key']}" == label:
+                source_action = b.get("source_action", "")
+                break
+        if source_action and not source_action.startswith("HL.Dispatcher("):
+            action_entry.set_text(source_action)
         desc_entry.set_text("")
-        kb_status.set_label(_("Editando: ") + label + _(" · escribe la nueva acción"))
+        kb_status.set_label(_("Editando: ") + label + _(" · la acción se rellenó desde binds.lua"))
 
     kb_list.connect("row-selected", on_bind_selected)
 
@@ -606,6 +553,17 @@ def on_activate(app: Adw.Application) -> None:
         kb_status.set_label((_("Eliminado: ") if ok else _("Error: ")) + msg)
         refresh_binds()
 
+    def toggle_bind(_btn: Gtk.Button) -> None:
+        key = key_entry.get_text().strip()
+        if not key:
+            kb_status.set_label(_("Escribe la tecla"))
+            return
+        entry = next((e for e in kb.stored() if e.get("key") == key), None)
+        disable = not (entry and entry.get("disabled"))
+        ok, msg = kb.set_disabled(key, disable)
+        kb_status.set_label((_("OK: ") if ok else _("Error: ")) + msg)
+        refresh_binds()
+
     def new_bind(_btn: Gtk.Button) -> None:
         editing["old_key"] = ""
         key_entry.set_text("")
@@ -616,6 +574,7 @@ def on_activate(app: Adw.Application) -> None:
     kb_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
     kb_actions.append(make_button(_("Nuevo"), new_bind))
     kb_actions.append(make_button(_("Guardar atajo"), save_bind))
+    kb_actions.append(make_button(_("Desactivar/Activar"), toggle_bind))
     kb_actions.append(make_button(_("Eliminar"), remove_bind))
     kb_actions.append(make_button(_("Recargar lista"), lambda _b: refresh_binds()))
     kb_group.add(kb_actions)
@@ -750,13 +709,6 @@ def on_activate(app: Adw.Application) -> None:
     w_outer.append(w_status)
 
     # ============ Común ============
-    def apply(_btn: Gtk.Button) -> None:
-        """Guarda la configuración; el cambio ya se ve en el compositor."""
-        bm.create_backup(reason="guardar")
-        save_state(int(scale.get_value()), switch.get_active(), 5, 4)
-        status.set_label(_("Configuración guardada ✓ (ya se ve en vivo)"))
-        refresh_history()
-
     def persist_settings(*_args) -> None:
         s = bm.get_settings()
         s["auto_backup"] = auto_switch.get_active()
@@ -774,9 +726,6 @@ def on_activate(app: Adw.Application) -> None:
         refresh_history()
         return True
 
-    box_app.append(status)
-    box_app.append(make_button(_("Guardar configuración"), apply))
-
     root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
                    margin_start=12, margin_end=12, margin_top=12, margin_bottom=12)
     root.append(switcher)
@@ -792,8 +741,6 @@ def on_activate(app: Adw.Application) -> None:
 
     def on_close(_win) -> bool:
         global _timer_id
-        if _live_timer is not None:
-            GLib.source_remove(_live_timer)
         if _opt_timer is not None:
             GLib.source_remove(_opt_timer)
         if _timer_id is not None:

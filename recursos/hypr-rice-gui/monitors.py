@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+# =============================================================================
+# AUDITORÍA · monitors.py — detección automática de monitores
+# -----------------------------------------------------------------------------
+# Sólo LEE `hyprctl monitors -j`. La única escritura es opcional y explícita:
+# write_variables() sustituye MONITOR1..3 en config/variables.lua con los
+# conectores detectados (por defecto MONITOR1="" → autodetección).
+# No se modifica ninguna resolución/modo automáticamente.
+# =============================================================================
 """Detección automática de monitores y sus propiedades (hyprctl monitors -j)."""
 from __future__ import annotations
 

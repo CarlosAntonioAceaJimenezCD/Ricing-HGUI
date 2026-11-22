@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+# =============================================================================
+# AUDITORÍA · backup_manager.py — copias de seguridad y restauración
+# -----------------------------------------------------------------------------
+# Efectos externos: crea/elimina .tar.gz en ~/.local/share/hypr-rice-gui/backups;
+# sobreescribe archivos de config al restaurar (siempre tras un backup previo).
+# Invariantes:
+#   1. Ningún backup se escribe sin un manifest.json con SHA-256 por archivo.
+#   2. restore_backup() SIEMPRE llama a create_backup("pre-restore") primero.
+#   3. Las rutas se verifican contra el directorio temporal antes de extraer
+#      (protección contra path traversal).
+#   4. Se excluyen secretos: fish_variables, keyrings, opencode, cachés.
+# =============================================================================
 """Gestor de backups automáticos para Ricing HGUI.
 
 Características:
@@ -202,8 +214,9 @@ def verify_backup(name: str) -> tuple[bool, str]:
 def dna_from_records(records: list[dict]) -> str:
     """Huella determinista de una configuración a partir de (path, sha256).
 
-    El mismo contenido siempre produce el mismo DNA, aunque cambie la fecha
-    de modificación o el orden de los archivos. Formato legible: DNA-XXXX-XXXX.
+    AUDITORÍA: ordenamos por path antes de hashear para que el resultado no
+    dependa del orden de lectura del sistema de archivos. Cambia si cambia el
+    contenido, pero NO si cambia solo la fecha de modificación.
     """
     payload = "".join(f"{r['path']}:{r['sha256']}\n" for r in sorted(records, key=lambda x: x["path"]))
     digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:8].upper()
