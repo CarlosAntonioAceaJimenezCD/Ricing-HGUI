@@ -53,7 +53,7 @@ rompe configuraciones. Usa un patrón de **tres capas**:
 ```mermaid
 flowchart LR
     GUI[Tu GUI<br/>Python + GTK4] -->|1. lee| STATE[ui-settings.lua<br/>estado persistido]
-    GUI -->|2. mover control = apply en vivo<br/>(debounce 120 ms)| HYPR[hyprctl keyword ...<br/>noctalia msg ...]
+    GUI -->|2. mover control = apply en vivo<br/>(debounce 120 ms)| HYPR[hyprctl eval hl.config{...}<br/>noctalia msg ...]
     GUI -->|3. botón Guardar = sólo persiste<br/>(con backup)| STATE
     STATE -->|require| LUA[tu hyprland.lua modular]
     LUA --> HYPR
@@ -65,7 +65,8 @@ flowchart LR
 
 1. **El estado vive en un archivo pequeño y generado**, no repartido por 13 módulos.
 2. **Nunca sobrescribas sin backup**: copia el archivo a `.bak` con timestamp.
-3. **Live preview primero**: `hyprctl keyword …` aplica al vuelo; el archivo sólo
+3. **Live preview primero**: en Hyprland 0.57 usa `hyprctl eval 'hl.config({...})'`
+   (`hyprctl keyword` devuelve *unknown request* desde la deprecación de `.conf`); el archivo sólo
    se escribe al pulsar "Guardar" (o al aplicar, pero con deshacer).
 4. **Validación antes de escribir**: rangos numéricos, booleanos, rutas existentes.
 5. **No pedir root**: todo está en `~/.config`.
@@ -134,7 +135,8 @@ flowchart LR
 | **Configuración** | `~/.local/share/hypr-rice-gui/settings.json` (switch, intervalo, retención) |
 | **Historial de puntos en el pasado** | `get_backup_details()` (manifiesto), `read_file_from_backup()` (ver un archivo sin extraer), `compare_with_current()` (modificados/ausentes/iguales), `delete_backup()`, `restore_backup()` |
 | **GUI** | Switch, intervalo, retención; lista de todos los backups con fecha/motivo/tamaño; selector de archivos; botones **Ver archivo**, **Comparar**, **Restaurar**, **Borrar**, **Crear ahora** |
-| **Vista previa en vivo** | Mover el slider de `rounding` o el switch de `blur` llama a `hyprctl keyword …` con un *debounce* de 120 ms: el cambio se ve al instante. El botón **Guardar configuración** **ya no aplica**, sólo persiste en `ui-settings.lua` (tras backup) |
+| **Vista previa en vivo** | Mover el slider de `rounding` o el switch de `blur` ejecuta `hyprctl eval "hl.config({decoration={rounding=N, blur={enabled=bool}}}})"` con un *debounce* de 120 ms: el cambio se ve al instante. El botón **Guardar configuración** **ya no aplica**, sólo persiste en `ui-settings.lua` (tras backup) |
+| **Navegación por categorías** | `Gtk.Stack` + `Gtk.StackSwitcher` con cuatro pestañas: **Apariencia**, **Backups**, **Historial** e **Identidad** |
 
 API del módulo:
 

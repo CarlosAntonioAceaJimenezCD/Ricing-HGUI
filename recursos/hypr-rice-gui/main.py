@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 """Prototipo de GUI de ricing para Hyprland 0.57 + Noctalia.
 
-Incluye:
-  - Aplicación en vivo de rounding/blur mediante hyprctl.
-  - Persistencia en ~/.config/hypr/config/ui-settings.lua con backup previo.
-  - BACKUPS AUTOMÁTICOS: programados, con retención, SHA-256 y restauración.
-  - HISTORIAL: explorar cualquier punto en el pasado, ver archivos, comparar
-    con el estado actual, restaurar o borrar backups.
+- Vista previa EN VIVO con hyprctl eval + hl.config (sintaxis de 0.57).
+- El botón "Guardar" sólo persiste la configuración (con backup).
+- Backups automáticos, historial de puntos en el pasado e identidad Config DNA.
+- Navegación por categorías mediante pestañas.
 
 Requisitos: python3, python-gobject, gtk4, libadwaita (ya en CachyOS).
 Ejecutar: python3 main.py
 """
 import gettext
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -42,12 +41,16 @@ def hyprctl(*args: str) -> str:
         return ""
 
 
+def set_live(rounding: int, blur: bool) -> None:
+    """Aplica en vivo con la API Lua de Hyprland 0.57 (hyprctl keyword ya no sirve)."""
+    code = f"hl.config({{decoration={{rounding={int(rounding)}, blur={{enabled={str(blur).lower()}}}}}}})"
+    hyprctl("eval", code)
+
+
 def current_rounding() -> int:
     out = hyprctl("getoption", "decoration:rounding")
-    try:
-        return int(out.split("=", 1)[1].strip().split(" ")[0])
-    except (IndexError, ValueError):
-        return 10
+    m = re.search(r"(?:int|float):\s*(-?[\d.]+)", out)
+    return int(float(m.group(1))) if m else 10
 
 
 def save_state(rounding: int, blur: bool, size: int, passes: int) -> None:
@@ -83,23 +86,36 @@ def show_text_window(parent: Gtk.Window, title: str, text: str) -> None:
     scroll.set_child(view)
     scroll.set_vexpand(True)
     box.append(scroll)
-    close = make_button(_("Cerrar"), lambda _b: win.close())
-    box.append(close)
+    box.append(make_button(_("Cerrar"), lambda _b: win.close()))
     win.set_child(box)
     win.present()
+
+
+def new_tab(stack: Gtk.Stack, name: str, title: str) -> tuple[Gtk.Box, Adw.PreferencesPage]:
+    outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                    margin_start=16, margin_end=16, margin_top=16, margin_bottom=16)
+    page = Adw.PreferencesPage()
+    outer.append(page)
+    stack.add_titled(outer, name, title)
+    return outer, page
 
 
 # --------------------------------------------------------------------------- app
 def on_activate(app: Adw.Application) -> None:
     win = Adw.ApplicationWindow(application=app, title=_("Ricing HGUI"))
-    win.set_default_size(560, 720)
+    win.set_default_size(640, 720)
     settings = bm.get_settings()
 
-    page = Adw.PreferencesPage()
+    stack = Gtk.Stack()
+    stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+    switcher = Gtk.StackSwitcher()
+    switcher.set_stack(stack)
+    switcher.set_halign(Gtk.Align.CENTER)
 
-    # ---------------- Apariencia ----------------
+    # ============ Pestaña 1: Apariencia ============
+    box_app, page_app = new_tab(stack, "apariencia", _("Apariencia"))
     group = Adw.PreferencesGroup(title=_("Apariencia de ventanas"))
-    page.add(group)
+    page_app.add(group)
 
     row_r = Adw.ActionRow(title=_("Redondeo"), subtitle=_("Radio de esquinas (px)"))
     scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 30, 1)
@@ -115,19 +131,15 @@ def on_activate(app: Adw.Application) -> None:
     row_b.add_suffix(switch)
     group.add(row_b)
 
-    status = Gtk.Label(label=_("Ajusta los controles: cambios en vivo"), margin_top=6)
+    status = Gtk.Label(label=_("Ajusta los controles: cambios en vivo"), margin_top=6, wrap=True)
 
-    # --- Vista previa en vivo (debounce para no saturar hyprctl) ---
     _live_timer: int | None = None
     _ready = {"value": False}
 
     def apply_live_now() -> bool:
         nonlocal _live_timer
         _live_timer = None
-        r = int(scale.get_value())
-        b = switch.get_active()
-        hyprctl("keyword", "decoration:rounding", str(r))
-        hyprctl("keyword", "decoration:blur:enabled", str(b).lower())
+        set_live(int(scale.get_value()), switch.get_active())
         status.set_label(_("Vista previa en vivo · aún sin guardar"))
         return False
 
@@ -142,12 +154,13 @@ def on_activate(app: Adw.Application) -> None:
     scale.connect("value-changed", schedule_live)
     switch.connect("notify::active", schedule_live)
 
-    # ---------------- Backups automáticos ----------------
+    # ============ Pestaña 2: Backups ============
+    _box_bk, page_bk = new_tab(stack, "backups", _("Backups"))
     bg = Adw.PreferencesGroup(
         title=_("Backups automáticos"),
         description=_("Copias de los dotfiles antes de cada cambio y de forma periódica."),
     )
-    page.add(bg)
+    page_bk.add(bg)
 
     row_auto = Adw.ActionRow(title=_("Activados"), subtitle=_("Copiar configs periódicamente"))
     auto_switch = Gtk.Switch()
@@ -170,82 +183,23 @@ def on_activate(app: Adw.Application) -> None:
     row_keep.add_suffix(spin_keep)
     bg.add(row_keep)
 
-    # ---------------- Identidad de la configuración ----------------
-    ig = Adw.PreferencesGroup(
-        title=_("Identidad de la configuración"),
-        description=_("Huella única (Config DNA) para reconocer y nombrar cada rice."),
-    )
-    page.add(ig)
-
-    dna_now = bm.current_dna()
-    ident_now = bm.get_identity(dna_now)
-    row_dna = Adw.ActionRow(
-        title=_("ID actual"),
-        subtitle=f"{dna_now} · {ident_now.get('label') or _('sin etiqueta')}",
-    )
-    ig.add(row_dna)
-
-    label_entry = Gtk.Entry()
-    label_entry.set_text(ident_now.get("label", ""))
-    label_entry.set_placeholder_text(_("Ej. Rice azul minimal / Gaming"))
-    row_label = Adw.ActionRow(title=_("Etiqueta"), subtitle=_("Se guarda para esta huella"))
-    row_label.add_suffix(label_entry)
-    ig.add(row_label)
-
-    notes_entry = Gtk.Entry()
-    notes_entry.set_text(ident_now.get("notes", ""))
-    notes_entry.set_placeholder_text(_("Notas opcionales"))
-    row_notes = Adw.ActionRow(title=_("Notas"), subtitle=_("Descripción del punto en el pasado"))
-    row_notes.add_suffix(notes_entry)
-    ig.add(row_notes)
-
-    def save_identity(_btn: Gtk.Button) -> None:
-        dna = selected.get("dna") or dna_now
-        bm.set_identity_label(dna, label_entry.get_text().strip(), notes_entry.get_text().strip())
-        status.set_label(_("Identidad guardada: ") + dna)
-        refresh_history()
-
-    def show_identity(_btn: Gtk.Button) -> None:
-        dna = selected.get("dna") or dna_now
-        inf = bm.identify_backup(selected["name"]) if selected.get("name") else {
-            "dna": dna, "label": bm.get_identity(dna).get("label", ""),
-            "notes": bm.get_identity(dna).get("notes", ""), "reason": "actual",
-            "created_at": "", "file_count": 0,
-        }
-        same = bm.find_backups_by_dna(dna)
-        coincide = _("sí") if dna == bm.current_dna() else _("no")
-        text = (
-            f"DNA: {inf['dna']}\n"
-            f"Etiqueta: {inf.get('label') or '(sin etiqueta)'}\n"
-            f"Notas: {inf.get('notes') or '-'}\n"
-            f"Motivo: {inf.get('reason', '-')}\n"
-            f"Archivos: {inf.get('file_count', 0)}\n"
-            f"Coincide con el estado actual: {coincide}\n"
-            f"Backups con esta identidad ({len(same)}):\n  " + "\n  ".join(same) + "\n"
-        )
-        show_text_window(win, _("Identidad de configuración"), text)
-
-    identity_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
-    identity_actions.append(make_button(_("Guardar etiqueta"), save_identity))
-    identity_actions.append(make_button(_("Ver identidad"), show_identity))
-    ig.add(identity_actions)
-
-    # ---------------- Historial (puntos en el pasado) ----------------
+    # ============ Pestaña 3: Historial ============
+    box_hist, page_hist = new_tab(stack, "historial", _("Historial"))
     hg = Adw.PreferencesGroup(
-        title=_("Historial · puntos en el pasado"),
+        title=_("Puntos en el pasado"),
         description=_("Selecciona cualquier copia para inspeccionarla, compararla o restaurarla."),
     )
-    page.add(hg)
+    page_hist.add(hg)
 
     history_list = Gtk.ListBox()
     history_list.set_selection_mode(Gtk.SelectionMode.SINGLE)
     history_scroll = Gtk.ScrolledWindow()
     history_scroll.set_child(history_list)
-    history_scroll.set_min_content_height(180)
-    history_scroll.set_max_content_height(260)
+    history_scroll.set_min_content_height(200)
+    history_scroll.set_max_content_height(320)
     hg.add(history_scroll)
 
-    detail = Gtk.Label(label=_("Selecciona un backup"), margin_top=6, wrap=True)
+    detail = Gtk.Label(label=_("Selecciona un backup"), wrap=True)
     files_combo = Gtk.ComboBoxText()
     row_files = Adw.ActionRow(title=_("Archivos del backup"), subtitle=_("Elige uno para verlo"))
     row_files.add_suffix(files_combo)
@@ -267,12 +221,13 @@ def on_activate(app: Adw.Application) -> None:
             return
         name = row.get_name()
         selected["name"] = name
-        items = {b["name"]: b for b in bm.list_backups()}
-        b = items.get(name, {})
+        selected["dna"] = bm.dna_of_backup(name) or ""
+        b = next((x for x in bm.list_backups() if x["name"] == name), {})
+        ident = bm.get_identity(selected["dna"])
         detail.set_label(
-            f"{b.get('created_at', '').replace('T', ' ')[:19]} · "
-            f"{b.get('reason', '')} · {b.get('file_count', 0)} archivos · "
-            f"{b.get('size', 0)//1024} KB"
+            f"{b.get('created_at', '').replace('T', ' ')[:19]} · {b.get('reason', '')} · "
+            f"{b.get('file_count', 0)} archivos · {selected['dna']} · "
+            f"{ident.get('label') or _('sin etiqueta')}"
         )
         populate_files(name)
 
@@ -281,22 +236,15 @@ def on_activate(app: Adw.Application) -> None:
         for b in bm.list_backups():
             row = Adw.ActionRow(
                 title=b["created_at"].replace("T", " ")[:19],
-                subtitle=f"{b['reason']} · {b['file_count']} archivos · {b['size']//1024} KB",
+                subtitle=f"{b['reason']} · {b['file_count']} archivos · {bm.dna_of_backup(b['name']) or ''}",
             )
             row.set_name(b["name"])
             row.set_activatable(True)
             history_list.append(row)
-        if len(bm.list_backups()) == 0:
+        if not bm.list_backups():
             detail.set_label(_("Sin backups todavía"))
 
     history_list.connect("row-selected", on_row_selected)
-
-    def apply(_btn: Gtk.Button) -> None:
-        """Sólo persiste: el cambio ya se está viendo en el compositor."""
-        bm.create_backup(reason="guardar")
-        save_state(int(scale.get_value()), switch.get_active(), 5, 4)
-        status.set_label(_("Configuración guardada ✓ (ya se ve en vivo)"))
-        refresh_history()
 
     def create_now(_btn: Gtk.Button) -> None:
         bm.create_backup(reason="manual")
@@ -311,10 +259,7 @@ def on_activate(app: Adw.Application) -> None:
             return
         path = files_combo.get_active_text() or ""
         text = bm.read_file_from_backup(name, path)
-        if text is None:
-            backup_status.set_label(_("No se pudo leer el archivo"))
-            return
-        show_text_window(win, f"{name} · {path}", text)
+        show_text_window(win, f"{name} · {path}", text or _("No se pudo leer el archivo"))
 
     def compare(_btn: Gtk.Button) -> None:
         name = selected.get("name")
@@ -344,15 +289,79 @@ def on_activate(app: Adw.Application) -> None:
         backup_status.set_label(_("Eliminado") if ok else _("Error: ") + msg)
         refresh_history()
 
-    row_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
-    for label, cb in [
-        (_("Crear ahora"), create_now), (_("Ver archivo"), view_file),
-        (_("Comparar"), compare), (_("Restaurar"), restore), (_("Borrar"), delete),
-    ]:
-        row_actions.append(make_button(label, cb))
-    hg.add(row_actions)
+    hist_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
+    for label, cb in [(_("Crear ahora"), create_now), (_("Ver archivo"), view_file),
+                      (_("Comparar"), compare), (_("Restaurar"), restore), (_("Borrar"), delete)]:
+        hist_actions.append(make_button(label, cb))
+    hg.add(hist_actions)
+    box_hist.append(detail)
+    box_hist.append(backup_status)
 
-    # Persistencia de ajustes y temporizador
+    # ============ Pestaña 4: Identidad ============
+    _box_id, page_id = new_tab(stack, "identidad", _("Identidad"))
+    ig = Adw.PreferencesGroup(
+        title=_("Identidad de la configuración"),
+        description=_("Huella única (Config DNA) para reconocer y nombrar cada rice."),
+    )
+    page_id.add(ig)
+
+    dna_now = bm.current_dna()
+    ident_now = bm.get_identity(dna_now)
+    ig.add(Adw.ActionRow(title=_("ID actual"),
+                         subtitle=f"{dna_now} · {ident_now.get('label') or _('sin etiqueta')}"))
+
+    label_entry = Gtk.Entry()
+    label_entry.set_text(ident_now.get("label", ""))
+    label_entry.set_placeholder_text(_("Ej. Rice azul minimal / Gaming"))
+    row_label = Adw.ActionRow(title=_("Etiqueta"), subtitle=_("Se guarda para esta huella"))
+    row_label.add_suffix(label_entry)
+    ig.add(row_label)
+
+    notes_entry = Gtk.Entry()
+    notes_entry.set_text(ident_now.get("notes", ""))
+    notes_entry.set_placeholder_text(_("Notas opcionales"))
+    row_notes = Adw.ActionRow(title=_("Notas"), subtitle=_("Descripción del punto en el pasado"))
+    row_notes.add_suffix(notes_entry)
+    ig.add(row_notes)
+
+    def save_identity(_btn: Gtk.Button) -> None:
+        dna = selected.get("dna") or dna_now
+        bm.set_identity_label(dna, label_entry.get_text().strip(), notes_entry.get_text().strip())
+        status.set_label(_("Identidad guardada: ") + dna)
+        refresh_history()
+
+    def show_identity(_btn: Gtk.Button) -> None:
+        dna = selected.get("dna") or dna_now
+        inf = bm.identify_backup(selected["name"]) if selected.get("name") else {
+            "dna": dna, "label": bm.get_identity(dna).get("label", ""),
+            "notes": bm.get_identity(dna).get("notes", ""), "reason": "actual", "file_count": 0,
+        }
+        same = bm.find_backups_by_dna(dna)
+        coincide = _("sí") if dna == bm.current_dna() else _("no")
+        text = (
+            f"DNA: {inf['dna']}\n"
+            f"Etiqueta: {inf.get('label') or '(sin etiqueta)'}\n"
+            f"Notas: {inf.get('notes') or '-'}\n"
+            f"Motivo: {inf.get('reason', '-')}\n"
+            f"Archivos: {inf.get('file_count', 0)}\n"
+            f"Coincide con el estado actual: {coincide}\n"
+            f"Backups con esta identidad ({len(same)}):\n  " + "\n  ".join(same) + "\n"
+        )
+        show_text_window(win, _("Identidad de configuración"), text)
+
+    id_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
+    id_actions.append(make_button(_("Guardar etiqueta"), save_identity))
+    id_actions.append(make_button(_("Ver identidad"), show_identity))
+    ig.add(id_actions)
+
+    # ============ Común ============
+    def apply(_btn: Gtk.Button) -> None:
+        """Guarda la configuración; el cambio ya se ve en el compositor."""
+        bm.create_backup(reason="guardar")
+        save_state(int(scale.get_value()), switch.get_active(), 5, 4)
+        status.set_label(_("Configuración guardada ✓ (ya se ve en vivo)"))
+        refresh_history()
+
     def persist_settings(*_args) -> None:
         s = bm.get_settings()
         s["auto_backup"] = auto_switch.get_active()
@@ -370,13 +379,14 @@ def on_activate(app: Adw.Application) -> None:
         refresh_history()
         return True
 
-    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
-                  margin_start=18, margin_end=18, margin_top=18, margin_bottom=18)
-    box.append(page)
-    for lbl in (status, detail, backup_status):
-        box.append(lbl)
-    box.append(make_button(_("Guardar configuración"), apply))
-    win.set_content(box)
+    box_app.append(status)
+    box_app.append(make_button(_("Guardar configuración"), apply))
+
+    root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                   margin_start=12, margin_end=12, margin_top=12, margin_bottom=12)
+    root.append(switcher)
+    root.append(stack)
+    win.set_content(root)
 
     refresh_history()
     _ready["value"] = True
