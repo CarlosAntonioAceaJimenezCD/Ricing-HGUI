@@ -1035,7 +1035,8 @@ def on_activate(app: Adw.Application) -> None:
     refresh_history()
     reload_binds()       # informe de debug: cargar atajos al arrancar
     refresh_monitors()
-    adapt_monitors()   # detecta N monitores y comenta referencias a MONITOR>n
+    # AUDITORÍA: NO se modifica la config al arrancar. La sincronización
+    # (comentar MONITORn inexistentes) sólo ocurre al pulsar su botón.
     refresh_connectors()
     _ready["value"] = True
     s = bm.get_settings()
