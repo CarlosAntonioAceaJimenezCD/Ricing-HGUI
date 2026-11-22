@@ -115,7 +115,32 @@ def on_activate(app: Adw.Application) -> None:
     row_b.add_suffix(switch)
     group.add(row_b)
 
-    status = Gtk.Label(label=_("Sin aplicar"), margin_top=6)
+    status = Gtk.Label(label=_("Ajusta los controles: cambios en vivo"), margin_top=6)
+
+    # --- Vista previa en vivo (debounce para no saturar hyprctl) ---
+    _live_timer: int | None = None
+    _ready = {"value": False}
+
+    def apply_live_now() -> bool:
+        nonlocal _live_timer
+        _live_timer = None
+        r = int(scale.get_value())
+        b = switch.get_active()
+        hyprctl("keyword", "decoration:rounding", str(r))
+        hyprctl("keyword", "decoration:blur:enabled", str(b).lower())
+        status.set_label(_("Vista previa en vivo · aún sin guardar"))
+        return False
+
+    def schedule_live(*_args) -> None:
+        nonlocal _live_timer
+        if not _ready["value"]:
+            return
+        if _live_timer is not None:
+            GLib.source_remove(_live_timer)
+        _live_timer = GLib.timeout_add(120, apply_live_now)
+
+    scale.connect("value-changed", schedule_live)
+    switch.connect("notify::active", schedule_live)
 
     # ---------------- Backups automáticos ----------------
     bg = Adw.PreferencesGroup(
@@ -267,13 +292,10 @@ def on_activate(app: Adw.Application) -> None:
     history_list.connect("row-selected", on_row_selected)
 
     def apply(_btn: Gtk.Button) -> None:
-        bm.create_backup(reason="antes-de-aplicar")
-        r = int(scale.get_value())
-        b = switch.get_active()
-        hyprctl("keyword", "decoration:rounding", str(r))
-        hyprctl("keyword", "decoration:blur:enabled", str(b).lower())
-        save_state(r, b, 5, 4)
-        status.set_label(_("Aplicado y guardado ✓"))
+        """Sólo persiste: el cambio ya se está viendo en el compositor."""
+        bm.create_backup(reason="guardar")
+        save_state(int(scale.get_value()), switch.get_active(), 5, 4)
+        status.set_label(_("Configuración guardada ✓ (ya se ve en vivo)"))
         refresh_history()
 
     def create_now(_btn: Gtk.Button) -> None:
@@ -353,15 +375,18 @@ def on_activate(app: Adw.Application) -> None:
     box.append(page)
     for lbl in (status, detail, backup_status):
         box.append(lbl)
-    box.append(make_button(_("Aplicar y guardar"), apply))
+    box.append(make_button(_("Guardar configuración"), apply))
     win.set_content(box)
 
     refresh_history()
+    _ready["value"] = True
     s = bm.get_settings()
     install_timer(s["interval_minutes"] if s.get("auto_backup", True) else 0, on_timer)
 
     def on_close(_win) -> bool:
         global _timer_id
+        if _live_timer is not None:
+            GLib.source_remove(_live_timer)
         if _timer_id is not None:
             GLib.source_remove(_timer_id)
             _timer_id = None
