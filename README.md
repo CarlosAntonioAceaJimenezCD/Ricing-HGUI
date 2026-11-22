@@ -3,7 +3,7 @@
 [![Python](https://img.shields.io/badge/Python-3.14-blue?logo=python)](https://www.python.org/)
 [![GTK4](https://img.shields.io/badge/GTK-4.24-libadwaita-1.10?logo=gtk)](https://gtk.org/)
 [![Hyprland](https://img.shields.io/badge/Hyprland-0.57.2-111827?logo=linux)](https://hyprland.org/)
-[![Docs](https://img.shields.io/badge/docs-17%20archivos-brightgreen)](investigacion/)
+[![Docs](https://img.shields.io/badge/docs-18%20archivos-brightgreen)](investigacion/)
 [![Fuentes](https://img.shields.io/badge/fuentes-49%20archivadas-yellow)](sources/)
 [![Web archive](https://img.shields.io/badge/web%20archive-744%20p%C3%A1ginas-orange)](archivo-web/INDICE.md)
 
@@ -24,7 +24,7 @@ gestiona **keybindings**, detecta **monitores**, busca **wallpapers** y permite
 
 | Área | Detalle |
 |---|---|
-| 📚 Investigación | 17 documentos: cultura del ricing, arquitectura, color (WCAG calculado), tipografía, iconos, animaciones, wallpapers, dotfiles, comunidad, herramientas GUI, cómo crear tu GUI, archivo web e inventario de **184 opciones** |
+| 📚 Investigación | 18 documentos: cultura del ricing, arquitectura, color (WCAG calculado), tipografía, iconos, animaciones, wallpapers, dotfiles, comunidad, herramientas GUI, cómo crear tu GUI, archivo web e inventario de **184 opciones** |
 | 🗂️ Fuentes | 49 páginas primarias archivadas con proveniencia (URL, título, fecha, conversor) |
 | 🌐 Archivo web | **744 páginas oficiales** de 42 sitios (wiki de Hyprland, docs de Noctalia, wikis de GitHub, sitios de herramientas) |
 | 🖥️ Perfil real | Inventario de 1232 paquetes, GPU, monitor, paletas y copias de los dotfiles del autor |
@@ -104,7 +104,7 @@ seguridad. El prototipo no pide root, no guarda tokens y excluye secretos de los
 | 01–04 | [Qué es ricing](investigacion/01-que-es-ricing.md) · [Hyprland 0.57](investigacion/02-hyprland-0-57.md) · [Arquitectura](investigacion/03-arquitectura-de-un-rice.md) · [Componentes](investigacion/04-componentes-del-escritorio.md) | Fundamentos |
 | 05–09 | [Color](investigacion/05-sistema-de-colores.md) · [Tipografía](investigacion/06-tipografia.md) · [Iconos](investigacion/07-iconos-y-cursores.md) · [Animaciones](investigacion/08-animaciones-y-efectos.md) · [Wallpapers](investigacion/09-wallpapers-y-generative-theming.md) | Diseño |
 | 10–13 | [Dotfiles](investigacion/10-dotfiles-y-gestion.md) · [Comunidad](investigacion/11-comunidad-y-recursos.md) · [Hoja de ruta](investigacion/12-hoja-de-ruta-personalizada.md) · [Glosario](investigacion/13-glosario.md) | Práctica |
-| 14–17 | [Herramientas GUI](investigacion/14-herramientas-gui-de-ricing.md) · [Crear tu GUI](investigacion/15-crear-tu-propia-gui.md) · [Archivo web](investigacion/16-archivo-web-oficial.md) · [Inventario de opciones](investigacion/17-inventario-de-opciones.md) | Extensión |
+| 14–17 | [Herramientas GUI](investigacion/14-herramientas-gui-de-ricing.md) · [Crear tu GUI](investigacion/15-crear-tu-propia-gui.md) · [Archivo web](investigacion/16-archivo-web-oficial.md) · [Inventario de opciones](investigacion/17-inventario-de-opciones.md) · [Áreas de personalización](investigacion/18-areas-de-personalizacion.md) | Extensión |
 
 Índices: [fuentes](sources/) · [archivo web](archivo-web/INDICE.md) ·
 [configuración auditada](configuracion-actual/) · [apéndices](apendices/).

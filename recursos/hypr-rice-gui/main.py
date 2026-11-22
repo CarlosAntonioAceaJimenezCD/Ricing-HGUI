@@ -44,6 +44,8 @@ import monitors as mon  # noqa: E402
 import wallpapers as wp  # noqa: E402
 import wallpaper_engine as we  # noqa: E402
 import sharing as sh  # noqa: E402
+import compact_rules as cr  # noqa: E402
+import apps as ap  # noqa: E402
 
 gettext.bindtextdomain("hypr-rice-gui", os.path.expanduser("~/.local/share/locale"))
 gettext.textdomain("hypr-rice-gui")
@@ -746,6 +748,136 @@ def on_activate(app: Adw.Application) -> None:
     kb_group.add(kb_actions)
     kb_outer.append(kb_status)
 
+    # ============ Reglas compactas (una fila por familia) ============
+    cr_group = Adw.PreferencesGroup(
+        title=_("Reglas compactas · ‹N›"),
+        description=_("Una sola regla genera los 10 atajos. Se aplica en vivo y se guarda en ui-workspace-rules.lua."),
+    )
+    kb_page.add(cr_group)
+    cr_list = Gtk.ListBox()
+    cr_scroll = Gtk.ScrolledWindow()
+    cr_scroll.set_child(cr_list)
+    cr_scroll.set_min_content_height(150)
+    cr_scroll.set_max_content_height(230)
+    cr_group.add(cr_scroll)
+    cr_status = Gtk.Label(label=_("Cada regla = 1 línea Lua · se expande a los atajos del rango"), wrap=True)
+    cr_rules: list[dict] = []
+    monitor_names = [m["name"] for m in mon.list_monitors()]
+
+    def refresh_rules() -> None:
+        nonlocal cr_rules
+        cr_list.remove_all()
+        cr_rules = cr.load(monitor_names)
+        for r in cr_rules:
+            row = Adw.ActionRow(
+                title=r["label"],
+                subtitle=(f"{r['mods']} + ‹N› → {int(r['start'])}–{int(r['end'])} · "
+                          + (_("activa") if r.get("enabled", True) else _("inactiva"))),
+            )
+            row.set_name(r["id"])
+            row.set_activatable(True)
+            cr_list.append(row)
+
+    def edit_rule(_btn=None, rule_id: str | None = None) -> None:
+        rule = next((r for r in cr_rules if r["id"] == rule_id), None) if rule_id else None
+        d = Gtk.Window(title=_("Editar regla") if rule else _("Nueva regla"),
+                       transient_for=win, default_width=480, default_height=420)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10,
+                      margin_start=16, margin_end=16, margin_top=16, margin_bottom=16)
+        d.set_child(box)
+        mods_e = Gtk.Entry(); mods_e.set_text(rule["mods"] if rule else "SUPER")
+        fam = Gtk.ComboBoxText()
+        for k, v in cr.FAMILIES.items(): fam.append_text(k + " · " + v[0])
+        fam.set_active(list(cr.FAMILIES).index(rule["family"]) if rule else 0)
+        start_s = Gtk.SpinButton.new_with_range(1, 10, 1)
+        end_s = Gtk.SpinButton.new_with_range(1, 10, 1)
+        start_s.set_value(rule["start"] if rule else 1)
+        end_s.set_value(rule["end"] if rule else 10)
+        enabled_sw = Gtk.Switch(); enabled_sw.set_active(rule.get("enabled", True) if rule else True)
+        for title, widget in [(_("Modificadores"), mods_e), (_("Familia"), fam),
+                              (_("Desde"), start_s), (_("Hasta"), end_s), (_("Activa"), enabled_sw)]:
+            row = Adw.ActionRow(title=title); row.add_suffix(widget); box.append(row)
+        msg = Gtk.Label(label="", wrap=True); box.append(msg)
+
+        def store(_b):
+            fam_id = list(cr.FAMILIES)[fam.get_active()]
+            entry = {"id": rule["id"] if rule else fam_id, "label": cr.FAMILIES[fam_id][0],
+                     "mods": mods_e.get_text().strip(), "family": fam_id,
+                     "action": cr.FAMILIES[fam_id][2], "start": int(start_s.get_value()),
+                     "end": int(end_s.get_value()), "enabled": enabled_sw.get_active()}
+            nonlocal cr_rules
+            cr_rules = [r for r in cr_rules if r["id"] != entry["id"]] + [entry]
+            ok, text = cr.save_rules(cr_rules, monitor_names)
+            ok2, text2 = cr.apply_rules(cr_rules, monitor_names)
+            cr_status.set_label((_("Guardada y aplicada ✓ ") if ok2 else _("Guardada; error al aplicar: ")) + text2)
+            d.close(); refresh_rules()
+
+        box.append(make_button(_("Guardar y aplicar"), store))
+        d.present()
+
+    def neutralize(_b):
+        import backup_manager as _bm
+        _bm.create_backup(reason="reglas-compactas")
+        ok, msg = cr.neutralize_source_loops()
+        cr_status.set_label((_("Bucles de binds.lua comentados: ") if ok else _("Error: ")) + msg)
+
+    cr_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
+    cr_actions.append(make_button(_("Editar regla seleccionada"), lambda _b: edit_rule(
+        rule_id=(cr_list.get_selected_row().get_name() if cr_list.get_selected_row() else None))))
+    cr_actions.append(make_button(_("Nueva regla"), lambda _b: edit_rule()))
+    cr_actions.append(make_button(_("Aplicar reglas"), lambda _b: cr_status.set_label(
+        str(cr.apply_rules(cr_rules, monitor_names)[1]))))
+    cr_actions.append(make_button(_("Quitar bucles de binds.lua"), neutralize))
+    cr_group.add(cr_actions)
+    cr_outer_placeholder = None  # el grupo ya está en kb_page
+    kb_outer.append(cr_status)
+
+    # ============ Pestaña: Aplicaciones por defecto ============
+    app_outer, app_page = new_tab(stack, "apps", _("Aplicaciones"))
+    app_group = Adw.PreferencesGroup(
+        title=_("Aplicaciones por defecto"),
+        description=_("Cambias la app y los atajos (SUPER+W, SUPER+Return…) siguen apuntando a la variable."),
+    )
+    app_page.add(app_group)
+    app_entries: dict[str, Gtk.Entry] = {}
+    for role in ap.ROLES:
+        e = Gtk.Entry()
+        e.set_width_chars(34)
+        e.set_tooltip_text(_("Comando con argumentos, p. ej. firefox --private-window"))
+        row = Adw.ActionRow(title=role.replace("_", " ").title())
+        row.add_suffix(e)
+        app_group.add(row)
+        app_entries[role] = e
+    ap_status = Gtk.Label(label="", wrap=True)
+    app_group.add(ap_status)
+
+    def load_apps() -> None:
+        vals = ap.read_apps()
+        for role, entry in app_entries.items():
+            entry.set_text(vals.get(role, ""))
+
+    def save_apps(_btn) -> None:
+        vals = {r: e.get_text().strip() for r, e in app_entries.items()}
+        problems = ap.validate(vals)
+        ok, msg = ap.write_apps(vals)
+        ok2, msg2 = ap.ensure_secondary_bind(vals)
+        ok3, msg3 = ap.apply_live(vals)
+        text = _("Guardado ✓ ") if ok else _("Error: ") + msg
+        if problems:
+            text += " · " + _("Avisos: ") + "; ".join(problems[:2])
+        text += " · " + msg2 + " · " + msg3
+        ap_status.set_label(text)
+        reload_binds()
+
+    app_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
+    app_actions.append(make_button(_("Guardar y aplicar"), save_apps))
+    app_actions.append(make_button(_("Recargar campos"), lambda _b: load_apps()))
+    app_actions.append(make_button(_("Recargar Hyprland"), lambda _b: ap_status.set_label(
+        str(ap.reload_hyprland()[1]))))
+    app_group.add(app_actions)
+    app_outer.append(ap_status)
+    ap_status.set_label(_("Navegador secundario: SUPER + SHIFT + W · cambios en el entorno requieren reiniciar sesión"))
+
     # ============ Pestaña 7: Monitores ============
     m_outer, m_page = new_tab(stack, "monitores", _("Monitores"))
     m_group = Adw.PreferencesGroup(
@@ -1067,6 +1199,8 @@ def on_activate(app: Adw.Application) -> None:
 
     bm.ensure_initial_backup()  # backup inicial completo y protegido (una sola vez)
     refresh_history()
+    refresh_rules()
+    load_apps()
     reload_binds()       # informe de debug: cargar atajos al arrancar
     refresh_monitors()
     # AUDITORÍA: NO se modifica la config al arrancar. La sincronización
