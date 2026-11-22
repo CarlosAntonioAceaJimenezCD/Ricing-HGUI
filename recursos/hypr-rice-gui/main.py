@@ -502,7 +502,11 @@ def on_activate(app: Adw.Application) -> None:
             cat, desc = kb.describe(action, b["dispatcher"])
             por_cat.setdefault(cat, []).append({"key": label, "desc": desc, "action": action})
         for cat, items in sorted(por_cat.items()):
-            folder = Adw.ExpanderRow(title=cat, subtitle=_("{n} atajo(s)").format(n=len(items)))
+            hint = kb.CATEGORY_HINTS.get(cat, "")
+            folder = Adw.ExpanderRow(
+                title=cat,
+                subtitle=f"{hint} · {len(items)} atajo(s)" if hint else _("{n} atajo(s)").format(n=len(items)),
+            )
             for it in items:
                 key = it["key"]
                 row = Adw.ActionRow(title=key, subtitle=it["desc"])

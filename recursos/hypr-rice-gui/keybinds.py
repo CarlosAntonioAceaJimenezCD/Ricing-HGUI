@@ -168,9 +168,9 @@ def expand_workspace_loops() -> dict[tuple[frozenset, str], str]:
             code = f"code:{19 if d == 0 else 9 + d}"
             action = re.sub(r"\bi\b", str(i), action_expr)
             action = action.replace('"m~" .. ' + str(i), f'"m~{i}"')
-            parts = re.findall(r'"([^"]*)"', action)
-            readable = "".join(parts) if parts else action
-            result[(frozenset(mods), code)] = readable
+            # Conservar la expresión Lua completa (hl.dsp....) para que
+            # describe() pueda clasificarla como workspace.
+            result[(frozenset(mods), code)] = action
     return result
 
 
@@ -274,6 +274,30 @@ def _workspace_label(expr: str) -> str:
     return f"{target}"
 
 
+def _monitor_label(expr: str) -> str:
+    """Traduce el destino de un monitor a texto legible."""
+    m = re.search(r'monitor\s*=\s*"([^"]+)"', expr)
+    target = (m.group(1) if m else "") or "siguiente"
+    table = {"-1": "anterior", "+1": "siguiente", "m-1": "anterior", "m+1": "siguiente"}
+    return table.get(target, target)
+
+
+CATEGORY_HINTS = {
+    "Monitores": "Mover o enfocar un monitor físico",
+    "Workspaces": "Cambiar de espacio de trabajo o mover ventanas entre ellos",
+    "Ventanas": "Acciones sobre la ventana activa",
+    "Launcher": "Abrir programas o menús",
+    "Sesión": "Bloquear, cerrar o gestionar la sesión",
+    "Capturas": "Tomar capturas de pantalla",
+    "Multimedia": "Volumen, brillo y reproducción",
+    "Sistema": "Ajustes del sistema",
+    "Wallpapers": "Cambiar el fondo de pantalla",
+    "Utilidades": "Herramientas varias",
+    "Noctalia": "Comandos del shell Noctalia",
+    "Otros": "Acciones sin clasificar",
+}
+
+
 def describe(action: str, dispatcher: str = "") -> tuple[str, str]:
     """Devuelve (categoría, descripción legible) de una acción Lua/exec.
 
@@ -346,8 +370,14 @@ def describe(action: str, dispatcher: str = "") -> tuple[str, str]:
                 return v
         return ("Launcher", "Ejecutar: " + cmd[:45])
 
-    # Workspaces: los atajos del usuario usan focus({workspace=...}) y
-    # window.move({workspace=...}), no un dispatcher llamado "workspace".
+    # MONITORES: categoría propia, distinta de Workspaces. Cubre mover la
+    # ventana a otro monitor y enfocar otro monitor.
+    if "focus" in low and "monitor" in low:
+        return ("Monitores", "Enfocar monitor " + _monitor_label(a))
+    if "window.move" in low and "monitor" in low:
+        return ("Monitores", "Mover ventana al monitor " + _monitor_label(a))
+
+    # WORKSPACES: focus({workspace=...}) / window.move({workspace=...}).
     if "workspace.toggle_special" in low:
         return ("Workspaces", "Alternar workspace especial (scratchpad)")
     if "focus" in low and "workspace" in low:
@@ -361,12 +391,9 @@ def describe(action: str, dispatcher: str = "") -> tuple[str, str]:
         dirs = {"u": "arriba", "d": "abajo", "l": "a la izquierda", "r": "a la derecha"}
         return ("Ventanas", "Mover ventana hacia " + dirs.get(d.group(1) if d else "", "otro lado"))
 
-    # Expresiones Lua crudas que aparecen en binds.lua.
-    if "window.move" in low:
-        mon = re.search(r'monitor\s*=\s*"([^"]+)"', a)
-        target = mon.group(1) if mon else "otro monitor"
-        pretty = {"-1": "anterior", "+1": "siguiente"}.get(target, target)
-        return ("Workspaces", f"Mover ventana al monitor {pretty}")
+    # Expresiones Lua crudas que aparecen en binds.lua (monitor por defecto).
+    if "window.move" in low and "monitor" in low:
+        return ("Monitores", "Mover ventana al monitor " + _monitor_label(a))
     if "layout" in low:
         return ("Ventanas", "Alternar la disposición (split)")
     if "window.drag" in low:
