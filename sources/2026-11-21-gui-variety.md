@@ -1,0 +1,108 @@
+---
+type: source
+source_type: doc
+url: "https://github.com/varietywalls/variety/blob/master/README.md"
+title: "Variety · README (cambiador de wallpapers con GUI)"
+fetched_at: 2026-11-22T00:51:12+00:00
+fetcher: curl + markitdown
+author: "varietywalls"
+---
+
+**Variety is in [maintenance mode](https://github.com/varietywalls/variety/issues/736). While we appreciate your interest, the current maintainers do not have the time to triage all issues and make major changes to the project.**
+
+# Variety
+
+Variety is a wallpaper manager for Linux systems. It supports out-of-the-box most Linux desktop environments, and can be configured to work
+on more esoteric ones.
+
+It can use local images or automatically download wallpapers from Wallhaven, Unsplash, Bing, Reddit and other online sources,
+allows you to rotate them on a regular interval, and provides easy ways to separate the great images from the junk.
+Variety can also display wise and funny quotations or a nice digital clock on the desktop.
+
+Where supported, Variety sits as a tray icon to allow easy pausing and resuming.
+Otherwise, its desktop entry menu provides a similar set of options.
+
+## Screenshot
+
+![Screenshot from 2022-07-30 16-36-55](https://user-images.githubusercontent.com/1457048/181916884-8a388e15-67dc-45ff-a8e2-e05aac7fca91.png)
+
+
+## Installation
+
+To run Variety you will need Python 3.9+.
+
+### As a system package
+
+Variety is available in the distro repositories of:
+
+- [Arch Linux](https://archlinux.org/packages/extra/any/variety/)
+- [Debian](https://packages.debian.org/search?keywords=variety)
+- [Fedora](https://www.rpmfind.net/linux/rpm2html/search.php?query=variety)
+- [OpenSUSE](https://software.opensuse.org/package/variety?search_term=variety)
+- [Ubuntu](https://packages.ubuntu.com/search?keywords=variety)
+- [NixOS](https://search.nixos.org/packages?show=variety&type=packages&query=variety)
+
+On a recent Ubuntu or Debian-based system (Universe repository has to be enabled on Ubuntu):
+```
+sudo apt update && sudo apt install variety
+```
+
+### Ubuntu PPA
+Variety backports to older Ubuntu releases are available at this PPA: https://launchpad.net/~variety/+archive/ubuntu/stable.
+The PPA usually provides newer releases than the ones available in the Universe repository:
+
+```
+sudo add-apt-repository ppa:variety/stable
+sudo apt update
+sudo apt install variety
+```
+
+If you have added the PPA, you may also install [Variety Slideshow](https://github.com/peterlevi/variety-slideshow) – a pan and zoom image slideshow/screensaver, which is an nice optional addition and integrates well into Variety. It is not available in the standard Ubuntu Universe repository.
+
+```
+sudo apt install variety-slideshow
+```
+
+### Install from source
+
+#### Build Requirements
+
+To build Variety from source, you will need the following:
+
+- setuptools
+- setuptools-gettext
+
+#### Runtime Requirements
+
+To actually run Variety, you will also need the following:
+
+- GTK+ 3
+- gexiv2
+- libnotify
+- Python libraries: see `pyproject.toml`
+- *Optional*: imagemagick (for wallpaper filters)
+- *Optional*: feh or nitrogen: used by default to set wallpapers on i3, openbox, and other WMs
+- *Optional*: libayatana-appindicator (for AppIndicator support)
+- *Optional*: for tray icon support on GNOME, the [GNOME AppIndicator extension](https://github.com/ubuntu/gnome-shell-extension-appindicator)
+- *Optional*: libavif-gdk-pixbuf (for avif format support)
+- *Optional*: webp-pixbuf-loader (for webp format support)
+
+See `debian/control` for an equivalent list of runtime dependencies on Debian/Ubuntu.
+
+#### Install steps
+
+1. Clone the git repository: `git clone https://github.com/varietywalls/variety.git && cd variety`
+
+2. Create a virtualenv: e.g. `python3 -m venv --system-site-packages ~/variety-venv`.
+
+3. Enable the virtualenv: `source ~/variety-venv/bin/activate`
+
+4. Install variety inside the virtualenv: `pip install -e .`
+
+5. Run `variety` from the command line or its desktop menu entry.
+
+## Launching
+
+Regardless of how you install, you can launch Variety from the dash or applications menu, or by running `variety` in a terminal.
+
+Run `variety --help` to see the command-line options. They allow you to control Variety from the terminal.

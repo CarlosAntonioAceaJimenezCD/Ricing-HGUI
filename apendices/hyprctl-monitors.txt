@@ -1,0 +1,39 @@
+Monitor VGA-1 (ID 0):
+	1440x900@59.88700 at 0x0
+	description: Toshiba Matsushita Display Technology Co. Ltd LCD-MONITOR A96D4BA007317
+	make: Toshiba Matsushita Display Technology Co., Ltd
+	model: LCD-MONITOR
+	physical size (mm): 400x250
+	serial: A96D4BA007317
+	active workspace: 2 (2)
+	special workspace:  ()
+	reserved: 0 35 0 0
+	scale: 1
+	transform: 0
+	focused: yes
+	dpmsStatus: 1
+	vrr: false
+	solitary: 0
+	solitaryBlockedBy: windowed mode,missing candidate
+	activelyTearing: false
+	tearingBlockedBy: next frame is not torn,user settings,missing candidate,hw cursor
+	directScanoutTo: 0
+	directScanoutBlockedBy: windowed mode,missing candidate
+	disabled: false
+	currentFormat: XRGB8888
+	mirrorOf: none
+	availableModes: 1440x900@59.89Hz 1280x1024@75.03Hz 1280x1024@60.02Hz 1440x900@74.98Hz 1280x960@60.00Hz 1366x768@59.79Hz 1360x768@60.02Hz 1280x800@74.93Hz 1280x800@59.81Hz 1152x864@75.00Hz 1280x768@74.89Hz 1280x768@59.87Hz 1280x720@60.00Hz 1024x768@75.03Hz 1024x768@70.07Hz 1024x768@60.00Hz 1024x576@59.97Hz 800x600@75.00Hz 800x600@72.19Hz 800x600@60.32Hz 800x600@56.25Hz 848x480@60.00Hz 640x480@75.00Hz 640x480@72.81Hz 640x480@59.94Hz 720x400@70.08Hz 
+	colorManagementPreset: srgb
+	sdrBrightness: 1
+	sdrSaturation: 1
+	sdrMinLuminance: 0.2
+	sdrMaxLuminance: 80
+	hardwareCursorsInUse: true
+	hardwareDetails:
+		backend: drm
+		hdr: no
+		chroma: yes
+		bt2020: no
+		vrrCapable: no
+
+

@@ -1,0 +1,21 @@
+# Entornos y artefactos de descarga (no versionar)
+.tools/
+.staging/
+__pycache__/
+*.pyc
+
+# Clones de referencia (volver a clonar según repositorios/README.md)
+repositorios/*/
+!repositorios/README.md
+
+# Secretos y datos personales
+fish_variables
+*keyring*
+*.gpg
+*.pem
+.env
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
