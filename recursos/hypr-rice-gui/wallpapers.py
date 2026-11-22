@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""Integración con sitios de wallpapers y aplicación vía Noctalia IPC.
+
+Proveedores:
+  - Local: /usr/share/wallpapers/cachyos-wallpapers
+  - Wallhaven: API pública https://wallhaven.cc/api/v1/search (sin clave)
+"""
+from __future__ import annotations
+
+import json
+import subprocess
+import urllib.parse
+from pathlib import Path
+from typing import Any
+
+DOWNLOADS = Path.home() / "Imágenes/ricing-wallpapers"
+LOCAL_DIRS = [
+    Path("/usr/share/wallpapers/cachyos-wallpapers"),
+    Path("/usr/share/noctalia/assets"),
+]
+UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/125 Safari/537.36"
+
+
+def _curl(url: str, timeout: int = 25) -> str:
+    try:
+        return subprocess.run(["curl", "-sS", "-L", "--compressed", "--max-time", str(timeout),
+                               "-A", UA, url], capture_output=True, text=True).stdout
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def local_wallpapers() -> list[dict[str, Any]]:
+    items = []
+    for d in LOCAL_DIRS:
+        if not d.exists():
+            continue
+        for p in sorted(d.rglob("*")):
+            if p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
+                items.append({"id": p.name, "title": p.stem, "resolution": "local",
+                              "thumb": "", "url": "", "path": str(p), "provider": "Local"})
+    return items[:80]
+
+
+def search_wallhaven(query: str, limit: int = 16) -> list[dict[str, Any]]:
+    params = urllib.parse.urlencode({
+        "q": query, "categories": "111", "purity": "100",
+        "sorting": "relevance", "atleast": "1440x900",
+    })
+    raw = _curl(f"https://wallhaven.cc/api/v1/search?{params}")
+    try:
+        data = json.loads(raw).get("data", [])
+    except (ValueError, AttributeError):
+        return []
+    out = []
+    for w in data[:limit]:
+        out.append({
+            "id": w.get("id", ""),
+            "title": w.get("id", ""),
+            "resolution": w.get("resolution", ""),
+            "thumb": w.get("thumbs", {}).get("small", ""),
+            "url": w.get("path", ""),
+            "path": "",
+            "provider": "Wallhaven",
+        })
+    return out
+
+
+def download(item: dict[str, Any]) -> tuple[bool, str]:
+    """Descarga un wallpaper a ~/Imágenes/ricing-wallpapers y devuelve la ruta."""
+    if item.get("path") and Path(item["path"]).exists():
+        return True, item["path"]
+    url = item.get("url", "")
+    if not url:
+        return False, "sin URL"
+    DOWNLOADS.mkdir(parents=True, exist_ok=True)
+    name = f"{item.get('provider', 'wall')}-{item.get('id', 'wallpaper')}.jpg"
+    dest = DOWNLOADS / name
+    try:
+        proc = subprocess.run(["curl", "-sS", "-L", "--max-time", "60", "-A", UA,
+                               url, "-o", str(dest)], capture_output=True, text=True)
+        if proc.returncode != 0 or not dest.exists() or dest.stat().st_size < 5000:
+            return False, "descarga fallida"
+    except (OSError, subprocess.SubprocessError):
+        return False, "descarga fallida"
+    return True, str(dest)
+
+
+def set_wallpaper(path: str, connector: str | None = None) -> tuple[bool, str]:
+    """Aplica el wallpaper con Noctalia IPC (wallpaper-set)."""
+    cmd = ["noctalia", "msg", "wallpaper-set"]
+    if connector:
+        cmd.append(connector)
+    cmd.append(path)
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        return proc.returncode == 0, (proc.stdout or proc.stderr).strip()[:160]
+    except (OSError, subprocess.SubprocessError) as e:
+        return False, str(e)[:160]

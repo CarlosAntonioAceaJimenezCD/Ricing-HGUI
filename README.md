@@ -41,6 +41,7 @@ Noctalia 5.6.0**, sobre Intel Sandy Bridge, 1440×900, fish, kitty/alacritty y N
 | 14 | [Herramientas GUI de ricing](investigacion/14-herramientas-gui-de-ricing.md) | hyprmod, wpgtk, Themix, Kvantum, Azote… |
 | 15 | [Crear tu propia GUI](investigacion/15-crear-tu-propia-gui.md) | Python + GTK4/libadwaita, backups automáticos, código, i18n |
 | 16 | [Archivo web oficial](investigacion/16-archivo-web-oficial.md) | 744 páginas de documentación oficial, criterios y fallos |
+| 17 | [Inventario de opciones](investigacion/17-inventario-de-opciones.md) | 184 opciones reales inventariadas con tipos, rangos y mapeo a `hl.config` |
 
 ## 📁 Estructura del repositorio
 
@@ -71,7 +72,9 @@ ricing/
    **[INCIERTO]** y citando `sources/`.
 5. **Prototipo** ejecutable en `recursos/hypr-rice-gui/main.py`, con **backups automáticos**
    (`backup_manager.py`): antes de cada cambio, temporizados, con SHA-256, retención,
-   **historial de puntos en el pasado** (inspeccionar archivos, comparar, restaurar o borrar cualquier copia).
+   **historial de puntos en el pasado** (inspeccionar archivos, comparar, restaurar o borrar cualquier copia),
+   **identidad Config DNA**, un **modelo genérico de 46 opciones** (`config_model.py`) con controles generados automáticamente y vista previa en vivo,
+   **editor de keybinds** (`keybinds.py`), **detección de monitores** (`monitors.py`) e **integración con Wallhaven/local** (`wallpapers.py`).
 
 ## 🛠️ Usar el prototipo de GUI
 

@@ -136,7 +136,11 @@ flowchart LR
 | **Historial de puntos en el pasado** | `get_backup_details()` (manifiesto), `read_file_from_backup()` (ver un archivo sin extraer), `compare_with_current()` (modificados/ausentes/iguales), `delete_backup()`, `restore_backup()` |
 | **GUI** | Switch, intervalo, retención; lista de todos los backups con fecha/motivo/tamaño; selector de archivos; botones **Ver archivo**, **Comparar**, **Restaurar**, **Borrar**, **Crear ahora** |
 | **Vista previa en vivo** | Mover el slider de `rounding` o el switch de `blur` ejecuta `hyprctl eval "hl.config({decoration={rounding=N, blur={enabled=bool}}}})"` con un *debounce* de 120 ms: el cambio se ve al instante. El botón **Guardar configuración** **ya no aplica**, sólo persiste en `ui-settings.lua` (tras backup) |
-| **Navegación por categorías** | `Gtk.Stack` + `Gtk.StackSwitcher` con cuatro pestañas: **Apariencia**, **Backups**, **Historial** e **Identidad** |
+| **Navegación por categorías** | `Gtk.Stack` + `Gtk.StackSwitcher` con **ocho pestañas**: Apariencia, Backups, Historial, Identidad, Opciones, **Keybinds**, **Monitores** y **Wallpapers**; *Opciones* usa además un `Gtk.StackSidebar` por categorías |
+| **Keybinds** | `keybinds.py`: lista en vivo desde `hyprctl binds -j`, alta/edición/borrado con `hl.bind`/`hl.unbind` vía `hyprctl eval`, y persistencia en `~/.config/hypr/config/ui-bindings.lua` (requiere `require("config.ui-bindings")` en `hyprland.lua`) |
+| **Monitores** | `monitors.py`: detección automática con `hyprctl monitors -j` (nombre, fabricante, modelo, S/N, resolución, refresh, escala, VRR, HDR, formato, workspace) y escritura de `MONITOR1..3` en `variables.lua` |
+| **Wallpapers** | `wallpapers.py`: proveedores **Local (CachyOS)** y **Wallhaven API** (sin clave), descarga a `~/Imágenes/ricing-wallpapers` y aplicación por **Noctalia IPC** `wallpaper-set [connector] <path>` |
+| **Modelo genérico de opciones** | `config_model.py` define 46 opciones con tipo, rango, ruta real (`general.gaps_in`, `decoration.blur.size`, `theme.mode`…), si son toggle o intensidad, y si se aplican en vivo. La GUI **genera los controles desde ese modelo**: switch para bool, slider para int/float, combo para enum, entrada para color |
 
 API del módulo:
 
