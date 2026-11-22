@@ -132,7 +132,8 @@ flowchart LR
 | **Retención** | `keep_last` (por defecto 10); borra los antiguos automáticamente |
 | **Seguridad** | Antes de restaurar hace un backup `pre-restore`; excluye `fish_variables`, keyrings y cachés |
 | **Configuración** | `~/.local/share/hypr-rice-gui/settings.json` (switch, intervalo, retención) |
-| **GUI** | Página "Backups automáticos" con switch, intervalo, retención, historial, crear y restaurar |
+| **Historial de puntos en el pasado** | `get_backup_details()` (manifiesto), `read_file_from_backup()` (ver un archivo sin extraer), `compare_with_current()` (modificados/ausentes/iguales), `delete_backup()`, `restore_backup()` |
+| **GUI** | Switch, intervalo, retención; lista de todos los backups con fecha/motivo/tamaño; selector de archivos; botones **Ver archivo**, **Comparar**, **Restaurar**, **Borrar**, **Crear ahora** |
 
 API del módulo:
 
@@ -143,6 +144,12 @@ bm.create_backup(reason="manual")     # devuelve el manifiesto
 bm.list_backups()                     # historial
 bm.verify_backup("backup-....tar.gz") # (bool, mensaje)
 bm.restore_backup("backup-....tar.gz")# (bool, mensaje)
+
+# Explorar puntos en el pasado
+bm.get_backup_details("backup-....tar.gz")       # manifiesto completo
+bm.read_file_from_backup("backup-....tar.gz", "home/usuario/.config/kitty/kitty.conf")
+bm.compare_with_current("backup-....tar.gz")     # {'changed': [...], 'missing': [...], 'same': [...]}
+bm.delete_backup("backup-....tar.gz")
 ```
 
 > **HECHO:** el código está en `recursos/hypr-rice-gui/backup_manager.py` y se

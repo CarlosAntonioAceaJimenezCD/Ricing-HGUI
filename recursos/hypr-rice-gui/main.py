@@ -5,15 +5,15 @@ Incluye:
   - Aplicación en vivo de rounding/blur mediante hyprctl.
   - Persistencia en ~/.config/hypr/config/ui-settings.lua con backup previo.
   - BACKUPS AUTOMÁTICOS: programados, con retención, SHA-256 y restauración.
+  - HISTORIAL: explorar cualquier punto en el pasado, ver archivos, comparar
+    con el estado actual, restaurar o borrar backups.
 
-Requisitos (ya instalados en CachyOS): python3, python-gobject, gtk4, libadwaita.
+Requisitos: python3, python-gobject, gtk4, libadwaita (ya en CachyOS).
 Ejecutar: python3 main.py
 """
 import gettext
 import os
-import shutil
 import subprocess
-from datetime import datetime
 from pathlib import Path
 
 import gi
@@ -51,7 +51,6 @@ def current_rounding() -> int:
 
 
 def save_state(rounding: int, blur: bool, size: int, passes: int) -> None:
-    """Escribe ui-settings.lua. El backup lo hace el llamador (apply)."""
     STATE.parent.mkdir(parents=True, exist_ok=True)
     STATE.write_text(
         "-- Generado por hypr-rice-gui. NO EDITAR A MANO.\n"
@@ -65,36 +64,39 @@ def save_state(rounding: int, blur: bool, size: int, passes: int) -> None:
     )
 
 
-# --------------------------------------------------------------------------- backups
-def refresh_backups(combo: Gtk.ComboBoxText, status: Gtk.Label) -> None:
-    combo.remove_all()
-    items = bm.list_backups()
-    for b in items:
-        when = b["created_at"].replace("T", " ")[:19]
-        combo.append_text(f"{when} · {b['reason']} · {b['file_count']} archivos")
-    if items:
-        combo.set_active(0)
-        status.set_label(_(f"{len(items)} backup(s) disponible(s)"))
-    else:
-        status.set_label(_("Sin backups todavía"))
+# --------------------------------------------------------------------------- widgets
+def make_button(label: str, callback, *args) -> Gtk.Button:
+    b = Gtk.Button(label=label)
+    b.connect("clicked", callback, *args)
+    return b
 
 
-def install_timer(interval_minutes: int, callback) -> None:
-    global _timer_id
-    if _timer_id is not None:
-        GLib.source_remove(_timer_id)
-        _timer_id = None
-    if interval_minutes > 0:
-        _timer_id = GLib.timeout_add_seconds(interval_minutes * 60, callback)
+def show_text_window(parent: Gtk.Window, title: str, text: str) -> None:
+    win = Gtk.Window(title=title, transient_for=parent, default_width=760, default_height=520)
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin=10)
+    view = Gtk.TextView()
+    view.set_editable(False)
+    view.set_monospace(True)
+    view.get_buffer().set_text(text)
+    scroll = Gtk.ScrolledWindow()
+    scroll.set_child(view)
+    scroll.set_vexpand(True)
+    box.append(scroll)
+    close = make_button(_("Cerrar"), lambda _b: win.close())
+    box.append(close)
+    win.set_child(box)
+    win.present()
 
 
+# --------------------------------------------------------------------------- app
 def on_activate(app: Adw.Application) -> None:
     win = Adw.ApplicationWindow(application=app, title=_("Ricing HGUI"))
-    win.set_default_size(480, 560)
+    win.set_default_size(560, 720)
     settings = bm.get_settings()
 
-    # ---------------- Apariencia ----------------
     page = Adw.PreferencesPage()
+
+    # ---------------- Apariencia ----------------
     group = Adw.PreferencesGroup(title=_("Apariencia de ventanas"))
     page.add(group)
 
@@ -114,24 +116,10 @@ def on_activate(app: Adw.Application) -> None:
 
     status = Gtk.Label(label=_("Sin aplicar"), margin_top=6)
 
-    def apply(_btn: Gtk.Button) -> None:
-        bm.create_backup(reason="antes-de-aplicar")
-        r = int(scale.get_value())
-        b = switch.get_active()
-        hyprctl("keyword", "decoration:rounding", str(r))
-        hyprctl("keyword", "decoration:blur:enabled", str(b).lower())
-        save_state(r, b, 5, 4)
-        status.set_label(_("Aplicado y guardado ✓"))
-        refresh_backups(combo, backup_status)
-
-    btn_apply = Gtk.Button(label=_("Aplicar y guardar"))
-    btn_apply.connect("clicked", apply)
-    group.add(btn_apply)
-
     # ---------------- Backups automáticos ----------------
     bg = Adw.PreferencesGroup(
         title=_("Backups automáticos"),
-        description=_("Copias de los dotfiles del rice antes de cada cambio y de forma periódica."),
+        description=_("Copias de los dotfiles antes de cada cambio y de forma periódica."),
     )
     page.add(bg)
 
@@ -156,6 +144,132 @@ def on_activate(app: Adw.Application) -> None:
     row_keep.add_suffix(spin_keep)
     bg.add(row_keep)
 
+    # ---------------- Historial (puntos en el pasado) ----------------
+    hg = Adw.PreferencesGroup(
+        title=_("Historial · puntos en el pasado"),
+        description=_("Selecciona cualquier copia para inspeccionarla, compararla o restaurarla."),
+    )
+    page.add(hg)
+
+    history_list = Gtk.ListBox()
+    history_list.set_selection_mode(Gtk.SelectionMode.SINGLE)
+    history_scroll = Gtk.ScrolledWindow()
+    history_scroll.set_child(history_list)
+    history_scroll.set_min_content_height(180)
+    history_scroll.set_max_content_height(260)
+    hg.add(history_scroll)
+
+    detail = Gtk.Label(label=_("Selecciona un backup"), margin_top=6, wrap=True)
+    files_combo = Gtk.ComboBoxText()
+    row_files = Adw.ActionRow(title=_("Archivos del backup"), subtitle=_("Elige uno para verlo"))
+    row_files.add_suffix(files_combo)
+    hg.add(row_files)
+
+    backup_status = Gtk.Label(label="", wrap=True)
+    selected: dict[str, str] = {}
+
+    def populate_files(name: str) -> None:
+        files_combo.remove_all()
+        m = bm.get_backup_details(name) or {}
+        for rec in m.get("files", []):
+            files_combo.append_text(rec["path"])
+        if m.get("files"):
+            files_combo.set_active(0)
+
+    def on_row_selected(_list: Gtk.ListBox, row: Gtk.ListBoxRow | None) -> None:
+        if row is None:
+            return
+        name = row.get_name()
+        selected["name"] = name
+        items = {b["name"]: b for b in bm.list_backups()}
+        b = items.get(name, {})
+        detail.set_label(
+            f"{b.get('created_at', '').replace('T', ' ')[:19]} · "
+            f"{b.get('reason', '')} · {b.get('file_count', 0)} archivos · "
+            f"{b.get('size', 0)//1024} KB"
+        )
+        populate_files(name)
+
+    def refresh_history() -> None:
+        history_list.remove_all()
+        for b in bm.list_backups():
+            row = Adw.ActionRow(
+                title=b["created_at"].replace("T", " ")[:19],
+                subtitle=f"{b['reason']} · {b['file_count']} archivos · {b['size']//1024} KB",
+            )
+            row.set_name(b["name"])
+            row.set_activatable(True)
+            history_list.append(row)
+        if len(bm.list_backups()) == 0:
+            detail.set_label(_("Sin backups todavía"))
+
+    history_list.connect("row-selected", on_row_selected)
+
+    def apply(_btn: Gtk.Button) -> None:
+        bm.create_backup(reason="antes-de-aplicar")
+        r = int(scale.get_value())
+        b = switch.get_active()
+        hyprctl("keyword", "decoration:rounding", str(r))
+        hyprctl("keyword", "decoration:blur:enabled", str(b).lower())
+        save_state(r, b, 5, 4)
+        status.set_label(_("Aplicado y guardado ✓"))
+        refresh_history()
+
+    def create_now(_btn: Gtk.Button) -> None:
+        bm.create_backup(reason="manual")
+        backup_status.set_label(_("Backup manual creado ✓"))
+        refresh_history()
+
+    def view_file(_btn: Gtk.Button) -> None:
+        name = selected.get("name")
+        idx = files_combo.get_active()
+        if not name or idx < 0:
+            backup_status.set_label(_("Selecciona un backup y un archivo"))
+            return
+        path = files_combo.get_active_text() or ""
+        text = bm.read_file_from_backup(name, path)
+        if text is None:
+            backup_status.set_label(_("No se pudo leer el archivo"))
+            return
+        show_text_window(win, f"{name} · {path}", text)
+
+    def compare(_btn: Gtk.Button) -> None:
+        name = selected.get("name")
+        if not name:
+            backup_status.set_label(_("Selecciona un backup"))
+            return
+        d = bm.compare_with_current(name)
+        backup_status.set_label(
+            _("Cambios: {n} modificados, {m} ausentes, {s} iguales").format(
+                n=len(d["changed"]), m=len(d["missing"]), s=len(d["same"]))
+        )
+
+    def restore(_btn: Gtk.Button) -> None:
+        name = selected.get("name")
+        if not name:
+            backup_status.set_label(_("Selecciona un backup"))
+            return
+        ok, msg = bm.restore_backup(name)
+        backup_status.set_label(_("Restaurado: ") + msg if ok else _("Error: ") + msg)
+        refresh_history()
+
+    def delete(_btn: Gtk.Button) -> None:
+        name = selected.get("name")
+        if not name:
+            return
+        ok, msg = bm.delete_backup(name)
+        backup_status.set_label(_("Eliminado") if ok else _("Error: ") + msg)
+        refresh_history()
+
+    row_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
+    for label, cb in [
+        (_("Crear ahora"), create_now), (_("Ver archivo"), view_file),
+        (_("Comparar"), compare), (_("Restaurar"), restore), (_("Borrar"), delete),
+    ]:
+        row_actions.append(make_button(label, cb))
+    hg.add(row_actions)
+
+    # Persistencia de ajustes y temporizador
     def persist_settings(*_args) -> None:
         s = bm.get_settings()
         s["auto_backup"] = auto_switch.get_active()
@@ -168,51 +282,19 @@ def on_activate(app: Adw.Application) -> None:
     spin_int.connect("value-changed", persist_settings)
     spin_keep.connect("value-changed", persist_settings)
 
-    combo = Gtk.ComboBoxText()
-
     def on_timer() -> bool:
-        m = bm.create_backup(reason="auto")
-        if m:
-            backup_status.set_label(_("Backup automático creado ✓"))
-            refresh_backups(combo, backup_status)
-        return True  # seguir programado
-
-    row_list = Adw.ActionRow(title=_("Historial"), subtitle=_("Backups guardados"))
-    row_list.add_suffix(combo)
-    bg.add(row_list)
-
-    backup_status = Gtk.Label(label="", margin_top=6)
-
-    def create_now(_btn: Gtk.Button) -> None:
-        m = bm.create_backup(reason="manual")
-        backup_status.set_label(_("Backup manual creado ✓") if m else _("Nada que respaldar"))
-        refresh_backups(combo, backup_status)
-
-    def restore(_btn: Gtk.Button) -> None:
-        items = bm.list_backups()
-        idx = combo.get_active()
-        if idx < 0 or idx >= len(items):
-            backup_status.set_label(_("Selecciona un backup"))
-            return
-        ok, msg = bm.restore_backup(items[idx]["name"])
-        backup_status.set_label(_("Restaurado: ") + msg if ok else _("Error: ") + msg)
-
-    box_btns = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8, margin_top=8)
-    b_new = Gtk.Button(label=_("Crear ahora"))
-    b_new.connect("clicked", create_now)
-    b_restore = Gtk.Button(label=_("Restaurar seleccionado"))
-    b_restore.connect("clicked", restore)
-    box_btns.append(b_new)
-    box_btns.append(b_restore)
-    bg.add(box_btns)
+        bm.create_backup(reason="auto")
+        refresh_history()
+        return True
 
     box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12, margin=18)
     box.append(page)
-    box.append(status)
-    box.append(backup_status)
+    for lbl in (status, detail, backup_status):
+        box.append(lbl)
+    box.append(make_button(_("Aplicar y guardar"), apply))
     win.set_content(box)
 
-    refresh_backups(combo, backup_status)
+    refresh_history()
     s = bm.get_settings()
     install_timer(s["interval_minutes"] if s.get("auto_backup", True) else 0, on_timer)
 
@@ -225,6 +307,15 @@ def on_activate(app: Adw.Application) -> None:
 
     win.connect("close-request", on_close)
     win.present()
+
+
+def install_timer(interval_minutes: int, callback) -> None:
+    global _timer_id
+    if _timer_id is not None:
+        GLib.source_remove(_timer_id)
+        _timer_id = None
+    if interval_minutes > 0:
+        _timer_id = GLib.timeout_add_seconds(interval_minutes * 60, callback)
 
 
 def main() -> int:

@@ -195,6 +195,63 @@ def verify_backup(name: str) -> tuple[bool, str]:
     return True, f"{m.get('file_count', 0)} archivos íntegros"
 
 
+# --------------------------------------------------------------------------- history / inspect
+def get_backup_details(name: str) -> dict | None:
+    """Devuelve el manifiesto completo de un backup (para inspeccionarlo)."""
+    archive = BACKUP_DIR / name
+    if not archive.exists():
+        return None
+    try:
+        with tarfile.open(archive, "r:gz") as tar:
+            f = tar.extractfile(MANIFEST)
+            if f is None:
+                return None
+            return json.loads(f.read())
+    except (OSError, tarfile.TarError, ValueError):
+        return None
+
+
+def read_file_from_backup(name: str, rel_path: str) -> str | None:
+    """Lee un archivo de texto dentro de un backup sin extraerlo."""
+    archive = BACKUP_DIR / name
+    try:
+        with tarfile.open(archive, "r:gz") as tar:
+            member = tar.extractfile(f"data/{rel_path.lstrip('/')}")
+            if member is None:
+                return None
+            return member.read().decode("utf-8", errors="replace")
+    except (OSError, tarfile.TarError, KeyError):
+        return None
+
+
+def compare_with_current(name: str) -> dict:
+    """Compara un backup con el estado actual: devuelve Changed/Missing/Same."""
+    manifest = get_backup_details(name) or {}
+    changed: list[str] = []
+    missing: list[str] = []
+    same: list[str] = []
+    for rec in manifest.get("files", []):
+        path = Path("/") / rec["path"]
+        if not path.exists():
+            missing.append(rec["path"])
+        elif _sha256(path) != rec["sha256"]:
+            changed.append(rec["path"])
+        else:
+            same.append(rec["path"])
+    return {"changed": changed, "missing": missing, "same": same}
+
+
+def delete_backup(name: str) -> tuple[bool, str]:
+    archive = BACKUP_DIR / name
+    if not archive.exists():
+        return False, "no existe"
+    try:
+        archive.unlink()
+        return True, "eliminado"
+    except OSError as e:
+        return False, str(e)[:120]
+
+
 # --------------------------------------------------------------------------- restore
 def restore_backup(name: str) -> tuple[bool, str]:
     """Restaura un backup. Antes hace un backup de seguridad del estado actual."""

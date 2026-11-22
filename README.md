@@ -70,7 +70,8 @@ ricing/
 4. **Síntesis** en `investigacion/`, distinguiendo **[HECHO]**, **[OPINIÓN]** e
    **[INCIERTO]** y citando `sources/`.
 5. **Prototipo** ejecutable en `recursos/hypr-rice-gui/main.py`, con **backups automáticos**
-   (`backup_manager.py`): antes de cada cambio, temporizados, con SHA-256, retención y restauración.
+   (`backup_manager.py`): antes de cada cambio, temporizados, con SHA-256, retención,
+   **historial de puntos en el pasado** (inspeccionar archivos, comparar, restaurar o borrar cualquier copia).
 
 ## 🛠️ Usar el prototipo de GUI
 
