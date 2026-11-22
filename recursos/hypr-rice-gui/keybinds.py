@@ -157,6 +157,106 @@ def action_to_ui(action: str) -> tuple[int, str]:
     return 5, a
 
 
+def normalize_key(key: str) -> str:
+    """Clave canónica para comparar solapes (ordena modificadores y baja a minúsculas)."""
+    parts = [p.strip().lower() for p in (key or "").split("+") if p.strip()]
+    return "+".join(sorted(parts))
+
+
+def describe(action: str) -> tuple[str, str]:
+    """Devuelve (categoría, descripción legible) de una acción Lua/exec."""
+    a = action or ""
+    low = a.lower()
+    if "noctalia msg" in low:
+        msg = low.split("noctalia msg", 1)[-1].strip().strip('"')
+        table = {
+            "window-switcher": ("Ventanas", "Cambiar de ventana"),
+            "settings-toggle": ("Sistema", "Abrir ajustes del sistema"),
+            "panel-toggle launcher": ("Launcher", "Abrir el launcher"),
+            "panel-toggle clipboard": ("Utilidades", "Abrir portapapeles"),
+            "panel-toggle control-center": ("Sistema", "Abrir centro de control"),
+            "panel-toggle session": ("Sesión", "Menú de sesión"),
+            "panel-toggle wallpaper": ("Wallpapers", "Selector de wallpaper"),
+            "volume-up": ("Multimedia", "Subir volumen"),
+            "volume-down": ("Multimedia", "Bajar volumen"),
+            "volume-mute": ("Multimedia", "Silenciar"),
+            "brightness-up": ("Sistema", "Subir brillo"),
+            "brightness-down": ("Sistema", "Bajar brillo"),
+            "screenshot-region": ("Capturas", "Capturar una región"),
+            "screenshot-fullscreen": ("Capturas", "Capturar pantalla completa"),
+            "session lock": ("Sesión", "Bloquear la sesión"),
+            "media toggle": ("Multimedia", "Reproducir / pausar"),
+        }
+        for k, v in table.items():
+            if msg.startswith(k):
+                return v
+        return ("Noctalia", f"Enviar a Noctalia: {msg[:40]}")
+    if "window.close" in low:
+        return ("Ventanas", "Cerrar la ventana activa")
+    if "window.fullscreen" in low:
+        return ("Ventanas", "Alternar pantalla completa")
+    if "dsp.window.float" in low or "togglefloating" in low:
+        return ("Ventanas", "Alternar ventana flotante")
+    if "kill" in low and "hyprctl" in low:
+        return ("Sesión", "Cerrar Hyprland")
+    if "workspace" in low:
+        return ("Workspaces", "Cambiar de workspace")
+    if "focus" in low or "cyclenext" in low:
+        return ("Ventanas", "Cambiar el foco de ventana")
+    if any(x in low for x in ("kitty", "alacritty", "terminal", "konsole")):
+        return ("Launcher", "Abrir terminal")
+    if any(x in low for x in ("dolphin", "nautilus", "thunar")):
+        return ("Launcher", "Abrir gestor de archivos")
+    if "firefox" in low or "chromium" in low:
+        return ("Launcher", "Abrir navegador")
+    if "exec_cmd" in low:
+        return ("Launcher", "Ejecutar un programa")
+    return ("Otros", a[:50])
+
+
+def check_conflict(key: str, exclude: str = "") -> list[dict[str, str]]:
+    """Busca atajos que se solapan con `key` (excluyendo uno por su clave exacta)."""
+    target = normalize_key(key)
+    if not target:
+        return []
+    found: list[dict[str, str]] = []
+    for b in enriched_binds():
+        candidate = b.get("source_key") or f"{b['mods']} + {b['key']}"
+        if exclude and normalize_key(exclude) == normalize_key(candidate):
+            continue
+        if normalize_key(candidate) == target:
+            found.append({"key": candidate, "description": b.get("source_action", b["dispatcher"])[:60]})
+    for e in stored():
+        if e.get("disabled") or e.get("suppression"):
+            continue
+        if normalize_key(e.get("key", "")) == target:
+            found.append({"key": e["key"], "description": e.get("description", "atajo guardado")})
+    return found
+
+
+def notify_info(title: str, text: str) -> None:
+    """Notificación informativa de escritorio (notify-send con fallback)."""
+    for cmd in (["notify-send", title, text], ["noctalia", "msg", "notify", text]):
+        try:
+            subprocess.run(cmd, capture_output=True, timeout=5)
+            return
+        except (OSError, subprocess.SubprocessError):
+            continue
+
+
+def notify_conflict(key: str, matches: list[dict[str, str]]) -> None:
+    """Notificación de escritorio al detectar un solape."""
+    desc = "; ".join(f"{m['key']} ({m['description']})" for m in matches[:2])
+    text = f"El atajo {key} ya está asignado a: {desc}"
+    for cmd in (["notify-send", "-u", "critical", "Ricing HGUI · Conflicto", text],
+                ["noctalia", "msg", "notify", text]):
+        try:
+            subprocess.run(cmd, capture_output=True, timeout=5)
+            return
+        except (OSError, subprocess.SubprocessError):
+            continue
+
+
 def stored() -> list[dict[str, str]]:
     if DATA.exists():
         try:

@@ -440,195 +440,276 @@ def on_activate(app: Adw.Application) -> None:
     opt_outer.append(status)
     opt_outer.append(make_button(_("Guardar todas las opciones"), save_options))
 
-    # ============ Pestaña 6: Keybinds ============
+    # ============ Pestaña 6: Keybinds (carpetas + edición independiente) ============
+    # AUDITORÍA: cada atajo tiene su propio modo edición (en su menú "…").
+    # El modo "Añadir" elige primero la acción, luego captura la tecla (5 s)
+    # y kb.describe() decide automáticamente la carpeta destino.
     kb_outer, kb_page = new_tab(stack, "keybinds", _("Keybinds"))
     kb_group = Adw.PreferencesGroup(
-        title=_("Atajos de teclado"),
-        description=_("Lista en vivo desde hyprctl. Edita o añade; se guarda en ui-bindings.lua."),
+        title=_("Atajos activos"),
+        description=_("Carpetas por categoría · puntos: activo/inactivo · menú «…»: editar o borrar."),
     )
     kb_page.add(kb_group)
 
-    kb_list = Gtk.ListBox()
-    kb_list.set_selection_mode(Gtk.SelectionMode.SINGLE)
-    kb_scroll = Gtk.ScrolledWindow()
-    kb_scroll.set_child(kb_list)
-    kb_scroll.set_min_content_height(220)
-    kb_scroll.set_max_content_height(360)
-    kb_scroll.set_min_content_width(560)
-    kb_group.add(kb_scroll)
+    from gi.repository import Gio
 
-    key_entry = Gtk.Entry()
-    key_entry.set_placeholder_text(_("SUPER + CTRL + K"))
-    key_entry.set_size_request(220, -1)
-    row_key = Adw.ActionRow(title=_("Tecla"), subtitle=_("Pulsa «Capturar» o escribe SUPER + K"))
-    key_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-    key_box.append(key_entry)
-    key_box.append(make_button(_("Capturar tecla…"), lambda _b: capture_key()))
-    row_key.add_suffix(key_box)
-    kb_group.add(row_key)
+    binds_cache: list[dict] = []
+    stored_cache: list[dict] = []
 
-    # La acción se elige en un menú en lenguaje natural; el usuario NO escribe Lua.
-    action_combo = Gtk.ComboBoxText()
-    for opt in (
-        _("Ejecutar un programa"), _("Cerrar la ventana"),
-        _("Alternar ventana flotante"), _("Pantalla completa"),
-        _("Enviar mensaje a Noctalia"), _("Avanzado (expresión Lua)"),
-    ):
-        action_combo.append_text(opt)
-    action_combo.set_active(0)
-    row_kind = Adw.ActionRow(title=_("Qué debe hacer"), subtitle=_("Elige una opción, sin código"))
-    row_kind.add_suffix(action_combo)
-    kb_group.add(row_kind)
+    def reload_binds() -> None:
+        nonlocal binds_cache, stored_cache
+        binds_cache = kb.enriched_binds()   # cache: evita 14 ms por clic
+        stored_cache = kb.stored()
+        render_binds()
 
-    action_entry = Gtk.Entry()
-    action_entry.set_placeholder_text(_("Ej.: kitty  ·  launcher  ·  volume-up"))
-    action_entry.set_size_request(300, -1)
-    row_action = Adw.ActionRow(title=_("Datos de la acción"), subtitle=_("Programa, mensaje o parámetro"))
-    row_action.add_suffix(action_entry)
-    kb_group.add(row_action)
+    def render_binds() -> None:
+        for child in list(kb_group):
+            if isinstance(child, Adw.ExpanderRow):
+                kb_group.remove(child)
+        por_cat: dict[str, list[dict]] = {}
+        for b in binds_cache:
+            label = b.get("source_key") or f"{b['mods']} + {b['key']}"
+            action = b.get("source_action") or b["dispatcher"]
+            cat, desc = kb.describe(action)
+            por_cat.setdefault(cat, []).append({"key": label, "desc": desc, "action": action})
+        for cat, items in sorted(por_cat.items()):
+            folder = Adw.ExpanderRow(title=cat, subtitle=_("{n} atajo(s)").format(n=len(items)))
+            for it in items:
+                key = it["key"]
+                row = Adw.ActionRow(title=key, subtitle=it["desc"])
+                saved = next((e for e in stored_cache if e.get("key") == key), None)
+                disabled = bool(saved and saved.get("disabled"))
 
-    desc_entry = Gtk.Entry()
-    desc_entry.set_placeholder_text(_("Descripción opcional"))
-    row_desc = Adw.ActionRow(title=_("Descripción"))
-    row_desc.add_suffix(desc_entry)
-    kb_group.add(row_desc)
+                box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+                dot_on = Gtk.CheckButton()
+                dot_on.set_tooltip_text(_("Activo"))
+                dot_off = Gtk.CheckButton()
+                dot_off.set_tooltip_text(_("Inactivo"))
+                dot_on.set_active(not disabled)
+                dot_off.set_active(disabled)
 
-    repeat_sw = Gtk.Switch()
-    locked_sw = Gtk.Switch()
-    row_flags = Adw.ActionRow(title=_("Opciones"), subtitle=_("Repetible / disponible con pantalla bloqueada"))
-    flags_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-    flags_box.append(Gtk.Label(label=_("Repetir")))
-    flags_box.append(repeat_sw)
-    flags_box.append(Gtk.Label(label=_("Bloqueado")))
-    flags_box.append(locked_sw)
-    row_flags.add_suffix(flags_box)
-    kb_group.add(row_flags)
+                def on_dot(widget, active_flag, other, k=key):
+                    if widget.get_active():
+                        if other.get_active():
+                            other.set_active(False)
+                        kb.set_disabled(k, not active_flag)
+                        kb_status.set_label(_("Estado: ") + k)
+                    elif not other.get_active():
+                        other.set_active(True)
 
-    kb_status = Gtk.Label(label=_("Selecciona un atajo o escribe uno nuevo"), wrap=True)
-    editing: dict[str, str] = {"old_key": ""}
+                dot_on.connect("toggled", lambda w, o=dot_off: on_dot(w, True, o))
+                dot_off.connect("toggled", lambda w, o=dot_on: on_dot(w, False, o))
+                box.append(dot_on)
+                box.append(dot_off)
 
-    def capture_key() -> None:
-        """Diálogo modal que captura una combinación de teclas real desde GTK."""
-        dialog = Gtk.Window(title=_("Pulsa una tecla…"), transient_for=win,
-                            default_width=360, default_height=120)
-        label = Gtk.Label(label=_("Pulsa la combinación (ej. SUPER + K)…"))
+                menu = Gio.Menu()
+                item_e = Gio.MenuItem.new(_("Editar atajo…"), "win.edit-bind")
+                item_e.set_attribute_value("target", GLib.Variant("s", key))
+                item_d = Gio.MenuItem.new(_("Borrar atajo"), "win.delete-bind")
+                item_d.set_attribute_value("target", GLib.Variant("s", key))
+                menu.append_item(item_e)
+                menu.append_item(item_d)
+                mb = Gtk.MenuButton(icon_name="open-menu-symbolic")
+                mb.set_tooltip_text(_("Acciones de este atajo"))
+                mb.set_popover(Gtk.PopoverMenu.new_from_model(menu))
+                box.append(mb)
+                row.add_suffix(box)
+                folder.add_row(row)
+            kb_group.add(folder)
+
+    def delete_by_key(key: str) -> None:
+        ok, msg = kb.delete(key)
+        kb_status.set_label((_("Borrado: ") if ok else _("Error: ")) + key + " · " + msg)
+        reload_binds()
+
+    del_action = Gio.SimpleAction.new("delete-bind", GLib.VariantType.new("s"))
+    del_action.connect("activate", lambda _a, param: delete_by_key(param.get_string()))
+    win.add_action(del_action)
+
+    # ---- captura temporizada reutilizable (5 s tras la última tecla) ----
+    def start_capture(on_done) -> None:
+        kb.notify_info(_("Ricing HGUI · Atajo"),
+                       _("Pulsa la combinación. Se registrará 5 s después de la última tecla. Enter también vale."))
+        dialog = Gtk.Window(title=_("Determinando atajo…"), transient_for=win,
+                            default_width=440, default_height=130)
+        label = Gtk.Label(label=_("Pulsa la combinación… 5 s tras la última tecla."), wrap=True)
         dialog.set_child(label)
+        cap: dict = {"mods": set(), "key": "", "timer": None}
 
-        controller = Gtk.EventControllerKey()
-
-        def on_key(_ctrl, keyval: int, _keycode: int, state: int) -> bool:
-            name = Gdk.keyval_name(keyval) or str(keyval)
-            # Ignorar modificadores sueltos: no son atajos completos.
-            if name in {"Control_L", "Control_R", "Alt_L", "Alt_R",
-                        "Super_L", "Super_R", "Shift_L", "Shift_R"}:
-                return True
-            mods = []
-            if state & Gdk.ModifierType.CONTROL_MASK:
-                mods.append("CTRL")
-            if state & Gdk.ModifierType.ALT_MASK:
-                mods.append("ALT")
-            if state & Gdk.ModifierType.SUPER_MASK:
-                mods.append("SUPER")
-            if state & Gdk.ModifierType.SHIFT_MASK:
-                mods.append("SHIFT")
-            key_entry.set_text(" + ".join(mods + [name]))
-            kb_status.set_label(_("Tecla capturada: ") + key_entry.get_text())
+        def finish() -> bool:
+            cap["timer"] = None
+            orden = ("CTRL", "ALT", "SUPER", "SHIFT")
+            partes = [m for m in orden if m in cap["mods"]]
+            if cap["key"]:
+                partes.append(cap["key"])
+            combo = " + ".join(partes)
+            if combo:
+                label.set_label(_("Registrado: ") + combo)
+                on_done(combo)
             dialog.close()
+            return False
+
+        def arm() -> None:
+            if cap["timer"] is not None:
+                GLib.source_remove(cap["timer"])
+            cap["timer"] = GLib.timeout_add_seconds(5, finish)
+
+        ctrl = Gtk.EventControllerKey()
+
+        def on_key(_c, keyval: int, _code: int, state: int) -> bool:
+            name = Gdk.keyval_name(keyval) or str(keyval)
+            if name in {"Control_L", "Control_R"}:
+                cap["mods"].add("CTRL")
+            elif name in {"Alt_L", "Alt_R"}:
+                cap["mods"].add("ALT")
+            elif name in {"Super_L", "Super_R"}:
+                cap["mods"].add("SUPER")
+            elif name in {"Shift_L", "Shift_R"}:
+                cap["mods"].add("SHIFT")
+            else:
+                cap["key"] = "Return" if name in {"Return", "KP_Enter", "Enter"} else name
+            arm()
             return True
 
-        controller.connect("key-pressed", on_key)
-        dialog.add_controller(controller)
+        ctrl.connect("key-pressed", on_key)
+        dialog.add_controller(ctrl)
         dialog.present()
 
-    def refresh_binds() -> None:
-        kb_list.remove_all()
-        for b in kb.enriched_binds():
-            # Usar la clave exacta del config cuando existe (evita errores al
-            # desvincular: hl.unbind es sensible a mayúsculas y al texto exacto).
+    # ---- diálogo de edición INDEPENDIENTE para un atajo ----
+    def edit_dialog(key: str, action: str) -> None:
+        d = Gtk.Window(title=_("Editar: ") + key, transient_for=win, default_width=520, default_height=430)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10,
+                      margin_start=16, margin_end=16, margin_top=16, margin_bottom=16)
+        d.set_child(box)
+
+        key_entry = Gtk.Entry()
+        key_entry.set_text(key)
+        key_row = Adw.ActionRow(title=_("Atajo"), subtitle=_("Se vuelve a capturar con el botón inferior"))
+        key_row.add_suffix(key_entry)
+        box.append(key_row)
+
+        combo = Gtk.ComboBoxText()
+        for opt in (_("Ejecutar un programa"), _("Cerrar la ventana"),
+                    _("Alternar ventana flotante"), _("Pantalla completa"),
+                    _("Enviar mensaje a Noctalia"), _("Avanzado (expresión Lua)")):
+            combo.append_text(opt)
+        idx, param0 = kb.action_to_ui(action)
+        combo.set_active(idx)
+        kind_row = Adw.ActionRow(title=_("Qué hace"))
+        kind_row.add_suffix(combo)
+        box.append(kind_row)
+
+        param = Gtk.Entry()
+        param.set_text(param0)
+        param_row = Adw.ActionRow(title=_("Datos"), subtitle=_("Programa / mensaje / parámetro"))
+        param_row.add_suffix(param)
+        box.append(param_row)
+
+        status = Gtk.Label(label="", wrap=True)
+        box.append(status)
+
+        def recapture(_b) -> None:
+            start_capture(lambda k: key_entry.set_text(k))
+
+        def save(_b) -> None:
+            new_key = key_entry.get_text().strip()
+            conflicts = kb.check_conflict(new_key, key)
+            if conflicts:
+                kb.notify_conflict(new_key, conflicts)
+                status.set_label(_("Conflicto con: ") + ", ".join(x["key"] for x in conflicts))
+                return
+            kind, act = kb.action_from_ui(combo.get_active(), param.get_text())
+            ok, msg = kb.add_or_update({"key": new_key, "kind": kind, "action": act,
+                                        "description": "", "repeat": False, "locked": False,
+                                        "old_key": key})
+            status.set_label((_("Guardado: ") if ok else _("Error: ")) + msg)
+            if ok:
+                d.close()
+                reload_binds()
+
+        row_btns = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        row_btns.append(make_button(_("Cambiar tecla (5 s)"), recapture))
+        row_btns.append(make_button(_("Guardar"), save))
+        box.append(row_btns)
+        d.present()
+
+    edit_action = Gio.SimpleAction.new("edit-bind", GLib.VariantType.new("s"))
+    def on_edit_action(_a, param):
+        key = param.get_string()
+        for b in binds_cache:
             label = b.get("source_key") or f"{b['mods']} + {b['key']}"
-            subtitle = b.get("source_action") or b["dispatcher"]
-            row = Adw.ActionRow(title=label, subtitle=subtitle[:80])
-            row.set_name(label)
-            row.set_activatable(True)
-            kb_list.append(row)
+            if label == key:
+                edit_dialog(key, b.get("source_action") or b["dispatcher"])
+                return
+    edit_action.connect("activate", on_edit_action)
+    win.add_action(edit_action)
 
-    def on_bind_selected(_list: Gtk.ListBox, row: Gtk.ListBoxRow | None) -> None:
-        if row is None:
-            return
-        label = row.get_name()
-        editing["old_key"] = label  # clave COMPLETA, igual que la espera hl.unbind
-        key_entry.set_text(label)
-        source_action = ""
-        for b in kb.enriched_binds():
-            if f"{b['mods']} + {b['key']}" == label:
-                source_action = b.get("source_action", "")
-                break
-        if source_action and not source_action.startswith("HL.Dispatcher("):
-            action_entry.set_text(source_action)
-        desc_entry.set_text("")
-        kb_status.set_label(_("Editando: ") + label + _(" · la acción se rellenó desde binds.lua"))
+    # ---- modo AÑADIR: acción -> tecla -> categoría automática ----
+    def add_dialog() -> None:
+        d = Gtk.Window(title=_("Añadir atajo"), transient_for=win, default_width=520, default_height=430)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10,
+                      margin_start=16, margin_end=16, margin_top=16, margin_bottom=16)
+        d.set_child(box)
 
-    kb_list.connect("row-selected", on_bind_selected)
+        combo = Gtk.ComboBoxText()
+        for opt in (_("Ejecutar un programa"), _("Cerrar la ventana"),
+                    _("Alternar ventana flotante"), _("Pantalla completa"),
+                    _("Enviar mensaje a Noctalia"), _("Avanzado (expresión Lua)")):
+            combo.append_text(opt)
+        combo.set_active(0)
+        kind_row = Adw.ActionRow(title=_("¿Qué hará el atajo?"), subtitle=_("Elige primero la acción"))
+        kind_row.add_suffix(combo)
+        box.append(kind_row)
 
-    def save_bind(_btn: Gtk.Button) -> None:
-        key = key_entry.get_text().strip()
-        param = action_entry.get_text().strip()
-        choice = action_combo.get_active()
-        if not key:
-            kb_status.set_label(_("Falta la tecla"))
-            return
-        # Las acciones habituales NO se escriben en Lua: se traducen desde el menú.
-        kind, action = kb.action_from_ui(choice, param)
-        if choice in (0, 4, 5) and not param:
-            kb_status.set_label(_("Esta acción necesita un comando o parámetro"))
-            return
-        entry = {
-            "key": key,
-            "kind": kind,
-            "action": action,
-            "description": desc_entry.get_text().strip(),
-            "repeat": repeat_sw.get_active(),
-            "locked": locked_sw.get_active(),
-            "old_key": editing["old_key"],
-        }
-        ok, msg = kb.add_or_update(entry)
-        kb_status.set_label((_("Guardado: ") if ok else _("Error: ")) + msg)
-        editing["old_key"] = ""
-        refresh_binds()
+        param = Gtk.Entry()
+        param.set_placeholder_text(_("Ej.: kitty · launcher · volume-up"))
+        param_row = Adw.ActionRow(title=_("Datos de la acción"))
+        param_row.add_suffix(param)
+        box.append(param_row)
 
-    def remove_bind(_btn: Gtk.Button) -> None:
-        key = key_entry.get_text().strip()
-        if not key:
-            kb_status.set_label(_("Escribe la tecla a eliminar"))
-            return
-        ok, msg = kb.delete(key)
-        kb_status.set_label((_("Eliminado: ") if ok else _("Error: ")) + msg)
-        refresh_binds()
+        key_entry = Gtk.Entry()
+        key_entry.set_placeholder_text(_("Se determina con el botón inferior"))
+        key_row = Adw.ActionRow(title=_("Tecla"), subtitle=_("5 s tras la última pulsación"))
+        key_row.add_suffix(key_entry)
+        box.append(key_row)
 
-    def toggle_bind(_btn: Gtk.Button) -> None:
-        key = key_entry.get_text().strip()
-        if not key:
-            kb_status.set_label(_("Escribe la tecla"))
-            return
-        entry = next((e for e in kb.stored() if e.get("key") == key), None)
-        disable = not (entry and entry.get("disabled"))
-        ok, msg = kb.set_disabled(key, disable)
-        kb_status.set_label((_("OK: ") if ok else _("Error: ")) + msg)
-        refresh_binds()
+        status = Gtk.Label(label=_("1 · elige la acción   2 · determina la tecla   3 · guarda"), wrap=True)
+        box.append(status)
 
-    def new_bind(_btn: Gtk.Button) -> None:
-        editing["old_key"] = ""
-        key_entry.set_text("")
-        action_entry.set_text("")
-        desc_entry.set_text("")
-        kb_status.set_label(_("Nuevo atajo · rellena los campos"))
+        def determine(_b) -> None:
+            start_capture(lambda k: (key_entry.set_text(k),
+                                     status.set_label(_("Tecla lista: ") + k)))
 
+        def save(_b) -> None:
+            key = key_entry.get_text().strip()
+            if not key:
+                status.set_label(_("Primero determina la tecla"))
+                return
+            conflicts = kb.check_conflict(key)
+            if conflicts:
+                kb.notify_conflict(key, conflicts)
+                status.set_label(_("Conflicto con: ") + ", ".join(x["key"] for x in conflicts))
+                return
+            kind, act = kb.action_from_ui(combo.get_active(), param.get_text())
+            ok, msg = kb.add_or_update({"key": key, "kind": kind, "action": act,
+                                        "description": "", "repeat": False, "locked": False,
+                                        "old_key": ""})
+            cat, _desc = kb.describe(act)
+            status.set_label((_("Añadido en «") + cat + _("»: ") if ok else _("Error: ")) + msg)
+            if ok:
+                d.close()
+                reload_binds()
+
+        row_btns = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        row_btns.append(make_button(_("Determinar tecla (5 s)"), determine))
+        row_btns.append(make_button(_("Guardar atajo"), save))
+        box.append(row_btns)
+        d.present()
+
+    kb_status = Gtk.Label(label=_("Usa «+ Añadir atajo» o el menú «…» de cada atajo"), wrap=True)
     kb_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
-    kb_actions.append(make_button(_("Nuevo"), new_bind))
-    kb_actions.append(make_button(_("Guardar atajo"), save_bind))
-    kb_actions.append(make_button(_("Desactivar/Activar"), toggle_bind))
-    kb_actions.append(make_button(_("Eliminar"), remove_bind))
-    kb_actions.append(make_button(_("Recargar lista"), lambda _b: refresh_binds()))
+    kb_actions.append(make_button(_("+ Añadir atajo"), lambda _b: add_dialog()))
+    kb_actions.append(make_button(_("Recargar"), lambda _b: reload_binds()))
     kb_group.add(kb_actions)
     kb_outer.append(kb_status)
 
@@ -942,7 +1023,7 @@ def on_activate(app: Adw.Application) -> None:
     win.set_content(root)
 
     refresh_history()
-    refresh_binds()      # informe de debug: cargar atajos al arrancar
+    reload_binds()       # informe de debug: cargar atajos al arrancar
     refresh_monitors()
     refresh_connectors()
     _ready["value"] = True

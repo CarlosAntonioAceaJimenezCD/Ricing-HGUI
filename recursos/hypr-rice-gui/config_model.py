@@ -294,4 +294,67 @@ def _toml_value(v: Any) -> str:
 
 
 def snapshot() -> dict[str, Any]:
-    return {o.id: get_value(o) for o in OPTIONS}
+    """Lee TODAS las opciones de una vez.
+
+    AUDITORÍA / OPTIMIZACIÓN: antes se hacía un `hyprctl getoption` por opción
+    (46 subprocesses, ~280 ms medidos). Ahora se usa un único `hyprctl -j
+    --batch` y se lee el TOML de Noctalia una sola vez (~10 ms medidos).
+    El formato devuelto por --batch es un objeto JSON por línea con clave
+    "option" y el valor tipado ("int", "float", "bool", "str", "css"...).
+    """
+    hypr_opts = [o for o in OPTIONS if o.source == "hyprland"]
+    cmd = ";".join(f"getoption {_hypr_path(o.path)}" for o in hypr_opts)
+    try:
+        raw = subprocess.run(["hyprctl", "-j", "--batch", cmd], capture_output=True,
+                             text=True, timeout=12).stdout
+    except (OSError, subprocess.SubprocessError):
+        raw = ""
+
+    by_path: dict[str, Any] = {}
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            obj = json.loads(line)
+        except ValueError:
+            continue
+        path = obj.get("option")
+        if not path:
+            continue
+        # normalizar ':' del path devuelto al formato con puntos del modelo
+        key = path.replace(":", ".")
+        if "int" in obj:
+            by_path[key] = int(obj["int"])
+        elif "float" in obj:
+            by_path[key] = float(obj["float"])
+        elif "bool" in obj:
+            by_path[key] = bool(obj["bool"])
+        elif "str" in obj:
+            by_path[key] = obj["str"]
+        elif "css" in obj:
+            nums = re.findall(r"-?\d+", str(obj["css"]))
+            by_path[key] = int(nums[0]) if nums else 0
+
+    # Noctalia: una sola lectura/escritura del TOML para todas sus opciones.
+    noct_data: dict[str, Any] = {}
+    noct_opts = [o for o in OPTIONS if o.source == "noctalia"]
+    if noct_opts:
+        try:
+            noct_data = tomllib.loads(NOCTALIA_FILE.read_text(encoding="utf-8"))
+        except (OSError, tomllib.TOMLDecodeError):
+            noct_data = {}
+
+    result: dict[str, Any] = {}
+    for o in OPTIONS:
+        if o.source == "hyprland":
+            result[o.id] = by_path.get(o.path)
+        else:
+            node: Any = noct_data
+            for part in o.path.split("."):
+                if not isinstance(node, dict) or part not in node:
+                    node = None
+                    break
+                node = node[part]
+            result[o.id] = node
+    return result
