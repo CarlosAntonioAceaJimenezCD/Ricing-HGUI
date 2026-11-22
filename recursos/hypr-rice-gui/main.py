@@ -73,7 +73,8 @@ def make_button(label: str, callback, *args) -> Gtk.Button:
 
 def show_text_window(parent: Gtk.Window, title: str, text: str) -> None:
     win = Gtk.Window(title=title, transient_for=parent, default_width=760, default_height=520)
-    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin=10)
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6,
+                  margin_start=10, margin_end=10, margin_top=10, margin_bottom=10)
     view = Gtk.TextView()
     view.set_editable(False)
     view.set_monospace(True)
@@ -143,6 +144,66 @@ def on_activate(app: Adw.Application) -> None:
     spin_keep.set_valign(Gtk.Align.CENTER)
     row_keep.add_suffix(spin_keep)
     bg.add(row_keep)
+
+    # ---------------- Identidad de la configuración ----------------
+    ig = Adw.PreferencesGroup(
+        title=_("Identidad de la configuración"),
+        description=_("Huella única (Config DNA) para reconocer y nombrar cada rice."),
+    )
+    page.add(ig)
+
+    dna_now = bm.current_dna()
+    ident_now = bm.get_identity(dna_now)
+    row_dna = Adw.ActionRow(
+        title=_("ID actual"),
+        subtitle=f"{dna_now} · {ident_now.get('label') or _('sin etiqueta')}",
+    )
+    ig.add(row_dna)
+
+    label_entry = Gtk.Entry()
+    label_entry.set_text(ident_now.get("label", ""))
+    label_entry.set_placeholder_text(_("Ej. Rice azul minimal / Gaming"))
+    row_label = Adw.ActionRow(title=_("Etiqueta"), subtitle=_("Se guarda para esta huella"))
+    row_label.add_suffix(label_entry)
+    ig.add(row_label)
+
+    notes_entry = Gtk.Entry()
+    notes_entry.set_text(ident_now.get("notes", ""))
+    notes_entry.set_placeholder_text(_("Notas opcionales"))
+    row_notes = Adw.ActionRow(title=_("Notas"), subtitle=_("Descripción del punto en el pasado"))
+    row_notes.add_suffix(notes_entry)
+    ig.add(row_notes)
+
+    def save_identity(_btn: Gtk.Button) -> None:
+        dna = selected.get("dna") or dna_now
+        bm.set_identity_label(dna, label_entry.get_text().strip(), notes_entry.get_text().strip())
+        status.set_label(_("Identidad guardada: ") + dna)
+        refresh_history()
+
+    def show_identity(_btn: Gtk.Button) -> None:
+        dna = selected.get("dna") or dna_now
+        inf = bm.identify_backup(selected["name"]) if selected.get("name") else {
+            "dna": dna, "label": bm.get_identity(dna).get("label", ""),
+            "notes": bm.get_identity(dna).get("notes", ""), "reason": "actual",
+            "created_at": "", "file_count": 0,
+        }
+        same = bm.find_backups_by_dna(dna)
+        coincide = _("sí") if dna == bm.current_dna() else _("no")
+        text = (
+            f"DNA: {inf['dna']}\n"
+            f"Etiqueta: {inf.get('label') or '(sin etiqueta)'}\n"
+            f"Notas: {inf.get('notes') or '-'}\n"
+            f"Motivo: {inf.get('reason', '-')}\n"
+            f"Archivos: {inf.get('file_count', 0)}\n"
+            f"Coincide con el estado actual: {coincide}\n"
+            f"Backups con esta identidad ({len(same)}):\n  " + "\n  ".join(same) + "\n"
+        )
+        show_text_window(win, _("Identidad de configuración"), text)
+
+    identity_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
+    identity_actions.append(make_button(_("Guardar etiqueta"), save_identity))
+    identity_actions.append(make_button(_("Ver identidad"), show_identity))
+    ig.add(identity_actions)
 
     # ---------------- Historial (puntos en el pasado) ----------------
     hg = Adw.PreferencesGroup(
@@ -287,7 +348,8 @@ def on_activate(app: Adw.Application) -> None:
         refresh_history()
         return True
 
-    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12, margin=18)
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                  margin_start=18, margin_end=18, margin_top=18, margin_bottom=18)
     box.append(page)
     for lbl in (status, detail, backup_status):
         box.append(lbl)

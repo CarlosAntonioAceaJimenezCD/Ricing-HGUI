@@ -24,6 +24,7 @@ from typing import Iterable
 APP_DIR = Path.home() / ".local/share/hypr-rice-gui"
 BACKUP_DIR = APP_DIR / "backups"
 SETTINGS_FILE = APP_DIR / "settings.json"
+IDENTITIES_FILE = APP_DIR / "identities.json"
 MANIFEST = "manifest.json"
 
 DEFAULT_TARGETS: tuple[Path, ...] = (
@@ -136,8 +137,10 @@ def create_backup(reason: str = "manual", targets: Iterable[Path] | None = None)
         "reason": reason,
         "app": "Ricing HGUI",
         "file_count": len(records),
+        "dna": dna_from_records(records),
         "files": records,
     }
+    touch_identity(manifest["dna"])
     (tmp / MANIFEST).write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
 
     archive = BACKUP_DIR / f"{name}.tar.gz"
@@ -193,6 +196,95 @@ def verify_backup(name: str) -> tuple[bool, str]:
     except (OSError, tarfile.TarError, ValueError) as e:
         return False, str(e)[:120]
     return True, f"{m.get('file_count', 0)} archivos íntegros"
+
+
+# --------------------------------------------------------------------------- identidad
+def dna_from_records(records: list[dict]) -> str:
+    """Huella determinista de una configuración a partir de (path, sha256).
+
+    El mismo contenido siempre produce el mismo DNA, aunque cambie la fecha
+    de modificación o el orden de los archivos. Formato legible: DNA-XXXX-XXXX.
+    """
+    payload = "".join(f"{r['path']}:{r['sha256']}\n" for r in sorted(records, key=lambda x: x["path"]))
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:8].upper()
+    return f"DNA-{digest[:4]}-{digest[4:]}"
+
+
+def current_dna() -> str:
+    """Calcula la identidad de la configuración actual del sistema."""
+    records = []
+    for src in _iter_files(DEFAULT_TARGETS):
+        try:
+            records.append({"path": _relative(src), "sha256": _sha256(src)})
+        except OSError:
+            continue
+    return dna_from_records(records)
+
+
+def dna_of_backup(name: str) -> str | None:
+    m = get_backup_details(name)
+    if not m:
+        return None
+    return m.get("dna") or dna_from_records(m.get("files", []))
+
+
+def load_identities() -> dict:
+    if IDENTITIES_FILE.exists():
+        try:
+            return json.loads(IDENTITIES_FILE.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+    return {}
+
+
+def save_identities(data: dict) -> None:
+    APP_DIR.mkdir(parents=True, exist_ok=True)
+    IDENTITIES_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def touch_identity(dna: str) -> None:
+    """Registra una identidad vista (para que aparezca en el catálogo)."""
+    now = datetime.now().astimezone().isoformat()
+    data = load_identities()
+    entry = data.get(dna, {"label": "", "notes": "", "first_seen": now})
+    entry["last_seen"] = now
+    data[dna] = entry
+    save_identities(data)
+
+
+def set_identity_label(dna: str, label: str, notes: str = "") -> None:
+    data = load_identities()
+    entry = data.get(dna, {"first_seen": datetime.now().astimezone().isoformat()})
+    entry["label"] = label
+    entry["notes"] = notes
+    entry["last_seen"] = datetime.now().astimezone().isoformat()
+    data[dna] = entry
+    save_identities(data)
+
+
+def get_identity(dna: str) -> dict:
+    return load_identities().get(dna, {"label": "", "notes": "", "first_seen": "", "last_seen": ""})
+
+
+def identify_backup(name: str) -> dict:
+    """Devuelve DNA + etiqueta + metadatos de un backup."""
+    m = get_backup_details(name) or {}
+    dna = dna_of_backup(name) or ""
+    ident = get_identity(dna)
+    return {
+        "name": name,
+        "dna": dna,
+        "label": ident.get("label", ""),
+        "notes": ident.get("notes", ""),
+        "reason": m.get("reason", ""),
+        "created_at": m.get("created_at", ""),
+        "file_count": m.get("file_count", 0),
+    }
+
+
+def find_backups_by_dna(dna: str) -> list[str]:
+    """Todos los puntos del pasado que tienen exactamente esta configuración."""
+    return [b["name"] for b in list_backups() if dna_of_backup(b["name"]) == dna]
 
 
 # --------------------------------------------------------------------------- history / inspect
