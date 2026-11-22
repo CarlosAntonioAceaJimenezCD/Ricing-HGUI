@@ -1,0 +1,1066 @@
+---
+type: source
+source_type: webpage
+url: "https://www.nerdfonts.com/releases"
+title: "Nerd Fonts - Iconic font aggregator, glyphs/icons collection, &amp; fonts patcher"
+fetched_at: 2026-11-22T06:27:06+00:00
+fetcher: "curl + markitdown"
+site: "www.nerdfonts.com"
+---
+* [home](/#home)
+* [home](/#home)
+* [Features](/#features)
+* [Features](/#features)
+* [Fonts](/font-downloads)
+* [Fonts Downloads](/font-downloads)
+* [Icons](/cheat-sheet)
+* [Cheat Sheet](/cheat-sheet)
+* [People](/contributors)
+* [Contributors](/contributors)
+* [Backers](/backers)
+* [Backers](/backers)
+* [Log](/releases)
+* [Changelog](/releases)
+
+##### Changelog
+
+# Release Changelog
+
+## v3.5.1 Release (2026.08.21)
+
+v3.5.1 Details
+
+It was too hot, we need a bugfix release this time.
+
+### Bugs
+
+* Actually put in the new promised Devicons #2057
+* SpaceMono: Remove fi/fl ligs #2062
+* Flatten forgotten font subdirs
+
+## v3.5.0 Release (2026.08.03)
+
+v3.5.0 Details
+
+Sun-Kissed Release, Running Hot - Heat wave edition
+Still sizzling you get (just some notable things):
+
+* Three glyph set updates
+* Finally Braille glyphs matching the ‘cell’ size exactly
+* Two new fonts
+* All fonts updated
+
+Thank you to all the people who contributed - by reporting issues, engaging in discussions, or providing code!
+
+### Breaking
+
+* D2Coding is renamed to D2Koding #2052
+* Flatten font subdirs #2054
+
+### Fonts
+
+* Add Annotation Mono #2049
+* Add Google Sans Code #2050
+* Update 0xProto to 2.502 @my4ng #1873
+* Update AdwaitaMono to 34.1 #2048
+* Update Agave to v38 #2048
+* Update Arimo to 1.33-autohint #2048
+* Update Cousine to 1.241 #2048
+* Update DaddyTimeMono to 1.2.3 17-9-2025 #2048
+* Update Departure Mono to v1.500 @rektdeckard #1874
+* Update GeistMono to 1.8.0 @Tejakshaya #2013
+* Update Inconsolata-LGC to 3.201 #2048
+* Update Iosevka to 34.8.0 #2048
+* Update Iosevka Term to 34.8.0 #2048
+* Update Iosevka Term Slab to 34.8.0 #2048
+* Update Lilex to 2.700 #2048
+* Update Monaspice to v1.400 @injust #1938
+* Update MPlus to 1.100 #2048
+* Update SpaceMono to 1.003 #2048
+* Update Ubuntu Sans Mono to 1.100 #2048
+* Fix ComicShannsMono: Flip `questiondown` #1963
+* Fix DejaVuSansMono: Fix monospaced #1865
+* Fix SpaceMono: Remove arrow-calts #1960
+* Fix SymbolsOnly 2 cell wide #1992
+
+### Icons
+
+* Add Braille icons (with generator) #1980
+* Add FontAwesome `fa-volume` #2030
+* Add Obsidian icon #2031
+* Add Wireshark icon #2031
+* Add zsh icon #1979
+* Update Codicons to 0.0.45 #2027
+* Update Devicons to v2.17.0 @joeriddles #1900
+* Update Font Logos to 1.4.0 #2029
+* Add MDI scale-groups #2033
+
+### Features
+
+* Make progress bars more compact #2022
+* Expand `--has-no-italic` to other slanted styles than Oblique #2032
+* Optionally center most icons in 2 cell space #2034
+* Optionally scale non-mono icons to be at least as large as mono @danielwe #1926
+
+### Bugs and improvements
+
+* Downgrade install.sh to bash 3 #1866
+* font-patcher: Fix patching of fonts with slashes in name #1881
+* font-patcher: Fix removal of `For Powerline` #1882
+* font-patcher: Implement rounding in `scale_bounding_box()` @GoldPigg #1974
+* font-patcher: Obey two-cell scale rule with c alignment #2020
+* Fix Material Design icon names #2023
+* Fix symbolfont handling if glyphs have multiple codepoints #2024
+* Fix some glyph are not visually centered when patching monospaced variation @OzelotVanilla #1998
+* Casks: Switch to `tar.xz` archives #2041
+* MacOS compatibility for `gotta-patch-em-all!.sh` @shaunchokshi #1976
+* Update outdated GitHub Actions @pgoslatara #1981
+* Allow more detailed information in `config.cfg` #2053
+* gotta-patch-em: Add flag to enforce patched-fonts/ subdir purging (for rename on releases) 1372be5 730af09
+
+### Website and docs
+
+* Improve font preview #2038
+* Fix cheatsheet footer @sliva0 #1855
+* Fix link in `README` @injust #1916
+* Fix broken emoji key link in `contributing.md` @NaufalK25 #2016
+
+## v3.4.0 Release (2025.04.24)
+
+v3.4.0 Details
+
+Easter Release without Eggs
+
+Mainly a font update release. No surprises here (we hope).
+
+**Note:** The `FontPatcher.zip` in this release was old (i.e. `v3.3.0`) at release time.
+The file has been corrected on May 21st, 2025. #1868
+
+### Breaking
+
+* Remove patcher option `--use-single-width-glyphs` (use `-s` or `--mono` instead)
+
+### Fonts
+
+* Add Adwaita Mono @badlydrawnface #1819
+* Add Atkinson Hyperlegible Mono @joshestein #1802
+* Update 0xProto to 2.300 @my4ng #1803
+* Update Cascadia Code to 2407.24 #1844
+* Update Geist Mono to 1.401 #1838
+* Update InconsolataLGC to 1.13 #1839
+* Update Iosevka to 33.2.1 #1845
+* Update Lilex to 2.600 #1840
+* Update Martian Mono to 1.1.0 #1841
+* Update Monaspace to 1.200 #1846
+* Update MPlus to 1.007 #1842
+* Update Noto (Sans and Serif) to 2.015 #1843
+* Update Ubuntu Sans to 1.006 #1836
+
+### Icons
+
+* Add new CSS icon @skoch13 #1762
+* Manually optimize many Devicon icons #1779
+
+### Features
+
+* Add possibility to create single width icons without touching existing glyphs #1773
+* Add possibility to manually set target cell size (`--cell`) #1773
+* The patched fonts in `otf` format are now much smaller (comparable to `ttf`) #1851
+* Intermediate icon storage is not rounded anymore #1849
+
+### Bugs and improvements
+
+* Fix few missing new Devicons @hasecilu #1768
+* Fix glitches in Devicon icons #1779
+* Fix self-patching on Windows #1761
+* Fix handling of some glyphs in `Nerd Font Propo` and `SymbolsOnly` #1852
+
+## v3.3.0 Release (2024.11.18)
+
+v3.3.0 Details
+
+The Post-Halloween Release
+
+The biggest change is the update of **Devicons** by switching from the unmaintained repo
+to a more maintained fork that has lots of asked for icons. Some very old icons have
+been dropped now; hope noone is really affected. See the description in #1691 for
+a complete list.
+
+### Breaking
+
+* Because Devicons are updated some old icons were dropped (replaced) #1691
+
+### Fonts
+
+* Add Departure Mono @rektdeckard #1709
+* Add Monaspace weight ExtraLight (Italic) #1670
+* Update 0xProto to 2.201 @my4ng #1623
+* Update Intel One Mono to 1.4.0 #1741
+* Update Monaspace to v1.101 @Stealthii #1630
+* Fix upstream Gohufont 14 question mark bug #1654
+
+### Icons
+
+* Switch to devicons/devicon #1691
+* Add Chuck and Vitruvian Man #1740
+* Add Progress Indicators a la Fira Code #1733
+* Update Font Logos to 1.3.0 #1721
+* FontAwesome: Scale glyphs a bit smaller #1722
+* Improve Bazel icon @zaucy #1610
+* Improve Ruby and Firebase icons
+
+### Features
+
+* Add shell based cheat-sheet script @hasecilu #1694
+* Add fontconfig file to SymbolsOnly release archive (for repackagers) #1713
+* Unify configuration files for font-patcher and gotta-patch-em (format changed) #1613
+
+### Bugs and improvements
+
+* Fix Powerline glyphs position and size in some cases #1727
+* font-patcher: Allow to rehint glyphs via config file #1613
+* font-patcher: don’t double-shrink heavy angle brackets @gibfahn #1617
+* font-patcher: Fix behavior when trying to patch non-font files #1648
+* font-patcher: Fix escaping warning
+* gotta-patch-em: Remove post processing
+* Increase Powerline overlap (big triangles and more) #1724
+* Increase weather icons ‘other’ icons scale #1726
+* ShareTechMono: Fix fi/fl ligs #1631
+* PowerShell install @jpawlowski #1701
+
+### Website and docs
+
+Again a lot has been done by various people, thank you all!
+
+## v3.2.1 Release (2024.04.12)
+
+v3.2.1 Details
+
+This bugfix release is mainly because of the Fira Code progress indicator glyphs. These are used by some applications, and usually could be used via fontfallback from any font (because the codepoints were un-occupied in the Nerd Fonts). But with adding more FontAwesome glyphs we utilized that codepoints for the new glyphs, breaking this common setup.
+To fix that we keep these codepoints (there are 9 glyphs) free and un-occupied. So the usual fallback scheme will continue to work.
+
+Please see below for a list of codepoint that change with this release (which were new in 3.2.0), so I count that not really as breaking, because they were just some days ago (accidentally) introduced.
+
+### Codepoint shift ⚠️ (only relative to 3.2.0)
+
+* Reorder some FontAwesome glyphs #1596
+  + `EE00` - `EE0B` shifted to `EFC3` - `EFCE`
+  + `F0E6` shifted to `EFC2`
+  + swap `F219` with `F29F` and `F167` with `F16A`
+
+### Bugs
+
+* Remove Ubuntu ‘fi’ and ‘fl’ ligs #1597
+
+### Improvements for package maintainers
+
+* Add individual licenses to font database `fonts.json` for package maintainers #1599
+* Add sha256 checksums to release (commit c2cd3cdf)
+
+## v3.2.0 Release (2024.04.04)
+
+v3.2.0 Details
+
+The Easter release. Lets see which eggs can be found:
+
+### Fonts
+
+* Add Recursive Mono #1576
+* Add Ubuntu Sans #1583
+* Add Zed Mono @cabrinha #1504
+* Update 0xProto to version 1.603 @junoslukan #1516 #1575
+* Update Commit Mono to 1.143 #1575
+* Update Geist Mono to 1.200 #1575
+* Update IBM Plex Mono to 2.004 (v6.4.0) #1575
+* Update InconsolataLGC to 1.5.2 #1575
+* Update Intel One Mono to 1.3.0 @landfillbaby #1558
+* Update Iosevka to 29.0.4 @iruoy #1497
+* Update Lilex to 2.400 #1575
+* Update Noto to 2.013/2.014 #1478
+* Update SourceCodePro to 2.042/1.062 #1444
+* Update Terminus to 4.49.3 #1571
+* Update Victor Mono to 1.5.6 #1575
+* Fix ComicShanns carons (pending upstream) #1546
+
+### Icons
+
+* Add Ada icon #1577
+* Add Astro icon @roginfarrer #1464
+* Add inverse Powerline arrow heads #1490
+* Add Prettier icon @ronitkrshah #1470
+* Update Codicons to 0.0.35 #1544
+* Update Font Awesome to 6.5.1 (partially) #1563
+* Update Font Logos to 1.2.0 #1585
+
+### Bugs and improvements
+
+Only some notable fixes listed here
+
+* docker: Allow blancs in filenames
+* docker: Include logfile in output
+* docker: Run parallel by default @robk #1508
+* font-patcher: Prevent excessively tall icons in mono fonts #1564
+* Increase Powerline overlap (only rounded) #1551
+* name-parser: Add “thick” weight for Lilex
+* name-parser: Fill short and long name as TypoFamily (for VSCode etc) #1442
+* name-parser: Fix Terminus-Bold-Italic parsing
+* name-parser: Sort Widths before Weights
+* Manually fix several icons with corrupt paths
+
+### Website and docs
+
+A lot of work has been done here by various people, thank you all!
+
+## v3.1.1 Release (2023.11.26)
+
+v3.1.1 Details
+
+This release is mainly a bugfix release: It undoes the breaking naming change of the
+last release which was an unwanted consequence of Fix naming problem (Visual Studio) #1406
+See #1434 for a discussion.
+
+Because these changes were already approved they are also included:
+
+### New fonts and icons
+
+* Monaspace: Add Light weight #1433
+* Add TOML icon @cpea2506 #1436
+
+## v3.1.0 Release (2023.11.21)
+
+v3.1.0 Details
+
+## ⚠️ Family name change
+
+Only after releasing it turned out that renaming some families from `Nerd Font` to `NF`, `Nerd Font Mono` to `NFM` is of course a problem for existing settings. Please see #1434 for details on the reason. Affected are
+
+* SourceCodePro
+* IntelOneMono
+* CascadiaCode
+* Noto
+* Iosevka
+* VictorMono
+* JetBrainsMono
+* IosevkaTerm
+
+This release fixes some bugs and adds fonts. More icons will come with the next release.
+
+We also sunset in-repo releases (new fonts will only be released as release artifact) #1360
+
+### New fonts and updates
+
+* Add 0xProto @piraces #1381
+* Add Cascadia Mono #1412
+* Add Commit Mono #1414
+* Add D2Coding #1413
+* Add Envy Code R #1318 (already since 3.0.2b)
+* Add Geist Mono @QuiiBz #1398
+* Add IntelOne Mono @ (already since 3.0.2b)
+* Add Iosevka Term Slab #803
+* Add Martian Mono @skryukov #1092
+* Add Monaspace @julien-blanchon #1405
+* Update Lilex to v2.3.0 #1356
+* Update MPlus #1357
+
+### Fixes
+
+* Fix naming problem (Visual Studio) #1406
+* Fix fi-ligature in Noto Sans Mono #1400
+* Fix logging error in font-patcher @lolicon0930 #1287
+
+### Features
+
+* Add Common Lisp and Scheme icon #1428
+* Add Fennel icon @Grazfather #1129
+* Add Neovim icon @georgeguimaraes #1391
+* Update Font Logos to v1.1.1 @hasecilu 1427
+* Update Windows icon to Windows 11 #1290
+* Add font-patcher option to specify metrics source #1300
+* Add font-patcher option to specify naming source #1319 #1282
+* Add font-patcher option to specify box drawing glyph behavior #1300
+* test-fonts.sh: allow wrapping at any number @hasecilu #1270
+
+### Website and docs
+
+A lot of work has been done here by various people, thank you all!
+
+## v3.0.2 Release (2023.06.05)
+
+v3.0.2 Details
+
+Note the breaking changes introduced with the `v3.0.0` release.
+If you miss icons, check #1190 and probably https://github.com/loichyan/nerdfix
+
+## One general fix and some font specific ones
+
+### Fixes
+
+* Bugfix Codicon Circles #1261
+* Fix DaddyTimeMono NFM #1244
+* Fix fsSelection for –has-no-italic (BitstreamVera + DejaVu) #1255
+* Fix naming of some fonts of BlexMono and GohuFont
+
+### Features
+
+* Allow not renaming the font #1282 for Cascadia Code self-patcher (#1242)
+* Create tar.xz packs now automated #1235
+* Improve cheat sheet @rszyma #1252 #1254
+* test-fonts.sh: allow wrapping at any number by @hasecilu #1270
+
+## v3.0.1 Release (2023.05.13)
+
+v3.0.1 Details
+
+This bugfix release handles the following issues.
+
+### Fixes
+
+* Revive some ligature removal (only of problematic ligs)
+* Correct Octicons scale (of very few icons)
+* Fix logging with AppImage `fontforge`
+* Drop box-drawing glyphs from Symbols Only fonts
+* Reintroduce upstream-dropped `oct-file-symlink-directory`
+* Reintroduce old style `oct-file-directory` in `custom-`
+* Fix wrong `fsSelection` bit
+* Fix `fi` ligature in Ubuntu
+* Fix scaling of heavy brackets (mostly in Nerd Font Mono)
+* Fix Ubuntu Mono Condensed font property (upstream bug)
+* Fix small scaling glitch for 4 Codicons
+* Correct CaskaydiaCove’s version string (which contains the autohinter)
+
+## v3.0.0 Release (2023.04.30)
+
+v3.0.0 Details
+
+This major release introduces some breaking changes:
+
+### Breaking 1: Naming
+
+This release fixes some long standing issues that are due to the naming of the fonts: There is a completely new naming scheme. This might be inconvientient for existing setups, sorry.
+
+* Some fonts will have `Nerd Font` in the name while other have it abbreviated as `NF`. This is needed because some names just were too long. (Same for `Nerd Font Mono` and `NFM`.)
+* There are no `Windows Compatible` fonts anymore. All fonts work on all platforms.
+* The `Complete` from the font names (and the repo directories) has been dropped (Complete is the new normal).
+* The name parts will be ordered as expected with style and weight last (`Somefont Bold Nerd Font` -> `Somefont Nerd Font Bold`).
+* The filename will have no blanks anymore.
+
+### Breaking 2: Material Design Icons Codepoints
+
+The old Material Design Icon codepoints are finally dropped. Due to an historic mistake we placed them in between some asiatic glyphs, breaking that script.
+Since v2.3.0 the (updated and expanded) Material Design Icons have new codepoints in the 5 digit region.
+
+* Dropped codepoints `F500`… and class names `nf-mdi-*`
+* New codepoints `F0001`… and class names `nf-md-*`
+* The whole discussions are here: https://github.com/ryanoasis/nerd-fonts/issues/365
+* A translation table is available here: https://github.com/ryanoasis/nerd-fonts/issues/1059#issuecomment-1404891287
+* There are tools out there that probably can update your configuration.
+
+Otherwise this is a ‘Update release’, so now the good stuff:
+
+### Updates
+
+* Update `Agave` to v37
+* Update `Arimo` to 1.33
+* Update `DaddyTimeMono` to 1.2.3
+* Update `Fira Mono` to 3.206
+* Update `Go Mono` to 2.010
+* Update `Hermit` to 2.0
+* Update `IBM Plex` to 2.3
+* Update `Iosevka` to 22.1.0
+* Update `Literation` to 2.1.5
+* Update `Lilex` to 2.000
+* Update `mononoki` to 1.6
+* Update `MPlus` to … current
+* Update `Overpass` to 3.0.5
+* Update `Roboto Mono` to 3.0
+* Update `Source Code Pro` to 2.038
+* Update `Terminus` to 4.49.2
+* Update `Victor Mono` to 1.5.4
+* Update the Octicons set to 18.3.0
+
+### Features
+
+* New font `ComicShannsMono`
+* New variant in release `Nerd Font Propo` for GUI usecases
+* Patch in heavy angle brackets
+* Patch in boxdrawing glyphs (if the font has no complete set)
+* Repair Panose info if source font has broken data
+* Reform PowerlineExtra sizing
+* Autocreate a `FontPatcher.zip` from `HEAD`
+* Create a json database with css names
+* Disentangle `Iosevka` into two packets (one for `Iosevka Term`)
+* Add option to manipulate `xAvgCharWidth` (needed rarely by self-patchers)
+* Add option to allow italic-less fonts with oblique
+* Add `--debug` and `--dry` to `font-patcher`
+* Add logging into file to `font-patcher`
+* Add `NERDFONTS` environment variable to transport options through `gotta-patch-em`
+
+### Improvements
+
+* Fix `Caskaydia Code` height different to `Cascadia Code` (hinting problem) (font is now `ttf` instead of `otf`!)
+
+### Fixes
+
+* Fix baseline to basline distance (line gap) for some fonts
+* Fix weather icons cloud scaling
+* Fix UniqueID of the fonts
+* Fix `Bitstream Vera` name: Is now `Bitstrom Wera` due to licensing issue
+* No fix, but: Drop support for Python 2
+
+### Remark
+
+I can feel the hurt of the breaking changes, but some old decisions just proved to be wrong.
+Many thanks to all the Issue reporters and pull requesters that help keep this project going!
+
+## v2.3.3 Release (2023.01.24)
+
+v2.3.3 Details
+
+The `v2.3.x` release is an interim release that tackles a lot technical issues and some updates. It is the preparatory step for `v3.0.0` that will update ‘everything’ and introduce new concepts. See [#1074](https://github.com/ryanoasis/nerd-fonts/discussions/1074).
+
+### Features
+
+* Process `TTC` files #783
+* Preserve existing bitmaps #939
+* Symbol scaling in nonmono (down to 2 ‘widths’) #748
+* Add New Material Design Icons to **its own region** by @earboxer #773
+* Calculate line gap correctly #1060 #943 *2.3.2*
+
+### Updates
+
+* Update `Inconsolata` to v3.000 #775
+* Update `3270font` to v3.0.1 #948
+* Update `JetBrains Mono` to 2.304 by @rluvaton #1053 c6b3b0841 *2.3.2*
+* Update `Mononoki` to 1.5 fec587385
+* Update `Seti` glyph set #978
+
+### Improvements
+
+* `install.sh --remove` #822
+* Stable codepoints #778
+* Add `-WindowsCompatibleOnly` on `install.ps1` by @ev-dev #841
+* Sunset ligature removal #977
+* Fix Iosevka Family names #1019
+* Fix unequal weather icon scale #916
+* Use Fontforge January 2023 Release #1037
+* Warn if sourcefont is a variable font `VF` #960
+* Improve Assembly icon by @ignamartinoli #990
+* Cover alternate unicode encodings *(for Input Mono)* by @nathanielevan #1058 *2.3.2*
+
+### Fixes
+
+* Fix `fontconfig` #920
+* Fix scaling related rounding error #921
+* Fix hasklug ligature #938
+* Avoid patching proportional sources #912
+* Fix JetBrains Mono `!=` ligature #964
+* Fix licenses in archives #981 8a749ab21 *2.3.3*
+* Fix crash on some custom sets #1006
+* Sanitize output filenames #1029
+* Fix some Nerd Font Mono too wide #1045 #1062 *2.3.2*
+* Fix unexpected ‘Book’ SubFamily #1047
+* Fix Nerd Fonts Symbols Only metrics 4939ac5 *2.3.3*
+
+## Next Release Outlook
+
+The `v3.0.0` release will bring two bigger changes:
+
+### Material Design Icons
+
+The Material Design Icons have to move codepoints. Historically we patch them in between `F500` - `FD46`; but part of that range is needed for Chinese and other glyphs. With #773 and *Plan 5+* of #365 their new home will be after `F0001`. And they grow considerably.
+
+The `v2.3.x` release has both, the ‘old’ and the ‘new’ codepoints to enable you an easier transision. **Please change** already **now** your prompts and other uses to the new codepoints. Release `v3.0.0` will finally drop the old codepoints (`F500` - `FD46`).
+
+### Naming
+
+Naming will also change. The name parts will move to places where they are customarily expected (e.g. weight and style comes last). This will fix some more problems. Probably we will drop the `Complete` monicker, as … everyone uses the complete versions, it just takes precious space in the names.
+The details are not fixed yet, follow [#1074](https://github.com/ryanoasis/nerd-fonts/discussions/1074) to keep up to date.
+
+### Details
+
+* [Release 2.3.0](https://github.com/ryanoasis/nerd-fonts/releases/tag/v2.3.0)
+* [Release 2.3.1](https://github.com/ryanoasis/nerd-fonts/releases/tag/v2.3.0)
+* [Release 2.3.2](https://github.com/ryanoasis/nerd-fonts/releases/tag/v2.3.0)
+
+## Remark
+
+This release was even more bumpy then the previous one. Please accept my apologies.
+Many thanks to all the Issue reporters and pull requesters that help keep this project going!
+
+## v2.2.2 Release (2022.09.07)
+
+v2.2.2 Details
+
+### New Features
+
+* Added new fonts:
+  + Lilex (PR #474 @adavidzh)
+* Make Nerd Fonts Monospaced Again (PR #746)
+* Docker support (PR #449 @mdschweda)
+* Add Codicons (PR #705 @cstrahan)
+
+### Updates / Improvements
+
+* Updated various fonts:
+  + Victor Mono to 1.4.1 (PR #516 @ea2809)
+  + Hasklig to v1.2 (PR #555 @Tehnix)
+  + Iosevka to 6.1.3 (PR #622 @FollieHiyuki)
+  + Fira Code to 6.2 (PR #704 @gitfool)
+  + JetBrains Mono to v2.251 (PR #776 @moritzdietz)
+  + Cascadia to 2111.01 (PR #723 @Finii)
+* Update Font Logos to 1.0.1 (PR #859)
+
+### Fixes
+
+* Various fixes and improvements, see release pages
+  + [Release 2.2.0](https://github.com/ryanoasis/nerd-fonts/releases/tag/v2.2.0)
+  + [Release 2.2.1](https://github.com/ryanoasis/nerd-fonts/releases/tag/v2.2.1)
+  + [Release 2.2.2](https://github.com/ryanoasis/nerd-fonts/releases/tag/v2.2.2)
+
+## v2.1.0 Release (2020.02.01)
+
+v2.1.0 Details
+
+### New Features
+
+* Added new fonts:
+  + IBM Plex (PR #253 @romen)
+  + iA Writer (patched as iM Writing) (PR #326 @xasx)
+  + Agave (PR #327 @xasx)
+  + DaddyTimeMono (fixes #330)
+  + Victor Mono (PR #364 @kule)
+  + Cascadia Code (patched as Caskaydia Cove)
+  + JetBrains Mono (PR #421 @Knovour, fixes #420, #425)
+* Added chocolatey install script (PR #259 @rahuliyer95)
+* Added PowerShell installation script for Windows (PR #357 @LZong-tw)
+* Added font previews to website (fixes #316)
+
+### Updates / Improvements
+
+* Updated most of the glyphs in the ‘original-source’ (PR #249 @danbee)
+* Updated font patcher script via refactor (PR #288 @haasosaurus)
+* Updated various fonts:
+  + Updated Fira Code to version 1.206 (PR #298 @mashehu)
+  + Updated ‘Fura’ to ‘Fira’ (PR #356 @ShalokShalom) (fixes #352)
+  + Updated Fira Code to version 2.0 (PR #372 @hugo-vrijswijk, fixes #424)
+  + Updated Iosevka to version 2.1.0 (PR #328 @MindTooth)
+  + Updated Fantasque Sans Mono to version 1.8.0 (PR #423 @adzenith)
+  + Updated Inconsolata to version 2.001 (fixes #289)
+  + Updated Liberation to version 2.00.5 (fixes #344)
+  + Updated Victor Mono to version 1.3.1 (fixes #388)
+* Added Cascadia Code to font sources (PR #374 @AaronFriel)
+* Added new language translations:
+  + Added Polish readme (PR #301 @P1X3L0V4)
+  + Added Spanish readme (PR #378 @Tamh)
+  + Added Korean readme (PR #382 @ParkSB)
+  + Added Ukrainian readme (PR #392 @igavelyuk)
+  + Added Japanese readme (PR #389 @delphinus)
+  + Added Italian readme (PR #427 @JGiola)
+* Added documentation about ligatures for patched fonts (PR #315 @sideeffffect)
+
+### Fixes
+
+* Fixed monospace overlapping (PR #283 @haasosaurus, fixes #270)
+* Fixed glyph bears in monospaced variants (PR #394 @Finii)
+* Fixed archive artifact script not including all fonts (fixes #418)
+* Fixed URLs in font table (PR #260 @raffclar)
+* Fixed possible mixed content error on website for Google Fonts (PR #276 @mashehu)
+* Fixed UX of font-patcher log to be inside `<details>` block (PR #291 @kevinSuttle)
+* Fixed bash scripts execution from non-standard bash (PR #282 @deadloko)
+* Fixed missing variations of Meslo (PR #308 @segevfiner fixes #302)
+* Fixed typo (PR #331 @mikeshatch)
+* Fixed typo in css class and cheatsheet (fixes #285)
+* Fixed including uuid files (ignored) (PR #371 @lebel)
+* Fixed RFN for Anka Coder (PR #376 @gunman808)
+* Fixed BigBlueTerminal font formatting in readme (PR #381 @this-is-you)
+* Fixed formatting of Agave readme (PR #379 @Roshanjossey)
+* Fixed link to Fish Shell on website (PR #385 @kaykayehnn)
+* Fixed showcase images in FiraCode readme (PR #405 @equwal)
+* Fixed outdated AUR references (PR #416 @sudoLife)
+* Fixed elixir image src in Fira Code readme (PR #419 @kadimisetty)
+* Fixed missing Italic variation for SourceCodePro (fixes #271)
+* Fixed English text in French translation (PR #322 @leoz2007)
+* Fixed exit code in install script (PR #361 @evaryont)
+* Fixed link of Caskroom (PR #349 @satoryu)
+
+## v2.0.0 Release
+
+v2.0.0 Details
+
+### New Features
+
+* Added new fonts:
+  + Noto (all variations) (#213)
+  + Overpass Mono (fixes #177)
+  + BigBlue Terminal (fixes #170)
+  + Dyslexic (fixes #217)
+  + Iosevka Term variant (no ligatures) (fixes #198)
+  + FiraCode TTF variant (fixes #244)
+  + SourceCodePro italics variant (fixes #236)
+* Added new glyph sets:
+  + [Material Design Icons](https://github.com/templarian/MaterialDesign)
+  + [Weather](https://github.com/erikflowers/weather-icons)
+* Added new glyphs to core:
+  + Elm (fixes #172)
+  + Elixir (fixes #228)
+  + Electron (fixes #237)
+* Added new translations:
+  + Added Traditional Chinese of readme (partially fixes #118) (PR #222) (@MindyTai)
+  + Added French readme (partially fixes #118) (PR #251) (@pgrimaud)
+* Added ability to remove ligatures via the `--removeligatures` option in `font-patcher`
+* Added `--configfile` option to `font-patcher`
+
+### Updates / Improvements
+
+* Updated `Hack` font to latest version (`v3.003`) (fixes #216) (with help from @chrissimpkins)
+* Updated `Iosevka` to the latest version (`v1.14.0`) (fixes #229)
+* Updated `Fantasque Sans Mono` to the latest version (`v1.7.2`) (fixes #240)
+* Updated `MPlus` version from `1.018` to `1.063`
+* Updated documentation for urxvt wcwidth implementations (fixes #155)
+* Updated logos and Sankey diagram
+
+### Breaking Updates / Improvements / Changes
+
+* Updated Font Logos (formerly Font Linux) to latest version (fixes #157)
+
+### Fixes
+
+* Fixed incorrect exitcode returned from installer (fixes #218) (PR #230 @Phuurl)
+* Fixed 3270 font not being valid/installable on Windows (fixes #12, #196)
+* Fixed weather variables script typo (PR #242 @snown)
+* Fixed Monospaced fonts having ligatures by default (fixed Meslo Mono having ligatures) (fixes #186)
+* Fixed Hasklig ExtraLight & Light variants (fixes #231)
+
+## v1.2.0 Release
+
+v1.2.0 Details
+
+### New Features
+
+* Added new fonts:
+  + `Arimo` (fixes #206) (PR #207 @Ksbugbee)
+  + `Go-Mono` (PR #199 @bbrks)
+  + `Tinos` (fixes #200) (PR #201 @jerezereh)
+  + `InconsolataLGC` (PR #205 @iloginow)
+  + `Cousine` (fixes #208) (PR #209 @de-olagundoye)
+* Added Contributors section to Website and Repo (fixes #160) (PR #202, PR #204 @lucasreed)
+* Added Travis CI and integrated with ShellCheck script (fixes #120) (#212 PR @andrewimeson)
+* Added new translations:
+  + Added Russian translation of readme (partially fixes #118) (PR #203 @magauran)
+  + Added Mandarin Chinese translation of readme (partially fixes #118) (PR #214 @hiby90hou)
+
+### Updates / Improvements
+
+* Updated `Hasklig (Hasklug)` font from version `1.0` to `1.1` (fixes #188) (PR #215 @fernandomora)
+* Updated fontconfig with `monospace` (PR #211 @Tyilo)
+
+### Fixes
+
+* Fixed font-patcher relative path issues with glyph sources (PR #193 @theGivingTree)
+* Fixed install script not being callable from other directories (PR #194 @Twanislas)
+* Fixed broken links (@reujab)
+* Fixed minor misc readme issues
+
+## v1.1.0 Release
+
+v1.1.0 Details
+
+### New Features
+
+* Added shell helper script (and shell variables) for referencing glyphs (PR #147 @powerman)
+* Added new fonts:
+  + `InconsoltaGo` (PR #130 @sodiumjoe)
+  + `Ubuntu` (non mono) (fixes #134)
+* Added release script (fixes #137)
+* Added better terminal and font test scripts
+* Added CSS file for using Nerd Fonts on websites
+* Added script to build CSS file with classes to use Nerd Font glyphs
+* Added `--adjust-line-height` option to `font-patcher`
+
+### Updates / Improvements
+
+* Updated ‘Features’ section counts (fixes #117) (PR #122 @OmarB97)
+* Updated location of readme images (PR #149 @agriffis)
+* Updated `DejaVu` version from `2.33` to `2.37` (and removes the `DejaVu for Powerline`) (PR #151 @agriffis)
+* Updated Reserved Font Name (RFN) details and provides clarification (fixes #136)
+* Updated `Ubuntu Mono` version from `0.80` to `0.83` and adds missing Bold and Italic variants (fixes #134)
+* Updated `FiraCode` version from `1.102` to `1.204` (fixes #180) (PR #181 @aidanharris)
+* Updated install and Quick Links info in readme
+* Updated Homebrew font install in readme
+* Updated readme with AUR package links
+* Updated readme with links to [NerdFonts.com’s Cheat Sheet](http://nerdfonts.com/#cheat-sheet)
+* Updated readme with ‘TL;DR’ section and re-ordering of font install options (fixes #124)
+* Updated readme with more details on font install options
+* Updated various readme sections
+* Updated contributing markdown with better information
+* Updated explanations of `--mono` option and monospace in general (fixes #165)
+* Updated `font-patcher` progress bars styling
+* Updated `installh.sh` script to support installing to global system paths via `-U` (default) or `-S` flags (PR #187 @brennanfee)
+
+### Fixes
+
+* Fixed Powerline glyphs sizes, alignment and offsets (fixes #26)
+* Fixed FAQ links in `.github/` (PR #132 @polyzen)
+* Fixed Homebrew command instructions in readme (PR #133 @teddy-error)
+* Fixed markdown rendering issues in readme (PR #148 @aloisdg)
+* Fixed glyph offsets (especially Powerline) (fixes #142)
+* Fixed incorrect typeface names on some fonts (fixes #126)
+* Fixed `Font Linux` screenshot with correct code points (fixes #138) (PR #149 @agriffis)
+* Fixed trailing spaces in readme (clean-up) (PR #167 @thyrlian)
+* Fixed wiki link in issue template (fixes #174) (PR #179 @kballard)
+* Fixed misc typos and link references in readme and `font-patcher` (PR #184 @reujab)
+* Fixed font family name conflicts by adding `Mono` to single-width fonts (fixes #176) (PR #178 @kballard)
+* Fixed `font-patcher` progress bar rounding output (PR #183 @reujab)
+* Fixed executing scripts from other directories (PR #185 @reujab)
+* Fixed missing glyph `e0ca` (ice waveform mirrored) (fixes #182)
+* Fixed `Hasklig` (`Hasklug`) SIL OFL compliance issue
+* Fixed missing or out of date patched font readmes
+* Fixed `font-patcher` glyph set count not ignoring empty codepoints
+* Fixed `font-patcher` progress bars stopping at incorrect percentage
+
+## v1.0.0 Release
+
+v1.0.0 Details
+
+### New Features
+
+* Added 6 new fonts:
+  + Code New Roman (enhancement #85)
+  + Gohu (enhancement #90)
+  + Hasklig (enhancement PR #103) (@jrolfs)
+  + Mononoki (enhancement #89)
+  + Share Tech Mono (enhancement #105)
+  + Space Mono (enhancement #93)
+* Added new Glyph Sets:
+  + [Font Awesome Extension](http://andrelgava.github.io/font-awesome-extension/) (Over 170 glyphs) (enhancement #96)
+  + [IEC Power Symbols](http://unicodepowersymbol.com/) (enhancement #94)
+* Added additional methods to download the fonts:
+  + Support for [Home Brew fonts](https://github.com/caskroom/homebrew-fonts) (enhancement #72)
+  + Archive downloads via releases with scripts to generate archive downloads for patched fonts (enhancement #32)
+* Added single Nerd Fonts glyphs only fonts for Fontconfig aliasing (enhancement #84)
+* Added TTF version of Terminess (Terminus) font (fixes #23)
+* Added support for custom symbol fonts (with `--custom` flag) (PR #107 @sharkusk)
+* Added progress bars options: `--progressbars` & `--no-progressbars` to patcher script
+* Added `--postprocess` flag to allow additional scripts to run after patching (related to #70)
+
+### Updates / Improvements
+
+* Improved repository size greatly (partially fixes #73)
+  + Provides only `complete` version of patched fonts by default (others are still possible via patcher script)
+* Removed `minimal` version of patched fonts (not particularly useful)
+* Removed `variation` versions of patched fonts and instead provides generated list of commands for each combination
+* Updated Font Awesome to the latest version v4.7.0:
+  + https://github.com/FortAwesome/Font-Awesome/releases/tag/v4.7.0
+  + https://github.com/FortAwesome/Font-Awesome/issues?q=milestone%3A4.7.0
+* Updated Octicons font from [v3.2.0](https://github.com/github/octicons/releases/tag/v3.2.0) to [v4.4.0](https://github.com/github/octicons/releases/tag/v4.4.0)
+  + Last version with [font support](https://github.com/primer/octicons/issues/108)
+  + Adds glyphs: `verified`, `smiley`, `unverified`, `ellipses`, `file`, `grabber`, `plus-small`, `reply`
+  + Various glyph modifications and fixes
+* Updated [DejaVu Sans Mono](http://dejavu-fonts.org/wiki/Changelog) from version 2.33 to 2.37
+* Updated readme with information on shallow cloning (enhancement #102)
+* Updated readme with better readability, prose, and removes some passive voice issues
+* Updated sankey diagram in readme with a more visual representation of the glyphs combined
+* Updated readability and format of changelog (even past versions)
+* Removed redundant flag `--limit-font-name-length`
+
+### Fixes
+
+* Added missing glyphs in range `2630` through `2637` (trigrams) to DejaVu Sans Mono (fixes #100)
+* Fixed various missing glyphs such as `heart`, `zap`, `desktop` (fixes #87)
+* Fixed several long standing issues (fix & enhancement PR #107) (@sharkusk)
+  + glyphs (scaling and positioning) (fixes #74)
+  + Monospaced font issues
+  + Windows and macOS issues (fixes #111)
+* Fixed font name for glyph font ‘PowerlineExtraSymbols.otf’ (fixes #109)
+* Fixed and tweaked various powerline gaps (PR #107 @sharkusk)
+* Fixed Hack hints being removed in patched versions (Knack) (fixes #70, with help from @chrissimpkins)
+* Fixed various issues with ‘–careful’ flag (PR #107 @sharkusk)
+* Fixed missing codepoint conflict information for Octicons & Font Awesome (fixes #116) (image from @kaymmm)
+* Fixed and refactored various code logic and style
+
+## v0.8.0 Release
+
+v0.8.0 Details
+
+* Added 2 new fonts:
+  + [Fantasque Sans Mono](https://github.com/belluzj/fantasque-sans) (enhancement #80)
+  + [Iosevka](https://github.com/be5invis/Iosevka) (enhancement #81)
+* Added new Glyph set: [Font Linux](https://github.com/Lukas-W/font-linux) (enhancement #75)
+* Updated font install script to limit to a single font family (more typical use case) (enhancement PR #82) (@rawkode)
+* Updated readme: Misc readability tweaks and clean-up
+* Fixed Powerline Symbols not correctly rendering (if font already has the symbols) (fixes #78)
+* Fixed AttributeError with Python 3 version of font patcher script (fixes #79)
+* Fixed certain Hack/Knack font style sets by updating version of Hack to [v2.020](https://github.com/chrissimpkins/Hack/releases/tag/v2.020) (fixes #63)
+
+## v0.7.0 Release
+
+v0.7.0 Details
+
+* Added 3 new fonts:
+  + Monoid (enhancement #54)
+  + Roboto Mono (enhancement #55)
+  + Fira Code (enhancement PR #62, fixes #59) (@jrolfs)
+* Added 1 new font variant:
+  + Proggy Clean (Slashed Zero) (fixes #69)
+* Added contributing and issue PR templates (enhancement #66)
+* Added Python 3 version of the font-patcher script (fixes #49)
+* Improved explanation of font choices (complete vs alternative vs minimal choices) with bash script to maintain (fixes #52)
+* Updated Hack to v2.019 (fixes #53)
+* Updated Font Awesome to the latest version v4.5.0 (20 new icons) (fixes #48):
+  + https://github.com/FortAwesome/Font-Awesome/releases/tag/v4.5.0
+  + https://github.com/FortAwesome/Font-Awesome/issues?q=milestone%3A4.5.0
+* Fixed fonts showing as duplicates in OS X Font Book (fixes #56, enhancement PR #61) (@jrolfs)
+* Fixed Powerline Symbols not being applied correctly to patched fonts since v0.5.0 (fixes #68, fix PR #71) (@F1LT3R)
+
+## v0.6.1 Release
+
+v0.6.1 Details
+
+* Added ‘font installation’ section from [vim-devicons](https://github.com/ryanoasis/vim-devicons) with changes (enhancement PR #47) (@her)
+* Improved various readme updates and fixes: Improved section headers, gitter badge, misc
+* Fixed possible error with `--careful` flag (fixes #45)
+* Fixed default font directory on linux install script to `~/.local/share/fonts` as the previous was deprecated (fix PR #51) (@shaief)
+* Fixed broken curl download example (fixes #50)
+
+## v0.6.0 Release
+
+v0.6.0 Details
+
+* Updated Font naming conventions and directory paths that are more manageable (partially fixes #32, #42)
+* Updated Font variations to use same Font Family (partially fixes #25, #42)
+* Updated Hack/Knack font to [v2.018](https://github.com/chrissimpkins/Hack/releases/tag/v2.018) (enhancement #39)
+* Updated Source Code Pro (Sauce Code Pro) font to [v2.010/v1.030](https://github.com/adobe-fonts/source-code-pro/releases/tag/2.010R-ro%2F1.030R-it) (enhancement #33)
+* Updated Octicons font to [v3.2.0](https://github.com/github/octicons/releases/tag/v3.2.0) plus latest master commits
+* Updated readme with alternate OSX install and execution options (enhancement #38)
+* Improved performance of ‘Multiple Fonts Patcher (Gotta Patch ‘em All Font Patcher!) by using parallelization (background processes) (enhancement #44)
+* Added new flag/option to font patcher (–outputdir) to allow specifying where to save patched font instead of current directory (enhancement #44)
+* Added ‘Powerline Extra’ symbols (enhancement #30, #35)
+* Added more Glyphs from Vim-devicons glyph set (various folders, Go, Windows logo, Vim logo, etc)
+* Fixed patched fonts not retaining glyph names (fixes #41)
+* Fixed Ligatures being lost/overwritten when patching (fixes #43)
+* Regenerated all patched fonts
+
+## v0.5.1 Release
+
+v0.5.1 Details
+
+* Added Gitter chat badge
+* Updated readme with badges
+
+## v0.5.0 Release
+
+v0.5.0 Details
+
+* Added Hack font (as ‘Knack’ for now) (enhancement PR #28) (@cheba)
+* Updated and improved all fonts patcher script (enhancement PR #27) (@cheba)
+* Updated Font Awesome to the latest version v4.4.0
+  + for more details see https://github.com/FortAwesome/Font-Awesome/releases/tag/v4.4.0
+* Updated readme with Reserved Font Name info, Hack font, and various version updates
+* Updated the directory structures to make it easier to find font styles
+* Updated all patch fonts to use latest changes and fixes
+* Fixed unicode codepoints for Font Awesome glyphs (fixes #31)
+* Fixed potential SIL Open Font License (OFL) issue with ‘Fira Mono’ (patched as ‘Fura’)
+
+## v0.4.1 Release
+
+v0.4.1 Details
+
+* Fixed wrong em sizes on some glyphs (particularly Font Awesome) (fixes #24)
+  + Regenerated all patched fonts
+* Added version, comment and fontlog (with changelog notes) to fonts
+* Added image: non text version of patcher logo
+* Removed misc unnecessary code (clean-up)
+* Updated changelog: added missing release details and updated other releases
+
+## v0.4.0 Release
+
+v0.4.0 Details
+
+* Added support for ‘octicons’, ‘font-awesome’ font glyphs
+* Added missing font combinations
+* Added Hermit (as ‘Hurmit’ to comply with SIL Open Font License (OFL)) font
+* Added more sample fonts (Hermit and SourceCodePro variants)
+* Added logos
+* Added ‘Code of Conduct’
+* Added missing Pomicons.otf source file and update .gitignore (fixes #19)
+* Added ‘all fonts patcher script’ pattern parameter support (fuzzy matching)
+* Updated readme: python-fontforge minimum version & link to FontForge install docs (enhancement PR #18) (@blueyed)
+* Updated readme: various misc improvements and fixes
+* Fixed font-patcher to only load Pomicons.otf with ‘–pomicons’ flag (enhancement PR #20) (fixes #19) (@blueyed)
+* Fixed other misc issues
+* Added font files versioning
+
+## v0.3.1 Release
+
+v0.3.1 Details
+
+* Updated readme
+* Fixed font patcher output name for Mono fonts
+* Fixed patcher overwriting fonts with ‘Mono’ versions preventing all combinations from being generated (only 220 instead of 352)
+* Fixed more possible license issues by completely removed ‘Input Mono’ font related files
+* Fixed all patched fonts: Re-patched all the fonts due to issue with font patcher and all fonts
+
+## v0.3.0 Release
+
+v0.3.0 Details
+
+* Added new fonts, set up unpatched sources, and set up patched version folders (enhancement #10)
+  + Fonts: 3270, Aurulent Sans Mono, Bitstream Vera Sans Mono, Heavy Data, Lekton, MPlus (M+), ProFont
+* Added script to re-patch all of the fonts (work in progress) for enhancement (enhancement #11)
+* Added pomicon glyphs (enhancement #14)
+* Updated devicons font source to latest version 1.8.0 release
+* Updated the range to include new glyphs from latest devicons 1.8.0 (work toward but NOT does not fix #12)
+* Updated scripts and files: various clean-up and refactoring tasks
+* Updated readme
+
+## v0.2.1 Release
+
+v0.2.1 Details
+
+* Added fonts install script for Linux and Mac OS (enhancment PR #5) (@srijanshetty)
+* Added detection and warnings when using unsupported (old) fontforge versions (fixes #6)
+* Added missing patched fonts
+* Fixed Licensing compliance issues (#7)
+  + includes removing PragmataPro (@abl)
+* Updated readme: misc updates and tweaks
+
+## v0.2.0 Release
+
+v0.2.0 Details
+
+* True mono support
+  + Script can now build single and double width glyphs!
+* Added details of cli parameters and updated fonts list with the true mono spaced fonts (#4)
+* Added/fixed mono fonts single width glyphs support
+* Updated readme
+
+## v0.1.2 Release
+
+v0.1.2 Details
+
+* Updated readme with better description and explanation of the options available
+* Added new unpatched font PragmataPro for Powerline
+* Added new patched font PragmataPro for Powerline Plus Nerd File Types
+
+## v0.1.1 Release
+
+v0.1.1 Details
+
+* Fixes scaling issues in first set of glyphs in certain fonts (fixes issue #1)
+
+## v0.1.0 Release
+
+v0.1.0 Details
+
+* Release
+* Inital port from ‘features/1-script-patch-fonts’ branch on vim-webdevicons repo
+
+Nerd Fonts & Web Site Created by [Ryan L McIntyre](https://RyanLMcIntyre.com/)
+
+Design by Tim O’Brien [t413.com](http://t413.com/)
+—
+[SinglePaged theme](https://github.com/t413/SinglePaged)
+—
+this site is [open source](https://github.com/ryanoasis/nerd-fonts/tree/gh-pages)
+
+Created in  &  with

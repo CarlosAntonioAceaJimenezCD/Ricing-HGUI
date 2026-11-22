@@ -1,0 +1,241 @@
+This document describes the format string syntax used by the `format` property of a module, and by the `key` property when it is used as a format string.
+
+## Basic Syntax
+
+A format string contains placeholders for dynamic values. Each placeholder starts with `{`, contains a value name or index, and ends with `}`.
+
+For example:
+```jsonc
+{
+  "type": "title",
+  "format": "{user-name}@{host-name}" // Evaluates to "user@my-host" given the values "user" and "my-host"
+}
+```
+
+See the module-specific help for available named arguments:
+```bash
+$ fastfetch -h title-format
+```
+
+A placeholder that cannot be resolved, such as a misspelled argument name or an out-of-range index, is printed verbatim rather than being dropped, which makes it easy to spot. `fastfetch --show-errors` does not report them.
+
+## Numeric/Index-Based (starts from `1`) Arguments
+
+**DEPRECATED**: Always prefer named arguments over numeric placeholders. Numeric placeholder positions can change between releases (for example if arguments are reordered), which introduces breaking changes for any configuration relying on them. Named arguments such as `{user-name}` remain stable regardless of argument ordering.
+
+`{1}@{2}` or `{}@{}` (indices are implicitly increased, starts from 1)
+> Because of historical reasons, `{0}` is the same as `{}`
+
+## String Manipulation
+
+### Truncation
+
+You can specify a truncation length using the `{arg:length}` syntax:
+```text
+"{user-name:5}" → truncates the username to 5 characters
+```
+
+If the length is negative, an ellipsis (`…`) is appended to the truncated string.
+
+*Note: the length is measured in raw bytes, not in characters or display columns, so a multi-byte character counts as several and can be cut in half. A color escape sequence at the start of the value, and the reset at the end of it, are not counted; one in the middle of the value is.*
+
+### Padding
+
+Use `<`, `>`, or `|` instead of `:` to apply left, right, or center padding:
+```jsonc
+"{user-name<20}" →  left-aligned with spaces: "username            "
+"{user-name>20}" → right-aligned with spaces: "            username"
+"{user-name|20}" → center-aligned with spaces: "      username      " // Added in v2.64.0
+```
+
+*Note: String length is measured in raw bytes, as above.*
+
+### Slicing
+
+Use `{variable~startIndex,endIndex}` to slice a string:
+```text
+"{user-name~0,3}"   → characters 0 to 2: "car"
+"{user-name~1}"     → from character 1 to the end: "arter"
+"{user-name~2,4}"   → characters 2 to 3: "rt"
+"{user-name~-3,-1}" → characters 3 to 4: "te"
+```
+
+Negative indices count backward from the end of the string. The start index is inclusive and the end index is exclusive, an omitted start index defaults to `0`, and an end index past the end of the string is clamped to it.
+
+*Note: String length is measured in raw bytes, as above.*
+
+**Note:** an omitted *end* index does not mean "up to the end of the string". `"{user-name~2,}"` and `"{user-name~-5,}"` both evaluate to an empty string, because the missing end index is read as `0` and `0` is never greater than the start index. Give the end index explicitly, or drop the comma to slice to the end of the string (`"{user-name~2}"`).
+
+## Variable References
+
+### Constants and Environment Variables
+
+You can reference constants and environment variables using the `$` prefix:
+```text
+"{$1}"       → the first entry of `display.constants`
+"{$-1}"      → the last entry of `display.constants`
+"{$ENV_VAR}" → an environment variable
+```
+
+* Constants are numbered from `1`, and a negative index counts backward from the end.
+* `{$0}` and any index outside the list are printed verbatim.
+
+## Special Formatting
+
+### Escaping Curly Braces
+
+A double open curly brace (`{{`) is printed as a single open curly brace (`{`) and is not treated as a placeholder. There is no escape for a closing brace; a `}` that does not close a placeholder is printed as is.
+
+### Conditional Content
+
+To conditionally print content only when a variable is set (not empty):
+```text
+"{?user-name}Username: {user-name}{?}" → Prints only if `{user-name}` is set
+```
+
+To conditionally print content only when a variable is NOT set (empty):
+```text
+"{/user-name}Username not available{/}" → Prints only if `{user-name}` is NOT set
+```
+
+Example combining both:
+```text
+"{?user-name}{user-name}{?}{/user-name}Username fallback{/}"
+```
+
+Whether a variable counts as "set" depends on its type, and for every numeric type the test is
+**strictly greater than zero**:
+
+| Variable type | Counted as set when |
+|---|---|
+| Number (integer, unsigned or floating point) | the value is greater than `0` |
+| String | it is neither empty nor `NULL` |
+| Boolean | it is `true` |
+| List | it holds at least one entry |
+
+A numeric `0` is therefore "not set", and so is every negative number. That is what makes the
+conditional form the right way to print a value that the platform may not report: modules whose
+detection layer marks "no data" with a negative sentinel hand that sentinel to the format engine, so
+a bare `{lmp-version}` in [Modules-BluetoothRadio](Modules-BluetoothRadio) prints `-2147483648`
+when the field is absent, while `{?lmp-version}…{?}` correctly treats it as unset and prints nothing.
+The raw variable and the condition disagree on purpose; use the conditional form for anything that
+can be absent. The test is `formatArgSet()` in `src/common/impl/format.c`.
+
+*Note: `{/x}` is the exact negation of `{?x}`, so it fires for `0` and for negative numbers too.*
+
+### Terminating Formatting
+
+To terminate formatting at any point, use `{-}`. Everything after it in the format string is discarded.
+
+## Color Formatting
+
+To apply color to text, start a placeholder with `#` followed by terminal color codes:
+```text
+"{#4;35}Colored Text{#}" → underlined magenta (pink) text
+```
+
+The ANSI escape sequence `\e[` at the start and `m` at the end are automatically appended.
+
+`{#}` resets all formatting to default, as does `{#0}`.
+
+Named color formats are also supported:
+```text
+"{#underline_magenta}Colored Text{#}"
+```
+
+See [Color Format Specification](https://github.com/fastfetch-cli/fastfetch/wiki/Color-Format-Specification) for the supported color codes.
+
+## Hiding a Key
+
+Setting `key` to exactly one space hides the key of a module, so that only its value is printed:
+
+```jsonc
+{
+  "type": "host",
+  "key": " " // Hides the key for the host module
+}
+```
+
+* The value must be exactly one space. Any other value is printed as the key, including two spaces (`"  "`).
+* An empty key (`""`) is treated as "unset", so the module's built-in key is used instead.
+* The same applies to `format`: an empty format string (`""`) is treated as "unset", so the module's built-in format is used instead.
+* A format string that evaluates to nothing still prints the key and the separator, followed by an empty value. It does not remove the line.
+
+---
+
+## Scripting Support (Experimental)
+
+For advanced custom formatting and cross-module data manipulation, Fastfetch supports embedding **Lua** or **QuickJS (JavaScript)** scripts directly within format strings. This feature requires Fastfetch v2.64.0 or later.
+
+### Lua Scripts
+Prefix your format string with `lua:` to execute Lua code.
+
+* **Return Values:** A `return` statement is required to pass the final string result back to the Fastfetch module. If `nil` is returned (or implicitly omitted), the entire module's output is skipped.
+* **Parameters:** Module-specific variables are passed via variable arguments (`...`). You can assign them to local variables for better readability.
+* **State Sharing:** The Lua interpreter instance is **shared across all modules**, allowing you to store data in one module and access it in another.
+* **Preloading:** `general.preload.lua` runs a script as soon as the config is read, before any module runs. It is where you load a file of your own helpers, so that their functions are available to every module. See *Preloading Shared Code* below.
+* **No `require`:** fastfetch does not open Lua's `package` library, so a script cannot pull in a module by name. It also means nothing in a config file can load a `.so` / `.dll`. Use `dofile` or `loadfile` with a path to load your own code.
+* **Debugging:** A `json_encode(table, is_pretty)` helper function is injected into the Lua environment to easily dump and inspect available variables.
+* **Requirements:** Supports Lua 5.3 through 5.5 (Lua 5.1 and LuaJIT are **not** supported). The Lua version is auto-detected at build time and can be verified using `fastfetch --list-features`.
+
+**Basic Usage:**
+```jsonc
+{
+    "type": "title",
+    "format": "lua:local args = ...; return string.format('Hello %s@%s', args.userName, args.hostName)" // Prints `Hello user@host`
+}
+```
+
+**Cross-Module Data Sharing:**
+```jsonc
+[
+    // 1. Store the shell object globally (no "return", so this module's output is skipped)
+    { "type": "shell", "format": "lua:shell = ..." },
+
+    // 2. Access the stored object in a subsequent module
+    { "type": "terminal", "format": "lua:return shell.prettyName .. ' in ' .. (...).prettyName" } // Prints `Zsh in Alacritty`
+]
+```
+
+**Debugging Available Variables:**
+```jsonc
+{
+    "type": "cpu",
+    "format": "lua:return json_encode(..., true)"
+}
+```
+
+You can use JSON5's line-continuation syntax (backslashes) to break up long script lines. [Example](https://github.com/fastfetch-cli/fastfetch/discussions/2379#discussioncomment-17194638)
+
+**Preloading Shared Code:**
+Write your helpers in a Lua file of your own, and load that file from `general.preload.lua`. The preload script runs once, in the shared Lua state, as soon as the config is read and before any module is, so everything it defines is available to every module:
+
+```jsonc
+// ~/.config/fastfetch/config.jsonc
+{
+    "general": {
+        "preload": {
+            // Runs once, while the config is read. Note: full path is required
+            "lua": "dofile('/home/me/.config/fastfetch/helpers.lua')"
+        }
+    },
+    "modules": [
+        { "type": "title", "format": "lua:return formatTitle(...)" }
+    ]
+}
+```
+
+```lua
+-- ~/.config/fastfetch/helpers.lua
+
+-- Declare it globally to reach it from a format string
+function formatTitle(args)
+    return '[' .. args.userName .. '@' .. args.hostName .. ']'
+end
+```
+
+* The format string still needs its own `return`: `lua:formatTitle(...)` prints nothing, `lua:return formatTitle(...)` prints the result.
+* `dofile(path)` loads and runs the file in one step. `loadfile(path)` returns the compiled chunk instead, so `loadfile(path)()` is the same thing written out; use that form if you want to check `loadfile`'s `nil, err` result before running anything.
+* The preload runs as soon as the config is read, so a config that sets it starts the Lua interpreter even if no `lua:` format string is used.
+* A preload script that fails is a **config error**: `JsonConfig Error (general.preload): <message>`, and fastfetch stops. It is not attributed to a module, and `--show-errors` does not affect whether it is printed. Since the message is not prefixed with the module it came from, a script error keeps Lua's own position, as in `general.preload.lua:1: ...`.
+* Those three functions are also the only file access a script has: `os`, `io` and `debug` are not available. `load` takes the source as a string rather than a path.

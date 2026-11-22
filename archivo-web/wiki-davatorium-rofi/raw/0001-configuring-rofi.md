@@ -1,0 +1,1 @@
+Moved to [CONFIG.md](https://github.com/davatorium/rofi/blob/next/CONFIG.md)

@@ -1,0 +1,979 @@
+<!DOCTYPE html><html lang="en" dir="ltr" data-has-toc data-has-sidebar class="astro-bguv2lll"> <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Widgets | AGS Wiki</title><link rel="canonical" href="https://aylur.github.io/ags-docs/config/widgets/"/><link rel="sitemap" href="/ags-docs/sitemap-index.xml"/><link rel="shortcut icon" href="/ags-docs/./favicon.ico" type="image/x-icon"/><meta name="generator" content="Astro v4.0.7"/><meta name="generator" content="Starlight v0.15.1"/><meta property="og:title" content="Widgets"/><meta property="og:type" content="article"/><meta property="og:url" content="https://aylur.github.io/ags-docs/config/widgets/"/><meta property="og:locale" content="en"/><meta property="og:description" content="List of builtin subclassed widgets"/><meta property="og:site_name" content="AGS Wiki"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Widgets"/><meta name="twitter:description" content="List of builtin subclassed widgets"/><meta name="description" content="List of builtin subclassed widgets"/><script>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme =
+			typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const theme =
+			storedTheme ||
+			(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'dark';
+		return {
+			updatePickers(theme = storedTheme || 'auto') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					/** @type {HTMLTemplateElement | null} */
+					const tmpl = document.querySelector(`#theme-icons`);
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script><template id="theme-icons"><svg aria-hidden="true" class="light astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M5 12a1 1 0 0 0-1-1H3a1 1 0 0 0 0 2h1a1 1 0 0 0 1-1Zm.64 5-.71.71a1 1 0 0 0 0 1.41 1 1 0 0 0 1.41 0l.71-.71A1 1 0 0 0 5.64 17ZM12 5a1 1 0 0 0 1-1V3a1 1 0 0 0-2 0v1a1 1 0 0 0 1 1Zm5.66 2.34a1 1 0 0 0 .7-.29l.71-.71a1 1 0 1 0-1.41-1.41l-.66.71a1 1 0 0 0 0 1.41 1 1 0 0 0 .66.29Zm-12-.29a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.71-.71a1.004 1.004 0 1 0-1.43 1.41l.73.71ZM21 11h-1a1 1 0 0 0 0 2h1a1 1 0 0 0 0-2Zm-2.64 6A1 1 0 0 0 17 18.36l.71.71a1 1 0 0 0 1.41 0 1 1 0 0 0 0-1.41l-.76-.66ZM12 6.5a5.5 5.5 0 1 0 5.5 5.5A5.51 5.51 0 0 0 12 6.5Zm0 9a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0 3.5a1 1 0 0 0-1 1v1a1 1 0 0 0 2 0v-1a1 1 0 0 0-1-1Z"/></svg> <svg aria-hidden="true" class="dark astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.64 13a1 1 0 0 0-1.05-.14 8.049 8.049 0 0 1-3.37.73 8.15 8.15 0 0 1-8.14-8.1 8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05Zm-9.5 6.69A8.14 8.14 0 0 1 7.08 5.22v.27a10.15 10.15 0 0 0 10.14 10.14 9.784 9.784 0 0 0 2.1-.22 8.11 8.11 0 0 1-7.18 4.32v-.04Z"/></svg> <svg aria-hidden="true" class="auto astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg> </template><link rel="stylesheet" href="/ags-docs/_astro/index.QiqLk1AS.css" />
+<style>svg:where(.astro-c6vsoqas){color:var(--sl-icon-color);font-size:var(--sl-icon-size, 1em);width:1em;height:1em}
+</style><script type="module" src="/ags-docs/_astro/hoisted.xRJUybm7.js"></script>
+<script type="module" src="/ags-docs/_astro/page.36aCzv65.js"></script></head> <body class="astro-bguv2lll"> <a href="#_top" class="astro-7q3lir66">Skip to content</a>  <div class="page sl-flex astro-vrdttmbt"> <header class="header astro-vrdttmbt"><div class="header sl-flex astro-kmkmnagf"> <div class="sl-flex astro-kmkmnagf"> <a href="/ags-docs/" class="site-title sl-flex astro-m46x6ez3">  <span class="astro-m46x6ez3"> AGS Wiki </span> </a>  </div> <div class="sl-flex astro-kmkmnagf"> <site-search data-translations="{&#34;placeholder&#34;:&#34;Search&#34;}" class="astro-v37mnknz"> <button data-open-modal disabled class="astro-v37mnknz">  <svg aria-label="Search" class="astro-v37mnknz astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21.71 20.29 18 16.61A9 9 0 1 0 16.61 18l3.68 3.68a.999.999 0 0 0 1.42 0 1 1 0 0 0 0-1.39ZM11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Z"/></svg>  <span class="sl-hidden md:sl-block astro-v37mnknz" aria-hidden="true">Search</span> <svg aria-label="(Press / to Search)" class="sl-hidden md:sl-block astro-v37mnknz astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 2H7a5 5 0 0 0-5 5v10a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5Zm3 15a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v10Z"/><path d="M15.293 6.707a1 1 0 1 1 1.414 1.414l-8.485 8.486a1 1 0 0 1-1.414-1.415l8.485-8.485Z"/></svg>  </button> <dialog style="padding:0" aria-label="Search" class="astro-v37mnknz"> <div class="dialog-frame sl-flex astro-v37mnknz">  <button data-close-modal class="sl-flex md:sl-hidden astro-v37mnknz"> Cancel </button> <div class="search-container astro-v37mnknz"> <div id="starlight__search" class="astro-v37mnknz"></div> </div> </div> </dialog> </site-search>    </div> <div class="sl-hidden md:sl-flex right-group astro-kmkmnagf"> <div class="sl-flex social-icons astro-kmkmnagf"> <a href="https://github.com/Aylur/ags" rel="me" class="sl-flex astro-wy4te6ga"><span class="sr-only astro-wy4te6ga">GitHub</span><svg aria-hidden="true" class="astro-wy4te6ga astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg> </a><a href="https://discord.gg/CXQpHwDuhY" rel="me" class="sl-flex astro-wy4te6ga"><span class="sr-only astro-wy4te6ga">Discord</span><svg aria-hidden="true" class="astro-wy4te6ga astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.78 13.78 0 0 0-.64 1.28 18.27 18.27 0 0 0-5.5 0 12.64 12.64 0 0 0-.64-1.28h-.05A19.74 19.74 0 0 0 3.64 4.4 20.26 20.26 0 0 0 .11 18.09l.02.02a19.9 19.9 0 0 0 6.04 3.03l.04-.02a14.24 14.24 0 0 0 1.23-2.03.08.08 0 0 0-.05-.07 13.1 13.1 0 0 1-1.9-.92.08.08 0 0 1 .02-.1 10.2 10.2 0 0 0 .41-.31h.04a14.2 14.2 0 0 0 12.1 0l.04.01a9.63 9.63 0 0 0 .4.32.08.08 0 0 1-.03.1 12.29 12.29 0 0 1-1.9.91.08.08 0 0 0-.02.1 15.97 15.97 0 0 0 1.27 2.01h.04a19.84 19.84 0 0 0 6.03-3.05v-.03a20.12 20.12 0 0 0-3.57-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42Z"/></svg> </a> </div> <starlight-theme-select>  <label style="--sl-select-width: 6.25em" class="astro-4yphtoen"> <span class="sr-only astro-4yphtoen">Select theme</span> <svg aria-hidden="true" class="icon label-icon astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg>  <select value="auto" class="astro-4yphtoen"> <option value="dark" class="astro-4yphtoen">Dark</option><option value="light" class="astro-4yphtoen">Light</option><option value="auto" selected="true" class="astro-4yphtoen">Auto</option> </select> <svg aria-hidden="true" class="icon caret astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </label>  </starlight-theme-select>  <script>
+	StarlightThemeProvider.updatePickers();
+</script>   </div> </div> </header> <nav class="sidebar astro-vrdttmbt" aria-label="Main"> <starlight-menu-button class="astro-jif73yzw"> <button aria-expanded="false" aria-label="Menu" aria-controls="starlight__sidebar" class="sl-flex md:sl-hidden astro-jif73yzw"> <svg aria-hidden="true" class="astro-jif73yzw astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/></svg>  </button> </starlight-menu-button>    <div id="starlight__sidebar" class="sidebar-pane astro-vrdttmbt"> <div class="sidebar-content sl-flex astro-vrdttmbt"> <ul class="top-level astro-3ii7xxms"> <li class="astro-3ii7xxms"> <details open class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Configuration</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/ags-docs/config/installation" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Installation</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/javascript" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">JavaScript</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/first-widgets" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">First Widgets</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/reactivity" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Reactivity</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/theming" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Theming</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/config-object" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Config Object</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/type-checking" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Type Checking</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/cli" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">CLI</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets" aria-current="page" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Widgets</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/variables" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Variables</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/services" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Services</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/utils" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Utils</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/app" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">App</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/custom-service" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Custom Service</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/subclassing-gtk-widgets" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Subclassing GTK Widgets</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/examples" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Examples</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/common-issues" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Common Issues</span>  </a> </li> </ul>  </details> </li><li class="astro-3ii7xxms"> <details class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Builtin Services</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/ags-docs/services/applications/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Applications</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/services/audio/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Audio</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/services/backlight/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Backlight</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/services/battery/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Battery</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/services/bluetooth/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Bluetooth</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/services/greetd/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Greetd</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/services/hyprland/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Hyprland</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/services/mpris/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Mpris</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/services/network/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Network</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/services/notifications/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Notifications</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/services/powerprofiles/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Power Profiles</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/services/systemtray/" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">System Tray</span>  </a> </li> </ul>  </details> </li><li class="astro-3ii7xxms"> <details class="astro-3ii7xxms"> <summary class="astro-3ii7xxms"> <div class="group-label astro-3ii7xxms"> <span class="large astro-3ii7xxms">Builtin Widgets</span>  </div> <svg aria-hidden="true" class="caret astro-3ii7xxms astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.25rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </summary> <ul class="astro-3ii7xxms"> <li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#window" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Window</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#box" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Box</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#button" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Button</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#calendar" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Calendar</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#centerbox" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">CenterBox</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#circularprogress" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">CircularProgress</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#colorbutton" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">ColorButton</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#drawingarea" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">DrawingArea</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#entry" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Entry</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#eventbox" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">EventBox</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#filechooserbutton" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">FileChooserButton</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#fixed" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Fixed</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#flowbox" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">FlowBox</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#fontbutton" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">FontButton</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#icon" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Icon</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#label" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Label</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#levelbar" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">LevelBar</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#listbox" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">ListBox</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#menu" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Menu</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#menubar" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">MenuBar</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#menuitem" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">MenuItem</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#overlay" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">OverLay</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#progressbar" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">ProgressBar</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#revealer" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Revealer</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#scrollable" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Scrollable</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#separator" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Separator</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#slider" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Slider</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#spinbutton" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">SpinButton</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#spinner" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Spinner</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#stack" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Stack</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#switch" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">Switch</span>  </a> </li><li class="astro-3ii7xxms"> <a href="/ags-docs/config/widgets#togglebutton" class="astro-3ii7xxms"> <span class="astro-3ii7xxms">ToggleButton</span>  </a> </li> </ul>  </details> </li> </ul>  <div class="md:sl-hidden"> <div class="mobile-preferences sl-flex astro-wu23bvmt"> <div class="sl-flex social-icons astro-wu23bvmt"> <a href="https://github.com/Aylur/ags" rel="me" class="sl-flex astro-wy4te6ga"><span class="sr-only astro-wy4te6ga">GitHub</span><svg aria-hidden="true" class="astro-wy4te6ga astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.83 1.24 1.83 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3Z"/></svg> </a><a href="https://discord.gg/CXQpHwDuhY" rel="me" class="sl-flex astro-wy4te6ga"><span class="sr-only astro-wy4te6ga">Discord</span><svg aria-hidden="true" class="astro-wy4te6ga astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.78 13.78 0 0 0-.64 1.28 18.27 18.27 0 0 0-5.5 0 12.64 12.64 0 0 0-.64-1.28h-.05A19.74 19.74 0 0 0 3.64 4.4 20.26 20.26 0 0 0 .11 18.09l.02.02a19.9 19.9 0 0 0 6.04 3.03l.04-.02a14.24 14.24 0 0 0 1.23-2.03.08.08 0 0 0-.05-.07 13.1 13.1 0 0 1-1.9-.92.08.08 0 0 1 .02-.1 10.2 10.2 0 0 0 .41-.31h.04a14.2 14.2 0 0 0 12.1 0l.04.01a9.63 9.63 0 0 0 .4.32.08.08 0 0 1-.03.1 12.29 12.29 0 0 1-1.9.91.08.08 0 0 0-.02.1 15.97 15.97 0 0 0 1.27 2.01h.04a19.84 19.84 0 0 0 6.03-3.05v-.03a20.12 20.12 0 0 0-3.57-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42Z"/></svg> </a> </div> <starlight-theme-select>  <label style="--sl-select-width: 6.25em" class="astro-4yphtoen"> <span class="sr-only astro-4yphtoen">Select theme</span> <svg aria-hidden="true" class="icon label-icon astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M21 14h-1V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7H3a1 1 0 0 0-1 1v2a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-2a1 1 0 0 0-1-1ZM6 7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7H6V7Zm14 10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-1h16v1Z"/></svg>  <select value="auto" class="astro-4yphtoen"> <option value="dark" class="astro-4yphtoen">Dark</option><option value="light" class="astro-4yphtoen">Light</option><option value="auto" selected="true" class="astro-4yphtoen">Auto</option> </select> <svg aria-hidden="true" class="icon caret astro-4yphtoen astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1em;"><path d="M17 9.17a1 1 0 0 0-1.41 0L12 12.71 8.46 9.17a1 1 0 1 0-1.41 1.42l4.24 4.24a1.002 1.002 0 0 0 1.42 0L17 10.59a1.002 1.002 0 0 0 0-1.42Z"/></svg>  </label>  </starlight-theme-select>  <script>
+	StarlightThemeProvider.updatePickers();
+</script>   </div>  </div> </div> </div> </nav> <div class="main-frame astro-vrdttmbt">  <div class="lg:sl-flex astro-67yu43on"> <aside class="right-sidebar-container astro-67yu43on"> <div class="right-sidebar astro-67yu43on"> <div class="lg:sl-hidden astro-pb3aqygn"><mobile-starlight-toc data-min-h="2" data-max-h="3" class="astro-doynk5tl"><nav aria-labelledby="starlight__on-this-page--mobile" class="astro-doynk5tl"><details id="starlight__mobile-toc" class="astro-doynk5tl"><summary id="starlight__on-this-page--mobile" class="sl-flex astro-doynk5tl"><div class="toggle sl-flex astro-doynk5tl">On this page<svg aria-hidden="true" class="caret astro-doynk5tl astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1rem;"><path d="m14.83 11.29-4.24-4.24a1 1 0 1 0-1.42 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1.002 1.002 0 0 0 0-1.42Z"/></svg> </div><span class="display-current astro-doynk5tl"></span></summary><div class="dropdown astro-doynk5tl"><ul class="isMobile astro-g2bywc46" style="--depth: 0;"> <li class="astro-g2bywc46" style="--depth: 0;"> <a href="#_top" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">Overview</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#setup-property" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">Setup property</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#attribute-property" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">Attribute property</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#common-gtk-properties" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">Common Gtk properties</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#toggleclassname" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">toggleClassName</span> </a> <ul class="isMobile astro-g2bywc46" style="--depth: 1;"> <li class="astro-g2bywc46" style="--depth: 1;"> <a href="#window" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Window</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#box" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Box</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#button" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Button</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#calendar" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Calendar</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#centerbox" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">CenterBox</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#circularprogress" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">CircularProgress</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#colorbutton" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">ColorButton</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#drawingarea" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">DrawingArea</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#entry" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Entry</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#eventbox" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">EventBox</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#filechooserbutton" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">FileChooserButton</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#fixed" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Fixed</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#flowbox" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">FlowBox</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#fontbutton" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">FontButton</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#icon" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Icon</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#label" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Label</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#levelbar" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">LevelBar</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#listbox" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">ListBox</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#menu" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Menu</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#menubar" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">MenuBar</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#menuitem" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">MenuItem</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#overlay" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Overlay</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#progressbar" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">ProgressBar</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#revealer" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Revealer</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#scrollable" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Scrollable</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#separator" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Separator</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#slider" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Slider</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#spinbutton" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">SpinButton</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#spinner" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Spinner</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#stack" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Stack</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#switch" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Switch</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#togglebutton" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">ToggleButton</span> </a>  </li> </ul>  </li> </ul> </div></details></nav></mobile-starlight-toc></div><div class="right-sidebar-panel sl-hidden lg:sl-block astro-pb3aqygn"><div class="sl-container astro-pb3aqygn"><starlight-toc data-min-h="2" data-max-h="3"><nav aria-labelledby="starlight__on-this-page"><h2 id="starlight__on-this-page">On this page</h2><ul class="astro-g2bywc46" style="--depth: 0;"> <li class="astro-g2bywc46" style="--depth: 0;"> <a href="#_top" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">Overview</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#setup-property" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">Setup property</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#attribute-property" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">Attribute property</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#common-gtk-properties" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">Common Gtk properties</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 0;"> <a href="#toggleclassname" class="astro-g2bywc46" style="--depth: 0;"> <span class="astro-g2bywc46" style="--depth: 0;">toggleClassName</span> </a> <ul class="astro-g2bywc46" style="--depth: 1;"> <li class="astro-g2bywc46" style="--depth: 1;"> <a href="#window" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Window</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#box" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Box</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#button" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Button</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#calendar" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Calendar</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#centerbox" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">CenterBox</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#circularprogress" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">CircularProgress</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#colorbutton" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">ColorButton</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#drawingarea" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">DrawingArea</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#entry" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Entry</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#eventbox" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">EventBox</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#filechooserbutton" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">FileChooserButton</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#fixed" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Fixed</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#flowbox" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">FlowBox</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#fontbutton" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">FontButton</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#icon" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Icon</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#label" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Label</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#levelbar" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">LevelBar</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#listbox" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">ListBox</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#menu" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Menu</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#menubar" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">MenuBar</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#menuitem" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">MenuItem</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#overlay" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Overlay</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#progressbar" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">ProgressBar</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#revealer" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Revealer</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#scrollable" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Scrollable</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#separator" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Separator</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#slider" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Slider</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#spinbutton" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">SpinButton</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#spinner" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Spinner</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#stack" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Stack</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#switch" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">Switch</span> </a>  </li><li class="astro-g2bywc46" style="--depth: 1;"> <a href="#togglebutton" class="astro-g2bywc46" style="--depth: 1;"> <span class="astro-g2bywc46" style="--depth: 1;">ToggleButton</span> </a>  </li> </ul>  </li> </ul> </nav></starlight-toc></div></div> </div> </aside> <div class="main-pane astro-67yu43on">  <main data-pagefind-body lang="en" dir="ltr" class="astro-bguv2lll">  <div class="sl-banner astro-laz2plt2">You are looking at the legacy documentation of AGS v1. Go to <a href="https://aylur.github.io/ags/">aylur.github.io/ags</a> for AGS v2.</div>  <div class="content-panel astro-7nkwcw3z"> <div class="sl-container astro-7nkwcw3z"> <h1 id="_top" class="astro-j6tvhyss">Widgets</h1>  </div> </div>  <div class="content-panel astro-7nkwcw3z"> <div class="sl-container astro-7nkwcw3z"> <div class="sl-markdown-content"> <p><code dir="auto">Widget</code> functions return an instance of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.widget">Gtk.Widget</a>.
+Most common widgets are subclassed and have a few additional properties.</p>
+<p>These widgets have some additional properties on top of the base Gtk.Widget ones:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>class-name</td><td><code dir="auto">string</code></td><td>List of class CSS selectors separated by white space.</td></tr><tr><td>class-names</td><td><code dir="auto">Array&#x3C;string></code></td><td>List of class CSS selectors.</td></tr><tr><td>css</td><td><code dir="auto">string</code></td><td>Inline CSS. e.g <code dir="auto">label { color: white; }</code>. If no selector is specified <code dir="auto">*</code> will be assumed. e.g <code dir="auto">color: white;</code> will be inferred as <code dir="auto">*{ color: white; }</code>.</td></tr><tr><td>hpack</td><td><code dir="auto">string</code></td><td>Horizontal alignment, behaves like <code dir="auto">halign</code>. <code dir="auto">halign</code> takes an enum, but for convenience <code dir="auto">hpack</code> can be given with a string, so one of <code dir="auto">"start"</code>, <code dir="auto">"center"</code>, <code dir="auto">"end"</code>, <code dir="auto">"fill"</code>.</td></tr><tr><td>vpack</td><td><code dir="auto">string</code></td><td>Vertical alignment.</td></tr><tr><td>cursor</td><td><code dir="auto">string</code></td><td>Cursor style when hovering over widgets that have hover states, e.g it won’t work on labels. <a href="https://docs.gtk.org/gdk3/ctor.Cursor.new_from_name.html">list of valid values</a>.</td></tr><tr><td>attribute</td><td><code dir="auto">any</code></td><td>Any additional attributes on <code dir="auto">self</code></td></tr><tr><td>setup</td><td><code dir="auto">(self) => void</code></td><td>A callback function to execute on <code dir="auto">self</code></td></tr></tbody></table>
+<h2 id="setup-property">Setup property</h2>
+<p><code dir="auto">setup</code> is a convenience prop to have imperative code inside declarative blocks</p>
+<p>without <code dir="auto">setup</code></p>
+<div class="expressive-code"><link rel="stylesheet" href="/ags-docs/_astro/ec.0epgx.css"><script type="module" src="/ags-docs/_astro/ec.sgewm.js"></script><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">function</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#82AAFF;--1:#3B61B0">MyWidget</span><span style="--0:#D9F5DD;--1:#111111">()</span><span style="--0:#D6DEEB;--1:#403F53"> {</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    </span><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">self</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Button</span><span style="--0:#D6DEEB;--1:#403F53">()</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    </span><span style="--0:#919F9F;--1:#5D6376">// imperative code</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    </span><span style="--0:#C792EA;--1:#8844AE">return</span><span style="--1:#403F53"><span style="--0:#D6DEEB"> </span><span style="--0:#D7DBE0">self</span></span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">}</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="function MyWidget() {    const self = Widget.Button()    // imperative code    return self}"><div></div></button></div></figure></div>
+<p>using <code dir="auto">setup</code></p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">MyWidget</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#D9F5DD;--1:#111111">()</span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Button</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">setup</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D7DBE0;--1:#403F53">self</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#919F9F;--1:#5D6376">// imperative code</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    }</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const MyWidget = () => Widget.Button({    setup: self => {        // imperative code    }})"><div></div></button></div></figure></div>
+<h2 id="attribute-property">Attribute property</h2>
+<p>for attaching additional attributes on widgets <code dir="auto">Object.assign</code> or
+the <code dir="auto">attribute</code> property can be used</p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">function</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#82AAFF;--1:#3B61B0">MyWidget</span><span style="--0:#D9F5DD;--1:#111111">()</span><span style="--0:#D6DEEB;--1:#403F53"> {</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    </span><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">self</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Button</span><span style="--0:#D6DEEB;--1:#403F53">()</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    </span><span style="--0:#C792EA;--1:#8844AE">return</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#7FDBCA;--1:#096E72">Object</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">assign</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">self</span></span><span style="--0:#889FB2;--1:#4D667B">,</span><span style="--0:#D6DEEB;--1:#403F53"> {</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        myPrimitiveProperty: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">anything</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#889FB2;--1:#4D667B">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        myObjectProperty: {</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">            something: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">anything</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#889FB2;--1:#4D667B">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">            key: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">value</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#889FB2;--1:#4D667B">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        }</span><span style="--0:#889FB2;--1:#4D667B">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    })</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">}</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">mywidget</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#82AAFF;--1:#3B61B0">MyWidget</span><span style="--0:#D6DEEB;--1:#403F53">()</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">console</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">log</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#7FDBCA;--1:#096E72">mywidget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">myPrimitiveProperty</span><span style="--0:#D6DEEB;--1:#403F53">) </span><span style="--0:#919F9F;--1:#5D6376">// anything</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">console</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">log</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#7FDBCA;--1:#096E72">mywidget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">myObjectProperty</span><span style="--0:#D6DEEB;--1:#403F53">) </span><span style="--0:#919F9F;--1:#5D6376">// { something: "anything", key: "value" }</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="function MyWidget() {    const self = Widget.Button()    return Object.assign(self, {        myPrimitiveProperty: &#x22;anything&#x22;,        myObjectProperty: {            something: &#x22;anything&#x22;,            key: &#x22;value&#x22;,        },    })}const mywidget = MyWidget()console.log(mywidget.myPrimitiveProperty) // anythingconsole.log(mywidget.myObjectProperty) // { something: &#x22;anything&#x22;, key: &#x22;value&#x22; }"><div></div></button></div></figure></div>
+<p>using <code dir="auto">attribute</code> has the benefit of it being a gobject
+which means it will signal <code dir="auto">notify::attribute</code> when it changes</p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">MyWidget</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#D9F5DD;--1:#111111">()</span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Button</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    attribute: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">anything</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">setup</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D7DBE0;--1:#403F53">self</span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#7FDBCA;--1:#096E72">self</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">on</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">notify::attribute</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D9F5DD;--1:#111111">()</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">console</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">log</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#7FDBCA;--1:#096E72">mywidget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">attribute</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    }</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">mywidget</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#82AAFF;--1:#3B61B0">MyWidget</span><span style="--0:#D6DEEB;--1:#403F53">()</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">console</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">log</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#7FDBCA;--1:#096E72">mywidget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">attribute</span><span style="--0:#D6DEEB;--1:#403F53">) </span><span style="--0:#919F9F;--1:#5D6376">// anything</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#919F9F;--1:#5D6376">// this line will invoke the above console.log in the setup</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">mywidget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">attribute</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C792EA;--1:#8844AE">=</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">something else</span><span style="--0:#D9F5DD;--1:#111111">"</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const MyWidget = () => Widget.Button({    attribute: &#x22;anything&#x22;,    setup: self => self.on(&#x22;notify::attribute&#x22;, () => {        console.log(mywidget.attribute)    }),})const mywidget = MyWidget()console.log(mywidget.attribute) // anything// this line will invoke the above console.log in the setupmywidget.attribute = &#x22;something else&#x22;"><div></div></button></div></figure></div>
+<p>keep in mind that <code dir="auto">attribute</code> will only signal if <em>its value</em> changes</p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">MyWidget</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#D9F5DD;--1:#111111">()</span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Button</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    attribute: {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        someKey: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">value</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        key: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">value</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">setup</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D7DBE0;--1:#403F53">self</span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#7FDBCA;--1:#096E72">self</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">on</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">notify::attribute</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D9F5DD;--1:#111111">()</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">console</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">log</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#7FDBCA;--1:#096E72">mywidget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">attribute</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    }</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">mywidget</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#82AAFF;--1:#3B61B0">MyWidget</span><span style="--0:#D6DEEB;--1:#403F53">()</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#919F9F;--1:#5D6376">// this line won't signal, because the attribute is still the same object</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">mywidget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#FAF39F;--1:#111111">attribute</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">key</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C792EA;--1:#8844AE">=</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">new value</span><span style="--0:#D9F5DD;--1:#111111">"</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#919F9F;--1:#5D6376">// to have it signal, assign a new object to it</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">mywidget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">attribute</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C792EA;--1:#8844AE">=</span><span style="--0:#D6DEEB;--1:#403F53"> {</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    </span><span style="--0:#7FDBCA;--1:#096E72">...mywidget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">attribute</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    key: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">new value</span><span style="--0:#D9F5DD;--1:#111111">"</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">}</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const MyWidget = () => Widget.Button({    attribute: {        someKey: &#x22;value&#x22;,        key: &#x22;value&#x22;,    },    setup: self => self.on(&#x22;notify::attribute&#x22;, () => {        console.log(mywidget.attribute)    })})const mywidget = MyWidget()// this line won&#x27;t signal, because the attribute is still the same objectmywidget.attribute.key = &#x22;new value&#x22;// to have it signal, assign a new object to itmywidget.attribute = {    ...mywidget.attribute,    key: &#x22;new value&#x22;}"><div></div></button></div></figure></div>
+<h2 id="common-gtk-properties">Common Gtk properties</h2>
+<p>Some common Gtk.Widget properties you might want for example</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>hexpand</td><td><code dir="auto">boolean</code></td><td>Expand horizontally.</td></tr><tr><td>vexpand</td><td><code dir="auto">boolean</code></td><td>Expand vertically.</td></tr><tr><td>sensitive</td><td><code dir="auto">boolean</code></td><td>Makes the widget interactable.</td></tr><tr><td>tooltip-text</td><td><code dir="auto">string</code></td><td>Tooltip popup when the widget is hovered over.</td></tr><tr><td>visible</td><td><code dir="auto">boolean</code></td><td>Visibility of the widget. Setting this to <code dir="auto">false</code> doesn’t have any effect if the parent container calls <code dir="auto">show_all()</code>, for example when you set a Box’s children dynamically.</td></tr></tbody></table>
+<h2 id="toggleclassname">toggleClassName</h2>
+<p>If you don’t want to mutate the <code dir="auto">classNames</code> array,
+there is <code dir="auto">toggleClassName</code>: <code dir="auto">(name: string, enable: boolean) => void</code></p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">label</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">example-label</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#919F9F;--1:#5D6376">// add class name</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">label</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">toggleClassName</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">my-awesome-label</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#FF6A83;--1:#A24848">true</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#919F9F;--1:#5D6376">// remove class name</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">label</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">toggleClassName</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">my-awesome-label</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#FF6A83;--1:#A24848">false</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const label = Widget.Label(&#x27;example-label&#x27;)// add class namelabel.toggleClassName(&#x27;my-awesome-label&#x27;, true)// remove class namelabel.toggleClassName(&#x27;my-awesome-label&#x27;, false)"><div></div></button></div></figure></div>
+<p>The properties listed here are just the additional properties on top of their
+base Gtk.Widget classes. <a href="https://gjs-docs.gnome.org/gtk30~3.0/">Refer to the Gtk3 docs</a>
+for the rest of them.</p>
+<h3 id="window">Window</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.window">Gtk.Window</a></p>
+<p>the toplevel widget that holds everything</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>child</td><td><code dir="auto">Widget</code></td><td></td></tr><tr><td>name</td><td><code dir="auto">string</code></td><td>Name of the window. This has to be unique, if you pass it in config. This will also be the name of the layer.</td></tr><tr><td>anchor</td><td><code dir="auto">string[]</code></td><td>Valid values are <code dir="auto">"top"</code>, <code dir="auto">"bottom"</code>, <code dir="auto">"left"</code>, <code dir="auto">"right"</code>. Anchor points of the window. Leave it empty to make it centered.</td></tr><tr><td>exclusivity</td><td><code dir="auto">string</code></td><td>Specify if the compositor should reserve space for the window automatically or how the window should interact with windows that do. Possible values: <code dir="auto">exclusive</code> (space should be reserved), <code dir="auto">normal</code> (the window should move if occluding another), <code dir="auto">ignore</code> (the window should not be moved). Default: <code dir="auto">normal</code>.</td></tr><tr><td>layer</td><td><code dir="auto">string</code></td><td>Valid values are <code dir="auto">"overlay"</code>, <code dir="auto">"top"</code>, <code dir="auto">"bottom"</code>, <code dir="auto">"background"</code>. It is <code dir="auto">"top"</code> by default.</td></tr><tr><td>margins</td><td><code dir="auto">number[]</code></td><td>Corresponds to CSS notation: <code dir="auto">[TOP, RIGHT, BOTTOM, LEFT]</code>, also <code dir="auto">[0, 6]</code> would have 0 margin on the top and bottom and would have 6 on the right and left.</td></tr><tr><td>monitor</td><td><code dir="auto">number</code></td><td>Which monitor to show the window on. If it is left undefined the window will show on the currently focused monitor.</td></tr><tr><td>keymode</td><td><code dir="auto">string</code></td><td>Valid values are <code dir="auto">"none"</code>, <code dir="auto">"on-demand"</code>: can receive keyboard input if focused, <code dir="auto">"exclusive"</code>: steal keyboard input on top and overlay layers</td></tr><tr><td>gdkmonitor</td><td><code dir="auto">Gdk.Monitor</code></td><td>alternative to <code dir="auto">monitor</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">window</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Window</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    name: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">window-name</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    anchor:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">top</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">left</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">right</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">]</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    exclusivity: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">normal</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    keymode: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">on-demand</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    layer: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">top</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    margins:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span><span style="--0:#F78C6C;--1:#AA0982">0</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#F78C6C;--1:#AA0982">6</span><span style="--0:#D6DEEB;--1:#403F53">]</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    monitor: </span><span style="--0:#F78C6C;--1:#AA0982">0</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    child: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">hello</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const window = Widget.Window({    name: &#x27;window-name&#x27;,    anchor: [&#x27;top&#x27;, &#x27;left&#x27;, &#x27;right&#x27;],    exclusivity: &#x27;normal&#x27;,    keymode: &#x27;on-demand&#x27;,    layer: &#x27;top&#x27;,    margins: [0, 6],    monitor: 0,    child: Widget.Label(&#x27;hello&#x27;),})"><div></div></button></div></figure></div>
+<h3 id="box">Box</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.box">Gtk.Box</a></p>
+<p>the main container widget</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>vertical</td><td><code dir="auto">bool</code></td><td>setting <code dir="auto">vertical: true</code> is the same as <code dir="auto">orientation: 1</code></td></tr><tr><td>children</td><td><code dir="auto">Widget[]</code></td><td>List of child widgets.</td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">box</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Box</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    spacing: </span><span style="--0:#F78C6C;--1:#AA0982">8</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    homogeneous: </span><span style="--0:#FF6A83;--1:#A24848">false</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    vertical: </span><span style="--0:#FF6A83;--1:#A24848">false</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    children:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        </span><span style="--0:#919F9F;--1:#5D6376">// widgets</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    ]</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const box = Widget.Box({    spacing: 8,    homogeneous: false,    vertical: false,    children: [        // widgets    ]})"><div></div></button></div></figure></div>
+<h3 id="button">Button</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.button">Gtk.Button</a></p>
+<p><code dir="auto">on-clicked</code> will be executed on <code dir="auto">Enter</code> if the button and its window has focus</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th></tr></thead><tbody><tr><td>child</td><td><code dir="auto">Widget</code></td></tr><tr><td>on-clicked</td><td><code dir="auto">() => void</code></td></tr><tr><td>on-primary-click</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-secondary-click</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-middle-click</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-primary-click-release</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-secondary-click-release</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-middle-click-release</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-hover</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-hover-lost</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-scroll-up</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-scroll-down</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">button</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Button</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    child: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">click me!</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">onClicked</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D9F5DD;--1:#111111">()</span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#82AAFF;--1:#3B61B0">print</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">hello</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const button = Widget.Button({    child: Widget.Label(&#x27;click me!&#x27;),    onClicked: () => print(&#x27;hello&#x27;),})"><div></div></button></div></figure></div>
+<h3 id="calendar">Calendar</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.calendar">Gtk.Calendar</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>date</td><td><code dir="auto">[number, number, number]</code></td><td>readonly [year, month, day]</td></tr><tr><td>detail</td><td><code dir="auto">(number, number, number) => string | null</code></td><td></td></tr><tr><td>on-day-selected</td><td><code dir="auto">() => void</code></td><td></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">calendar</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Calendar</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    showDayNames: </span><span style="--0:#FF6A83;--1:#A24848">true</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    showDetails: </span><span style="--0:#FF6A83;--1:#A24848">true</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    showHeading: </span><span style="--0:#FF6A83;--1:#A24848">true</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    showWeekNumbers: </span><span style="--0:#FF6A83;--1:#A24848">true</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">detail</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#D7DBE0;--1:#403F53">self</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D7DBE0;--1:#403F53">y</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D7DBE0;--1:#403F53">m</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D7DBE0;--1:#403F53">d</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        return </span><span style="--0:#D6DEEB;--1:#403F53">`</span><span style="--0:#ECC48D;--1:#3B61B0">&#x3C;span color="white"></span><span style="--0:#E2817F;--1:#B23834">${</span><span style="--0:#D7DBE0;--1:#403F53">y</span><span style="--0:#E2817F;--1:#B23834">}</span><span style="--0:#ECC48D;--1:#3B61B0">. </span><span style="--0:#E2817F;--1:#B23834">${</span><span style="--0:#D7DBE0;--1:#403F53">m</span><span style="--0:#E2817F;--1:#B23834">}</span><span style="--0:#ECC48D;--1:#3B61B0">. </span><span style="--0:#E2817F;--1:#B23834">${</span><span style="--0:#D7DBE0;--1:#403F53">d</span><span style="--0:#E2817F;--1:#B23834">}</span><span style="--0:#ECC48D;--1:#3B61B0">.&#x3C;/span></span><span style="--0:#D6DEEB;--1:#403F53">`</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">onDaySelected</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#C792EA;--1:#8844AE">{ </span><span style="--0:#D6DEEB;--1:#403F53">date</span><span style="--0:#C792EA;--1:#8844AE">: [</span><span style="--0:#D7DBE0;--1:#403F53">y</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D7DBE0;--1:#403F53">m</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D7DBE0;--1:#403F53">d</span><span style="--0:#C792EA;--1:#8844AE">] }</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#82AAFF;--1:#3B61B0">print</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D6DEEB;--1:#403F53">`</span><span style="--0:#E2817F;--1:#B23834">${</span><span style="--0:#D7DBE0;--1:#403F53">y</span><span style="--0:#E2817F;--1:#B23834">}</span><span style="--0:#ECC48D;--1:#3B61B0">. </span><span style="--0:#E2817F;--1:#B23834">${</span><span style="--0:#D7DBE0;--1:#403F53">m</span><span style="--0:#E2817F;--1:#B23834">}</span><span style="--0:#ECC48D;--1:#3B61B0">. </span><span style="--0:#E2817F;--1:#B23834">${</span><span style="--0:#D7DBE0;--1:#403F53">d</span><span style="--0:#E2817F;--1:#B23834">}</span><span style="--0:#ECC48D;--1:#3B61B0">.</span><span style="--0:#D6DEEB;--1:#403F53">`</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const calendar = Widget.Calendar({    showDayNames: true,    showDetails: true,    showHeading: true,    showWeekNumbers: true,    detail: (self, y, m, d) => {        return &#x60;<span color=&#x22;white&#x22;>${y}. ${m}. ${d}.</span>&#x60;    },    onDaySelected: ({ date: [y, m, d] }) => {        print(&#x60;${y}. ${m}. ${d}.&#x60;)    },})"><div></div></button></div></figure></div>
+<h3 id="centerbox">CenterBox</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.box">Gtk.Box</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>vertical</td><td><code dir="auto">bool</code></td><td>setting <code dir="auto">vertical: true</code> is the same as <code dir="auto">orientation: 1</code></td></tr><tr><td>start-widget</td><td><code dir="auto">Gtk.Widget</code></td><td></td></tr><tr><td>center-widget</td><td><code dir="auto">Gtk.Widget</code></td><td></td></tr><tr><td>end-widget</td><td><code dir="auto">Gtk.Widget</code></td><td></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">centerBox</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">CenterBox</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    spacing: </span><span style="--0:#F78C6C;--1:#AA0982">8</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    vertical: </span><span style="--0:#FF6A83;--1:#A24848">false</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    startWidget: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">left widget</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    centerWidget: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">center widget</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    endWidget: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">right widget</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const centerBox = Widget.CenterBox({    spacing: 8,    vertical: false,    startWidget: Widget.Label(&#x27;left widget&#x27;),    centerWidget: Widget.Label(&#x27;center widget&#x27;),    endWidget: Widget.Label(&#x27;right widget&#x27;),})"><div></div></button></div></figure></div>
+<h3 id="circularprogress">CircularProgress</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.bin">Gtk.Bin</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>start-at</td><td><code dir="auto">number</code></td><td>Number between 0 and 1, e.g 0.75 is the top</td></tr><tr><td>end-at</td><td><code dir="auto">number</code></td><td>Number between 0 and 1</td></tr><tr><td>inverted</td><td><code dir="auto">boolean</code></td><td></td></tr><tr><td>rounded</td><td><code dir="auto">boolean</code></td><td>Wether the progress bar should have rounded ends</td></tr><tr><td>value</td><td><code dir="auto">number</code></td><td>Number between 0 and 1</td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">progress</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">CircularProgress</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    css: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">min-width: 50px;</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">  </span><span style="--0:#919F9F;--1:#5D6376">// its size is min(min-height, min-width)</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        + </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">min-height: 50px;</span><span style="--0:#D9F5DD;--1:#111111">'</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        + </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">font-size: 6px;</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE"> </span><span style="--0:#919F9F;--1:#5D6376">// to set its thickness set font-size on it</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        + </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">margin: 4px;</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE"> </span><span style="--0:#919F9F;--1:#5D6376">// you can set margin on it</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        + </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">background-color: #131313;</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE"> </span><span style="--0:#919F9F;--1:#5D6376">// set its bg color</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        + </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">color: aqua;</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#919F9F;--1:#5D6376">// set its fg color</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    rounded: </span><span style="--0:#FF6A83;--1:#A24848">false</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    inverted: </span><span style="--0:#FF6A83;--1:#A24848">false</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    startAt: </span><span style="--0:#F78C6C;--1:#AA0982">0.75</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    value: </span><span style="--0:#7FDBCA;--1:#096E72">battery</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">bind</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">percent</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">as</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">p</span></span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#D7DBE0;--1:#403F53">p</span><span style="--0:#C792EA;--1:#8844AE"> / </span><span style="--0:#F78C6C;--1:#AA0982">100</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    child: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Icon</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        icon: </span><span style="--0:#7FDBCA;--1:#096E72">battery</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">bind</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">icon-name</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    }</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const progress = Widget.CircularProgress({    css: &#x27;min-width: 50px;&#x27;  // its size is min(min-height, min-width)        + &#x27;min-height: 50px;&#x27;        + &#x27;font-size: 6px;&#x27; // to set its thickness set font-size on it        + &#x27;margin: 4px;&#x27; // you can set margin on it        + &#x27;background-color: #131313;&#x27; // set its bg color        + &#x27;color: aqua;&#x27;, // set its fg color    rounded: false,    inverted: false,    startAt: 0.75,    value: battery.bind(&#x27;percent&#x27;).as(p => p / 100),    child: Widget.Icon({        icon: battery.bind(&#x27;icon-name&#x27;),    }),})"><div></div></button></div></figure></div>
+<h3 id="colorbutton">ColorButton</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.colorbutton">Gtk.ColorButton</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th></tr></thead><tbody><tr><td>on-color-set</td><td><code dir="auto">() => void</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">colorbutton</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">ColorButton</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">onColorSet</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#C792EA;--1:#8844AE">{ </span><span style="--0:#D6DEEB;--1:#403F53">rgba</span><span style="--0:#C792EA;--1:#8844AE">: { </span><span style="--0:#D7DBE0;--1:#403F53">red</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D7DBE0;--1:#403F53">green</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D7DBE0;--1:#403F53">blue</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D7DBE0;--1:#403F53">alpha</span><span style="--0:#C792EA;--1:#8844AE"> } }</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#82AAFF;--1:#3B61B0">print</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D6DEEB;--1:#403F53">`</span><span style="--0:#ECC48D;--1:#3B61B0">rgba(</span><span style="--0:#E2817F;--1:#B23834">${</span><span style="--0:#D7DBE0;--1:#403F53">red</span><span style="--0:#E2817F;--1:#B23834"> </span><span style="--0:#C792EA;--1:#8844AE">*</span><span style="--0:#E2817F;--1:#B23834"> </span><span style="--0:#F78C6C;--1:#AA0982">255</span><span style="--0:#E2817F;--1:#B23834">}</span><span style="--0:#ECC48D;--1:#3B61B0">, </span><span style="--0:#E2817F;--1:#B23834">${</span><span style="--0:#D7DBE0;--1:#403F53">green</span><span style="--0:#E2817F;--1:#B23834"> </span><span style="--0:#C792EA;--1:#8844AE">*</span><span style="--0:#E2817F;--1:#B23834"> </span><span style="--0:#F78C6C;--1:#AA0982">255</span><span style="--0:#E2817F;--1:#B23834">}</span><span style="--0:#ECC48D;--1:#3B61B0">, </span><span style="--0:#E2817F;--1:#B23834">${</span><span style="--0:#D7DBE0;--1:#403F53">blue</span><span style="--0:#E2817F;--1:#B23834"> </span><span style="--0:#C792EA;--1:#8844AE">*</span><span style="--0:#E2817F;--1:#B23834"> </span><span style="--0:#F78C6C;--1:#AA0982">255</span><span style="--0:#E2817F;--1:#B23834">}</span><span style="--0:#ECC48D;--1:#3B61B0">, </span><span style="--0:#E2817F;--1:#B23834">${</span><span style="--0:#D7DBE0;--1:#403F53">alpha</span><span style="--0:#E2817F;--1:#B23834">}</span><span style="--0:#ECC48D;--1:#3B61B0">)</span><span style="--0:#D6DEEB;--1:#403F53">`</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const colorbutton = Widget.ColorButton({    onColorSet: ({ rgba: { red, green, blue, alpha } }) => {        print(&#x60;rgba(${red * 255}, ${green * 255}, ${blue * 255}, ${alpha})&#x60;)    },})"><div></div></button></div></figure></div>
+<h3 id="drawingarea">DrawingArea</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.drawingarea">Gtk.DrawingArea</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th></tr></thead><tbody><tr><td>draw-fn</td><td><code dir="auto">(cr: Cairo.Context, width: number, height: number) => void</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">drawingarea</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">DrawingArea</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    widthRequest: </span><span style="--0:#F78C6C;--1:#AA0982">50</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    heightRequest: </span><span style="--0:#F78C6C;--1:#AA0982">50</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">drawFn</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#D7DBE0;--1:#403F53">self</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D7DBE0;--1:#403F53">cr</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D7DBE0;--1:#403F53">w</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D7DBE0;--1:#403F53">h</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        const </span><span style="--0:#82AAFF;--1:#3B61B0">center</span><span style="--0:#C792EA;--1:#8844AE"> = {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">            x: </span><span style="--0:#D7DBE0;--1:#403F53">w</span><span style="--0:#C792EA;--1:#8844AE"> / </span><span style="--0:#F78C6C;--1:#AA0982">2</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">            y: </span><span style="--0:#D7DBE0;--1:#403F53">h</span><span style="--0:#C792EA;--1:#8844AE"> / </span><span style="--0:#F78C6C;--1:#AA0982">2</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        };</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">cr</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">setSourceRGBA</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#F78C6C;--1:#AA0982">1</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#F78C6C;--1:#AA0982">1</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#F78C6C;--1:#AA0982">1</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#F78C6C;--1:#AA0982">1</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">cr</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">setLineWidth</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#F78C6C;--1:#AA0982">8</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">cr</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">arc</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#7FDBCA;--1:#096E72">center</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">x</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#7FDBCA;--1:#096E72">center</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">y</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#F78C6C;--1:#AA0982">2</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#F78C6C;--1:#AA0982">0</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#7FDBCA;--1:#096E72">Math</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">PI</span><span style="--0:#C792EA;--1:#8844AE"> * </span><span style="--0:#F78C6C;--1:#AA0982">2</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">cr</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">stroke</span><span style="--0:#D6DEEB;--1:#403F53">()</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const drawingarea = Widget.DrawingArea({    widthRequest: 50,    heightRequest: 50,    drawFn: (self, cr, w, h) => {        const center = {            x: w / 2,            y: h / 2,        };        cr.setSourceRGBA(1, 1, 1, 1)        cr.setLineWidth(8)        cr.arc(center.x, center.y, 2, 0, Math.PI * 2)        cr.stroke()    },})"><div></div></button></div></figure></div>
+<h3 id="entry">Entry</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.entry">Gtk.Entry</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th></tr></thead><tbody><tr><td>on-change</td><td><code dir="auto">() => void</code></td></tr><tr><td>on-accept</td><td><code dir="auto">() => void</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">entry</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Entry</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    placeholder_text: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">type here</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    text: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">initial text</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    visibility: </span><span style="--0:#FF6A83;--1:#A24848">true</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#919F9F;--1:#5D6376">// set to false for passwords</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">onAccept</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#C792EA;--1:#8844AE">{ </span><span style="--0:#D7DBE0;--1:#403F53">text</span><span style="--0:#C792EA;--1:#8844AE"> }</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#82AAFF;--1:#3B61B0">print</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">text</span><span style="--0:#D6DEEB">)</span></span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const entry = Widget.Entry({    placeholder_text: &#x27;type here&#x27;,    text: &#x27;initial text&#x27;,    visibility: true, // set to false for passwords    onAccept: ({ text }) => print(text),})"><div></div></button></div></figure></div>
+<h3 id="eventbox">EventBox</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.eventbox">Gtk.EventBox</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th></tr></thead><tbody><tr><td>child</td><td><code dir="auto">Widget</code></td></tr><tr><td>on-primary-click</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-secondary-click</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-middle-click</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-primary-click-release</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-secondary-click-release</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-middle-click-release</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-hover</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-hover-lost</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-scroll-up</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr><tr><td>on-scroll-down</td><td><code dir="auto">(event: Gdk.Event) => boolean</code></td></tr></tbody></table>
+<h3 id="filechooserbutton">FileChooserButton</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.filechooserbutton">Gtk.FileChooserButton</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>on-file-set</td><td><code dir="auto">() => void</code></td><td></td></tr><tr><td>uri</td><td><code dir="auto">() => void</code></td><td>convenience getter for <code dir="auto">get_uri</code></td></tr><tr><td>uris</td><td><code dir="auto">() => void</code></td><td>convenience getter for <code dir="auto">get_uris</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">fbutton</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">FileChooserButton</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">onFileSet</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#C792EA;--1:#8844AE">{ </span><span style="--0:#D7DBE0;--1:#403F53">uri</span><span style="--0:#C792EA;--1:#8844AE"> }</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#82AAFF;--1:#3B61B0">print</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">uri</span><span style="--0:#D6DEEB">)</span></span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const fbutton = Widget.FileChooserButton({    onFileSet: ({ uri }) => {        print(uri)    },})"><div></div></button></div></figure></div>
+<h3 id="fixed">Fixed</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.fixed">Gtk.Fixed</a></p>
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p><code dir="auto">Gtk.Fixed</code> is not yet subclassed to be declarative and doesn’t have
+any additional properties/methods on top of the base Gtk widget.</p></section></aside>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">fixed</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Fixed</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">setup</span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#D7DBE0;--1:#403F53">self</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">self</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">put</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">hello</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#F78C6C;--1:#AA0982">0</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#F78C6C;--1:#AA0982">0</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">self</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">put</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">hello</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#F78C6C;--1:#AA0982">50</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#F78C6C;--1:#AA0982">50</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const fixed = Widget.Fixed({    setup(self) {        self.put(Widget.Label(&#x27;hello&#x27;), 0, 0)        self.put(Widget.Label(&#x27;hello&#x27;), 50, 50)    },})"><div></div></button></div></figure></div>
+<h3 id="flowbox">FlowBox</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.flowbox">Gtk.FlowBox</a></p>
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p><code dir="auto">Gtk.FlowBox</code> is not yet subclassed to be declarative and doesn’t have
+any additional properties/methods on top of the base Gtk widget.</p></section></aside>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">flowbox</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">FlowBox</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">setup</span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#D7DBE0;--1:#403F53">self</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">self</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">add</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">hello</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">))</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const flowbox = Widget.FlowBox({    setup(self) {        self.add(Widget.Label(&#x27;hello&#x27;))    },})"><div></div></button></div></figure></div>
+<h3 id="fontbutton">FontButton</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.fontbutton">Gtk.FontButton</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>on-font-set</td><td><code dir="auto">() => void</code></td><td></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">fontbutton</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">FontButton</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">onFontSet</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#C792EA;--1:#8844AE">{ </span><span style="--0:#D7DBE0;--1:#403F53">font</span><span style="--0:#C792EA;--1:#8844AE"> }</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#82AAFF;--1:#3B61B0">print</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">font</span><span style="--0:#D6DEEB">)</span></span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const fontbutton = Widget.FontButton({    onFontSet: ({ font }) => {        print(font)    },})"><div></div></button></div></figure></div>
+<h3 id="icon">Icon</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.image">Gtk.Image</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>icon</td><td><code dir="auto">string</code></td><td>Name of an icon or path to a file</td></tr><tr><td>size</td><td><code dir="auto">number</code></td><td>Forced size</td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Icon</span><span style="--0:#D6DEEB;--1:#403F53">({ icon: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">dialog-information-symbolic</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53"> })</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#919F9F;--1:#5D6376">// if you only want an icon, it can be shortened like this</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Icon</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">dialog-information-symbolic</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#919F9F;--1:#5D6376">// if you don't set a size, it will be computed from css font-size</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Icon</span><span style="--0:#D6DEEB;--1:#403F53">({</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    icon: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">dialog-information-symbolic</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    css: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">font-size: 30px</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">})</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#919F9F;--1:#5D6376">// NOTE:</span></div><div class="ec-line"><span style="--0:#919F9F;--1:#5D6376">// setting the icon dynamically has a flicker currently</span></div><div class="ec-line"><span style="--0:#919F9F;--1:#5D6376">// to fix it, use a forced size</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Icon</span><span style="--0:#D6DEEB;--1:#403F53">({</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    icon: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">dialog-information-symbolic</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    size: </span><span style="--0:#F78C6C;--1:#AA0982">30</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">})</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="Widget.Icon({ icon: &#x27;dialog-information-symbolic&#x27; })// if you only want an icon, it can be shortened like thisWidget.Icon(&#x27;dialog-information-symbolic&#x27;)// if you don&#x27;t set a size, it will be computed from css font-sizeWidget.Icon({    icon: &#x27;dialog-information-symbolic&#x27;,    css: &#x27;font-size: 30px&#x27;,})// NOTE:// setting the icon dynamically has a flicker currently// to fix it, use a forced sizeWidget.Icon({    icon: &#x27;dialog-information-symbolic&#x27;,    size: 30,})"><div></div></button></div></figure></div>
+<h3 id="label">Label</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.label">Gtk.Label</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>justification</td><td><code dir="auto">string</code></td><td>Valid values are <code dir="auto">"left"</code>, <code dir="auto">"center"</code>, <code dir="auto">"right"</code>, <code dir="auto">"fill"</code>. Same as <code dir="auto">justify</code> but represented as a string instead of enum.</td></tr><tr><td>truncate</td><td><code dir="auto">string</code></td><td>Valid values are <code dir="auto">"none"</code>, <code dir="auto">"start"</code>, <code dir="auto">"middle"</code>, <code dir="auto">"end"</code>. Same as <code dir="auto">ellipsize</code> but represented as a string instead of enum.</td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">label</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    label: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">some text to show</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    justification: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">left</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    truncate: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">end</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    xalign: </span><span style="--0:#F78C6C;--1:#AA0982">0</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    maxWidthChars: </span><span style="--0:#F78C6C;--1:#AA0982">24</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    wrap: </span><span style="--0:#FF6A83;--1:#A24848">true</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    useMarkup: </span><span style="--0:#FF6A83;--1:#A24848">true</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#919F9F;--1:#5D6376">// shorthand for { label: 'hello' }</span></div><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">hello</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const label = Widget.Label({    label: &#x27;some text to show&#x27;,    justification: &#x27;left&#x27;,    truncate: &#x27;end&#x27;,    xalign: 0,    maxWidthChars: 24,    wrap: true,    useMarkup: true,})// shorthand for { label: &#x27;hello&#x27; }Widget.Label(&#x27;hello&#x27;)"><div></div></button></div></figure></div>
+<h3 id="levelbar">LevelBar</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.levelbar">Gtk.LevelBar</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>bar-mode</td><td><code dir="auto">string</code></td><td>Valid values are <code dir="auto">"continuous"</code>, <code dir="auto">"discrete"</code>. Same as <code dir="auto">mode</code> but represented as a string instead of enum.</td></tr><tr><td>vertical</td><td><code dir="auto">bool</code></td><td>setting <code dir="auto">vertical: true</code> is the same as <code dir="auto">orientation: 1</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">continuous</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">LevelBar</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    widthRequest: </span><span style="--0:#F78C6C;--1:#AA0982">100</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    value: </span><span style="--0:#7FDBCA;--1:#096E72">battery</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">bind</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">percent</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">as</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">p</span></span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#D7DBE0;--1:#403F53">p</span><span style="--0:#C792EA;--1:#8844AE"> / </span><span style="--0:#F78C6C;--1:#AA0982">100</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">discrete</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">LevelBar</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    widthRequest: </span><span style="--0:#F78C6C;--1:#AA0982">100</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    bar_mode: </span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">discrete</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    max_value: </span><span style="--0:#F78C6C;--1:#AA0982">10</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    value: </span><span style="--0:#7FDBCA;--1:#096E72">battery</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">bind</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">percent</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">as</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">p</span></span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#D7DBE0;--1:#403F53">p</span><span style="--0:#C792EA;--1:#8844AE"> / </span><span style="--0:#F78C6C;--1:#AA0982">10</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const continuous = Widget.LevelBar({    widthRequest: 100,    value: battery.bind(&#x22;percent&#x22;).as(p => p / 100),})const discrete = Widget.LevelBar({    widthRequest: 100,    bar_mode: &#x22;discrete&#x22;,    max_value: 10,    value: battery.bind(&#x22;percent&#x22;).as(p => p / 10),})"><div></div></button></div></figure></div>
+<h3 id="listbox">ListBox</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.listbox">Gtk.ListBox</a></p>
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p><code dir="auto">Gtk.ListBox</code> is not yet subclassed to be declarative and doesn’t have
+any additional properties/methods on top of the base Gtk widget.</p></section></aside>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">listbox</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">ListBox</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">setup</span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#D7DBE0;--1:#403F53">self</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">self</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">add</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">hello</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">))</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const listbox = Widget.ListBox({    setup(self) {        self.add(Widget.Label(&#x27;hello&#x27;))    },})"><div></div></button></div></figure></div>
+<h3 id="menu">Menu</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.menu">Gtk.Menu</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th></tr></thead><tbody><tr><td>children</td><td><code dir="auto">MenuItem[]</code></td></tr><tr><td>on-popup</td><td><code dir="auto">(flipped_rect: void, final_rect: void, flipped_x: boolean, flipped_y: boolean) => void</code></td></tr><tr><td>on-move-scroll</td><td><code dir="auto">(scroll_type: Gtk.ScrollType) => void</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">function</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#82AAFF;--1:#3B61B0">RightClickMenu</span><span style="--0:#D9F5DD;--1:#111111">()</span><span style="--0:#D6DEEB;--1:#403F53"> {</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    </span><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">menu</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Menu</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        children:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">            </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">MenuItem</span><span style="--0:#D6DEEB;--1:#403F53">({</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">                child: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">hello</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#889FB2;--1:#4D667B">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">            })</span><span style="--0:#889FB2;--1:#4D667B">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        ]</span><span style="--0:#889FB2;--1:#4D667B">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    }</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line">
+</div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    </span><span style="--0:#C792EA;--1:#8844AE">return</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Button</span><span style="--0:#D6DEEB;--1:#403F53">({</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        </span><span style="--0:#82AAFF;--1:#3B61B0">on_primary_click</span><span style="--0:#D6DEEB;--1:#403F53">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--1:#403F53"><span style="--0:#D7DBE0">_</span><span style="--0:#D6DEEB">, </span><span style="--0:#D7DBE0">event</span></span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C792EA;--1:#8844AE">=></span><span style="--0:#D6DEEB;--1:#403F53"> {</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">            </span><span style="--0:#7FDBCA;--1:#096E72">menu</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">popup_at_pointer</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">event</span><span style="--0:#D6DEEB">)</span></span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        }</span><span style="--0:#889FB2;--1:#4D667B">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    })</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">}</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="function RightClickMenu() {    const menu = Widget.Menu({        children: [            Widget.MenuItem({                child: Widget.Label(&#x27;hello&#x27;),            }),        ],    })    return Widget.Button({        on_primary_click: (_, event) => {            menu.popup_at_pointer(event)        },    })}"><div></div></button></div></figure></div>
+<h3 id="menubar">MenuBar</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.menubar">Gtk.MenuBar</a></p>
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p><code dir="auto">Gtk.MenuBar</code> is not yet subclassed to be declarative and doesn’t have
+any additional properties/methods on top of the base Gtk widget.</p></section></aside>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">menubar</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">MenuBar</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">setup</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D7DBE0;--1:#403F53">self</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">self</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">append</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Menu</span><span style="--0:#D6DEEB;--1:#403F53">())</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    }</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const menubar = Widget.MenuBar({    setup: self => {        self.append(Widget.Menu())    }})"><div></div></button></div></figure></div>
+<h3 id="menuitem">MenuItem</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.menuitem">Gtk.MenuItem</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th></tr></thead><tbody><tr><td>child</td><td><code dir="auto">Widget</code></td></tr><tr><td>on-activate</td><td><code dir="auto">() => boolean</code></td></tr><tr><td>on-select</td><td><code dir="auto">() => boolean</code></td></tr><tr><td>on-deselect</td><td><code dir="auto">() => boolean</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">menu</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Menu</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    children:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">MenuItem</span><span style="--0:#D6DEEB;--1:#403F53">({</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">            child: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">hello</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">),</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">            </span><span style="--0:#82AAFF;--1:#3B61B0">onActivate</span><span style="--0:#D6DEEB;--1:#403F53">: </span><span style="--0:#D9F5DD;--1:#111111">()</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C792EA;--1:#8844AE">=></span><span style="--0:#D6DEEB;--1:#403F53"> {</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">                </span><span style="--0:#82AAFF;--1:#3B61B0">print</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">clicked</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">            }</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        }),</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    ]</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const menu = Widget.Menu({    children: [        Widget.MenuItem({            child: Widget.Label(&#x27;hello&#x27;),            onActivate: () => {                print(&#x27;clicked&#x27;)            }        }),    ],})"><div></div></button></div></figure></div>
+<h3 id="overlay">Overlay</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.overlay">Gtk.Overlay</a>
+Takes the size of its first child, then places subsequent children on
+top of each other and won’t render them outside the container.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>child</td><td><code dir="auto">Widget</code></td><td>Child which will determine the size of the overlay</td></tr><tr><td>overlays</td><td><code dir="auto">Widget[]</code></td><td>Overlayed children</td></tr><tr><td>pass-through</td><td><code dir="auto">boolean</code></td><td>Whether the overlay childs should pass the input through</td></tr></tbody></table>
+<h3 id="progressbar">ProgressBar</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.progressbar">Gtk.ProgressBar</a></p>
+<aside aria-label="Note" class="starlight-aside starlight-aside--note"><p class="starlight-aside__title" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="starlight-aside__icon"><path d="M12 11C11.7348 11 11.4804 11.1054 11.2929 11.2929C11.1054 11.4804 11 11.7348 11 12V16C11 16.2652 11.1054 16.5196 11.2929 16.7071C11.4804 16.8946 11.7348 17 12 17C12.2652 17 12.5196 16.8946 12.7071 16.7071C12.8946 16.5196 13 16.2652 13 16V12C13 11.7348 12.8946 11.4804 12.7071 11.2929C12.5196 11.1054 12.2652 11 12 11ZM12.38 7.08C12.1365 6.97998 11.8635 6.97998 11.62 7.08C11.4973 7.12759 11.3851 7.19896 11.29 7.29C11.2017 7.3872 11.1306 7.49882 11.08 7.62C11.024 7.73868 10.9966 7.86882 11 8C10.9992 8.13161 11.0245 8.26207 11.0742 8.38391C11.124 8.50574 11.1973 8.61656 11.29 8.71C11.3872 8.79833 11.4988 8.86936 11.62 8.92C11.7715 8.98224 11.936 9.00632 12.099 8.99011C12.2619 8.97391 12.4184 8.91792 12.5547 8.82707C12.691 8.73622 12.8029 8.61328 12.8805 8.46907C12.9582 8.32486 12.9992 8.16378 13 8C12.9963 7.73523 12.8927 7.48163 12.71 7.29C12.6149 7.19896 12.5028 7.12759 12.38 7.08ZM12 2C10.0222 2 8.08879 2.58649 6.4443 3.6853C4.79981 4.78412 3.51809 6.3459 2.76121 8.17317C2.00433 10.0004 1.8063 12.0111 2.19215 13.9509C2.578 15.8907 3.53041 17.6725 4.92894 19.0711C6.32746 20.4696 8.10929 21.422 10.0491 21.8079C11.9889 22.1937 13.9996 21.9957 15.8268 21.2388C17.6541 20.4819 19.2159 19.2002 20.3147 17.5557C21.4135 15.9112 22 13.9778 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7363 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM12 20C10.4178 20 8.87104 19.5308 7.55544 18.6518C6.23985 17.7727 5.21447 16.5233 4.60897 15.0615C4.00347 13.5997 3.84504 11.9911 4.15372 10.4393C4.4624 8.88743 5.22433 7.46197 6.34315 6.34315C7.46197 5.22433 8.88743 4.4624 10.4393 4.15372C11.9911 3.84504 13.5997 4.00346 15.0615 4.60896C16.5233 5.21447 17.7727 6.23984 18.6518 7.55544C19.5308 8.87103 20 10.4177 20 12C20 14.1217 19.1572 16.1566 17.6569 17.6569C16.1566 19.1571 14.1217 20 12 20Z"></path></svg>Note</p><section class="starlight-aside__content"><p>You might want to use <code dir="auto">LevelBar</code> instead.</p></section></aside>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>vertical</td><td><code dir="auto">bool</code></td><td>Setting <code dir="auto">vertical: true</code> is the same as <code dir="auto">orientation: 1</code></td></tr><tr><td>value</td><td><code dir="auto">number</code></td><td>Same as <code dir="auto">ProgressBar.fraction</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">progressbar</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">ProgressBar</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    value: </span><span style="--0:#7FDBCA;--1:#096E72">battery</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">bind</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#ECC48D;--1:#984E4D">percent</span><span style="--0:#D9F5DD;--1:#111111">"</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">as</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">p</span></span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#D7DBE0;--1:#403F53">p</span><span style="--0:#C792EA;--1:#8844AE"> / </span><span style="--0:#F78C6C;--1:#AA0982">100</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const progressbar = Widget.ProgressBar({    value: battery.bind(&#x22;percent&#x22;).as(p => p / 100),})"><div></div></button></div></figure></div>
+<h3 id="revealer">Revealer</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.revealer">Gtk.Revealer</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>child</td><td><code dir="auto">Widget</code></td><td></td></tr><tr><td>transition</td><td><code dir="auto">string</code></td><td>Valid values are <code dir="auto">"none"</code>, <code dir="auto">"crossfade"</code>, <code dir="auto">"slide_left"</code>, <code dir="auto">"slide_right"</code>, <code dir="auto">"slide_down"</code>, <code dir="auto">"slide_up"</code>. This is <code dir="auto">transitionType</code> represented as a string instead of enum.</td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">revealer</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Revealer</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    revealChild: </span><span style="--0:#FF6A83;--1:#A24848">false</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    transitionDuration: </span><span style="--0:#F78C6C;--1:#AA0982">1000</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    transition: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">slide_right</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    child: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">hello!</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">setup</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D7DBE0;--1:#403F53">self</span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#7FDBCA;--1:#096E72">self</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">poll</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#F78C6C;--1:#AA0982">2000</span><span style="--0:#C792EA;--1:#8844AE">, </span><span style="--0:#D9F5DD;--1:#111111">()</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#7FDBCA;--1:#096E72">self</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">reveal_child</span><span style="--0:#C792EA;--1:#8844AE"> = !</span><span style="--0:#7FDBCA;--1:#096E72">self</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#7FDBCA;--1:#096E72">reveal_child</span><span style="--0:#C792EA;--1:#8844AE">;</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    }</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const revealer = Widget.Revealer({    revealChild: false,    transitionDuration: 1000,    transition: &#x27;slide_right&#x27;,    child: Widget.Label(&#x27;hello!&#x27;),    setup: self => self.poll(2000, () => {        self.reveal_child = !self.reveal_child;    }),})"><div></div></button></div></figure></div>
+<h3 id="scrollable">Scrollable</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.scrolledwindow">Gtk.ScrolledWindow</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>child</td><td><code dir="auto">Widget</code></td><td></td></tr><tr><td>hscroll</td><td><code dir="auto">string</code></td><td>Valid values are <code dir="auto">"always</code>, <code dir="auto">"automatic"</code>, <code dir="auto">"external"</code>, <code dir="auto">"never"</code>.</td></tr><tr><td>vscroll</td><td><code dir="auto">string</code></td><td>Valid values are <code dir="auto">"always</code>, <code dir="auto">"automatic"</code>, <code dir="auto">"external"</code>, <code dir="auto">"never"</code>.</td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">scrollable</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Scrollable</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    hscroll: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">always</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    vscroll: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">never</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    css: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">min-width: 20px;</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    child: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">Lorem ipsum dolor sit amet, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE"> +</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">officia excepteur ex fugiat reprehenderit enim </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE"> +</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">labore culpa sint ad nisi Lorem pariatur mollit</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const scrollable = Widget.Scrollable({    hscroll: &#x27;always&#x27;,    vscroll: &#x27;never&#x27;,    css: &#x27;min-width: 20px;&#x27;,    child: Widget.Label(&#x27;Lorem ipsum dolor sit amet, &#x27; +        &#x27;officia excepteur ex fugiat reprehenderit enim &#x27; +        &#x27;labore culpa sint ad nisi Lorem pariatur mollit&#x27;),})"><div></div></button></div></figure></div>
+<h3 id="separator">Separator</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.separator">Gtk.Separator</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>vertical</td><td><code dir="auto">bool</code></td><td>Setting <code dir="auto">vertical: true</code> is the same as <code dir="auto">orientation: 1</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">separator</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Separator</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    vertical: </span><span style="--0:#FF6A83;--1:#A24848">false</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const separator = Widget.Separator({    vertical: false,})"><div></div></button></div></figure></div>
+<h3 id="slider">Slider</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.scale">Gtk.Scale</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>vertical</td><td><code dir="auto">bool</code></td><td>Setting <code dir="auto">vertical: true</code> is the same as <code dir="auto">orientation: 1</code></td></tr><tr><td>value</td><td><code dir="auto">number</code></td><td></td></tr><tr><td>min</td><td><code dir="auto">number</code></td><td></td></tr><tr><td>max</td><td><code dir="auto">number</code></td><td></td></tr><tr><td>marks</td><td><code dir="auto">tuple</code> or <code dir="auto">number</code></td><td>where tuple is <code dir="auto">[number, string?, Position?]</code>, Position is <code dir="auto">"top"</code>, <code dir="auto">"left</code>, <code dir="auto">"right</code>, <code dir="auto">"bottom"</code></td></tr><tr><td>on-change</td><td><code dir="auto">(event: Gdk.Event) => void</code></td><td></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Slider</span><span style="--0:#D6DEEB;--1:#403F53">({</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    </span><span style="--0:#82AAFF;--1:#3B61B0">onChange</span><span style="--0:#D6DEEB;--1:#403F53">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--1:#403F53"><span style="--0:#D6DEEB">{ </span><span style="--0:#D7DBE0">value</span><span style="--0:#D6DEEB"> }</span></span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C792EA;--1:#8844AE">=></span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#82AAFF;--1:#3B61B0">print</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">value</span><span style="--0:#D6DEEB">),</span></span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    vertical: </span><span style="--0:#FF6A83;--1:#A24848">true</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    value: </span><span style="--0:#F78C6C;--1:#AA0982">0</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    min: </span><span style="--0:#F78C6C;--1:#AA0982">0</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    max: </span><span style="--0:#F78C6C;--1:#AA0982">1</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    marks: [</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        </span><span style="--0:#F78C6C;--1:#AA0982">1</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        </span><span style="--0:#F78C6C;--1:#AA0982">2</span><span style="--0:#D6DEEB;--1:#403F53">,</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        [</span><span style="--0:#F78C6C;--1:#AA0982">3</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">label</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">],</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">        [</span><span style="--0:#F78C6C;--1:#AA0982">4</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">label</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">bottom</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">],</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">    ],</span></div><div class="ec-line"><span style="--0:#D6DEEB;--1:#403F53">})</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="Widget.Slider({    onChange: ({ value }) => print(value),    vertical: true,    value: 0,    min: 0,    max: 1,    marks: [        1,        2,        [3, &#x27;label&#x27;],        [4, &#x27;label&#x27;, &#x27;bottom&#x27;],    ],})"><div></div></button></div></figure></div>
+<h3 id="spinbutton">SpinButton</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.spinbutton">Gtk.SpinButton</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th></tr></thead><tbody><tr><td>on-value-changed</td><td><code dir="auto">() => void</code></td></tr><tr><td>range</td><td><code dir="auto">[min: number, max: number]</code></td></tr><tr><td>increments</td><td><code dir="auto">[step: number, page: number]</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">spinbutton</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">SpinButton</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    range:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span><span style="--0:#F78C6C;--1:#AA0982">0</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#F78C6C;--1:#AA0982">100</span><span style="--0:#D6DEEB;--1:#403F53">]</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    increments:</span><span style="--0:#D6DEEB;--1:#403F53"> [</span><span style="--0:#F78C6C;--1:#AA0982">1</span><span style="--0:#D6DEEB;--1:#403F53">, </span><span style="--0:#F78C6C;--1:#AA0982">5</span><span style="--0:#D6DEEB;--1:#403F53">]</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">onValueChanged</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#C792EA;--1:#8844AE">{ </span><span style="--0:#D7DBE0;--1:#403F53">value</span><span style="--0:#C792EA;--1:#8844AE"> }</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> => {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#82AAFF;--1:#3B61B0">print</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">value</span><span style="--0:#D6DEEB">)</span></span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const spinbutton = Widget.SpinButton({    range: [0, 100],    increments: [1, 5],    onValueChanged: ({ value }) => {        print(value)    },})"><div></div></button></div></figure></div>
+<h3 id="spinner">Spinner</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.Spinner">Gtk.Spinner</a>
+spinning icon showing that something is loading</p>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">spinner</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Spinner</span><span style="--0:#D6DEEB;--1:#403F53">()</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const spinner = Widget.Spinner()"><div></div></button></div></figure></div>
+<h3 id="stack">Stack</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.stack">Gtk.Stack</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>children</td><td><code dir="auto">{ [string]: Widget }</code></td><td>name, Widget key-value pairs</td></tr><tr><td>shown</td><td><code dir="auto">string</code></td><td>Name of the widget to show. This can’t be set on construction, instead the first given widget will be shown.</td></tr><tr><td>transition</td><td><code dir="auto">string</code></td><td><code dir="auto">transitionType</code> represented as a string. Valid values are <code dir="auto">none</code>, <code dir="auto">crossfade</code>, <code dir="auto">slide_right</code>, <code dir="auto">slide_left</code>, <code dir="auto">slide_up</code>, <code dir="auto">slide_down</code>, <code dir="auto">slide_left_right</code>, <code dir="auto">slide_up_down</code>, <code dir="auto">over_up</code>, <code dir="auto">over_down</code>, <code dir="auto">over_left</code>, <code dir="auto">over_right</code>, <code dir="auto">under_up</code>, <code dir="auto">under_down</code>, <code dir="auto">under_left</code>, <code dir="auto">under_right</code>, <code dir="auto">over_up_down</code>, <code dir="auto">over_down_up</code>, <code dir="auto">over_left_right</code>, <code dir="auto">over_right_left</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">stack</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Stack</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    children: {</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">child1</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">first child</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">        </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">child2</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Label</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">second child</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#D6DEEB;--1:#403F53">)</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    },</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    shown: </span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#ECC48D;--1:#984E4D">child2</span><span style="--0:#D9F5DD;--1:#111111">'</span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const stack = Widget.Stack({    children: {        &#x27;child1&#x27;: Widget.Label(&#x27;first child&#x27;),        &#x27;child2&#x27;: Widget.Label(&#x27;second child&#x27;),    },    shown: &#x27;child2&#x27;,})"><div></div></button></div></figure></div>
+<h3 id="switch">Switch</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.switch">Gtk.Switch</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th></tr></thead><tbody><tr><td>on-activate</td><td><code dir="auto">() => void</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">switch</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">Switch</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">onActivate</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#C792EA;--1:#8844AE">{ </span><span style="--0:#D7DBE0;--1:#403F53">active</span><span style="--0:#C792EA;--1:#8844AE"> }</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#82AAFF;--1:#3B61B0">print</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">active</span><span style="--0:#D6DEEB">)</span></span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const switch = Widget.Switch({    onActivate: ({ active }) => print(active),})"><div></div></button></div></figure></div>
+<h3 id="togglebutton">ToggleButton</h3>
+<p>subclass of <a href="https://gjs-docs.gnome.org/gtk30~3.0/gtk.togglebutton">Gtk.ToggleButton</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Type</th></tr></thead><tbody><tr><td>on-toggled</td><td><code dir="auto">() => void</code></td></tr></tbody></table>
+<div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre tabindex="0"><code><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">const </span><span style="--0:#82AAFF;--1:#3B61B0">togglebutton</span><span style="--0:#C792EA;--1:#8844AE"> = </span><span style="--0:#7FDBCA;--1:#096E72">Widget</span><span style="--0:#C792EA;--1:#8844AE">.</span><span style="--0:#82AAFF;--1:#3B61B0">ToggleButton</span><span style="--0:#D6DEEB;--1:#403F53">(</span><span style="--0:#C792EA;--1:#8844AE">{</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">    </span><span style="--0:#82AAFF;--1:#3B61B0">onToggled</span><span style="--0:#C792EA;--1:#8844AE">: </span><span style="--0:#D9F5DD;--1:#111111">(</span><span style="--0:#C792EA;--1:#8844AE">{ </span><span style="--0:#D7DBE0;--1:#403F53">active</span><span style="--0:#C792EA;--1:#8844AE"> }</span><span style="--0:#D9F5DD;--1:#111111">)</span><span style="--0:#C792EA;--1:#8844AE"> => </span><span style="--0:#82AAFF;--1:#3B61B0">print</span><span style="--1:#403F53"><span style="--0:#D6DEEB">(</span><span style="--0:#D7DBE0">active</span><span style="--0:#D6DEEB">)</span></span><span style="--0:#C792EA;--1:#8844AE">,</span></div><div class="ec-line"><span style="--0:#C792EA;--1:#8844AE">}</span><span style="--0:#D6DEEB;--1:#403F53">)</span></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="const togglebutton = Widget.ToggleButton({    onToggled: ({ active }) => print(active),})"><div></div></button></div></figure></div> </div> <footer class="astro-3yyafb3n"> <div class="meta sl-flex astro-3yyafb3n"> <a href="https://github.com/Aylur/ags-docs/tree/main/src/content/docs/config/widgets.md" class="sl-flex astro-eez2twj6"><svg aria-hidden="true" class="astro-eez2twj6 astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.2em;"><path d="M22 7.24a1 1 0 0 0-.29-.71l-4.24-4.24a1 1 0 0 0-1.1-.22 1 1 0 0 0-.32.22l-2.83 2.83L2.29 16.05a1 1 0 0 0-.29.71V21a1 1 0 0 0 1 1h4.24a1 1 0 0 0 .76-.29l10.87-10.93L21.71 8c.1-.1.17-.2.22-.33a1 1 0 0 0 0-.24v-.14l.07-.05ZM6.83 20H4v-2.83l9.93-9.93 2.83 2.83L6.83 20ZM18.17 8.66l-2.83-2.83 1.42-1.41 2.82 2.82-1.41 1.42Z"/></svg> Edit page</a>  </div> <div class="pagination-links astro-u2l5gyhi" dir="ltr"> <a href="/ags-docs/config/cli" rel="prev" class="astro-u2l5gyhi"> <svg aria-hidden="true" class="astro-u2l5gyhi astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17 11H9.41l3.3-3.29a1.004 1.004 0 1 0-1.42-1.42l-5 5a1 1 0 0 0-.21.33 1 1 0 0 0 0 .76 1 1 0 0 0 .21.33l5 5a1.002 1.002 0 0 0 1.639-.325 1 1 0 0 0-.219-1.095L9.41 13H17a1 1 0 0 0 0-2Z"/></svg>  <span class="astro-u2l5gyhi"> Previous <br class="astro-u2l5gyhi"> <span class="link-title astro-u2l5gyhi">CLI</span> </span> </a> <a href="/ags-docs/config/variables" rel="next" class="astro-u2l5gyhi"> <svg aria-hidden="true" class="astro-u2l5gyhi astro-c6vsoqas" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="--sl-icon-size: 1.5rem;"><path d="M17.92 11.62a1.001 1.001 0 0 0-.21-.33l-5-5a1.003 1.003 0 1 0-1.42 1.42l3.3 3.29H7a1 1 0 0 0 0 2h7.59l-3.3 3.29a1.002 1.002 0 0 0 .325 1.639 1 1 0 0 0 1.095-.219l5-5a1 1 0 0 0 .21-.33 1 1 0 0 0 0-.76Z"/></svg>  <span class="astro-u2l5gyhi"> Next <br class="astro-u2l5gyhi"> <span class="link-title astro-u2l5gyhi">Variables</span> </span> </a> </div>  </footer>  </div> </div>   </main> </div> </div>  </div> </div>  </body></html>

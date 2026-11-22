@@ -1,0 +1,381 @@
+---
+type: source
+source_type: webpage
+url: "https://catppuccin.com/blog/why-we-ditched-the-icon-for-external-links"
+title: "Why We Ditched the Icon for External Links • Catppuccin"
+fetched_at: 2026-11-22T06:27:17+00:00
+fetcher: "curl + markitdown"
+site: "catppuccin.com"
+---
+[Catppuccin Logo Pepperjack](/)
+
+* [Ports](/ports)
+* [Palette](/palette)
+* [Community](/community)
+* [Blog](/blog)
+
+![Aerial photography of concrete roads](/_astro/why-we-ditched-the-icon-for-external-links.UrKBoP8l_2lnQfn.png)
+
+# Why We Ditched the Icon for External Links
+
+The small arrow beside external links was nice... so why did we get rid of it?
+
+![unseen-ninja's Avatar](/maintainers/64x64/unseen-ninja.webp)![sgoudham's Avatar](/maintainers/64x64/sgoudham.webp)
+
+Authored by [Lemon](https://github.com/unseen-ninja) & [Hammy](https://github.com/sgoudham)
+
+Published on: December 18, 2024
+
+7 min read
+
+You may or may not have already noticed it; The small arrow (`↗`) we used to
+indicate links with a target outside of `catppuccin.com` has been removed.
+
+Surprisingly, this ended up being a tough decision as we grew quite attached to
+the little guy, but ultimately the decision came down to two key concerns:
+
+1. **Rise in technical complexity.**
+2. **Icon ambiguity.**
+
+Let’s dive in!
+
+## [The `<Link>` component](#the-link-component)
+
+For the initial release of the website, we created a `<Link>` component to be used
+throughout the codebase. This worked as expected, giving us control of the
+styling based on the props passed in or omitted.
+
+Link.astro
+
+```
+---
+
+interface Props {
+
+href: string;
+
+external?: boolean;
+
+muted?: boolean;
+
+}
+
+const { href, external = false, muted = false } = Astro.props;
+
+---
+
+<a href={href} class:list={[`${muted ? "muted" : ""}`]}>
+
+<slot />{external ? <span class="external">&#x2197;</span> : ""}
+
+</a>
+
+<style lang="scss">
+
+...
+
+</style>
+```
+
+This isn’t the only approach we could have taken to append the icon to all
+external links. For example, an alternative CSS based approach:
+
+\_typography.scss
+
+```
+a[href^="https://"]::after {
+
+content: '\2197';
+
+}
+```
+
+At first glance, this approach seems quite elegant. However, we decided against
+it as a number of exceptions (e.g. images/badges as links, etc) made this quite
+complex as well.
+
+With no real reason to revisit or refactor the approach after the initial
+launch, the `<Link>` component was left untouched - until a few weeks ago.
+
+## [External link icons in blog posts](#external-link-icons-in-blog-posts)
+
+Recently, we made the decision to launch a blog and, thankfully, Astro made it
+*very easy* to get one up and running. We added the official
+[@astrojs/mdx](https://github.com/withastro/astro/tree/main/packages/integrations/mdx/)
+integration, created the new blog page, and wrote [our first blog
+post!](/blog/celebrating-three-years-of-catppuccin) 🥳
+
+While writing the first blog post, we realised the `<Link>` component must be
+imported to specify an external link, which we weren’t excited about:
+
+celebrating-three-years-of-catppuccin.mdx
+
+```
+import Link from "../../components/Link.astro"
+
+Three years ago today, 5th December 2021, <Link
+
+href="https://github.com/pocco81" external>Pocco</Link> created the <Link
+
+href="https://github.com/catppuccin/catppuccin/releases/tag/v0.1.0"
+
+external>v0.1.0</Link> GitHub release.
+```
+
+We tried mapping the `<a>` tag to the `<Link>` component, but couldn’t quite
+figure out how to pass in the `external` prop.
+
+It would be a bad idea to assume all links within a blog post are internal or
+external, so we ditched this idea and continued on with other tasks we wanted to
+accomplish.
+
+## [Auto detecting external links](#auto-detecting-external-links)
+
+A few days later, we performed the upgrade to [Astro 5 and Svelte
+5](https://github.com/catppuccin/website/pull/116), prompting us to reconsider
+and re-evaluate the structure of the codebase. When revisiting the `<Link>`
+component, we realised that we could use the `SITE` environment variable given
+by Astro to detect external links.
+
+Here’s the new rewritten `<Link>` component:
+
+Link.svelte
+
+```
+<script lang="ts">
+
+import type { Snippet } from "svelte";
+
+interface Props {
+
+href: string;
+
+externalIcon?: boolean;
+
+muted?: boolean;
+
+underline?: boolean;
+
+children: Snippet;
+
+}
+
+let { href, externalIcon = true, muted = false, underline = true, children }: Props = $props();
+
+const domain = import.meta.env.SITE;
+
+</script>
+
+<!-- We need the "externalIcon" boolean since we may not always to put the external icon on external links. -->
+
+<!-- For example, the "Powered By Vercel" badge. -->
+
+{#snippet externalLinkIcon()}
+
+{#if externalIcon}<span class="external">&#x2197;</span>{/if}
+
+{/snippet}
+
+{#if !href.includes(domain) && !href.startsWith("/") && !href.startsWith("#")}
+
+<a {href} class:muted class:underline>{@render children()}{@render externalLinkIcon()}</a>
+
+{:else}
+
+<a {href} class:muted class:underline>{@render children()}</a>
+
+{/if}
+
+<style lang="scss">
+
+...
+
+</style>
+```
+
+We again took the opportunity to add the mapping between the `<a>` tag and the
+new `<Link>` component:
+
+blog/[id].astro
+
+```
+<Content components={{ a: Link }} />
+```
+
+Allowing the import to be removed in favour of normal Markdown:
+
+celebrating-three-years-of-catppuccin.mdx
+
+```
+import Link from "../../components/Link.astro"
+
+Three years ago today, 5th December 2021, <Link
+
+href="https://github.com/pocco81" external>Pocco</Link> created the <Link
+
+href="https://github.com/catppuccin/catppuccin/releases/tag/v0.1.0"
+
+external>v0.1.0</Link> GitHub release.
+
+Three years ago today, 5th December 2021, [Pocco](https://github.com/pocco81)
+
+created the
+
+[v0.1.0](https://github.com/catppuccin/catppuccin/releases/tag/v0.1.0) GitHub
+
+release.
+```
+
+Of course, this meant the external link icon couldn’t be disabled in blog posts
+but that was a trade-off we were okay with.
+
+The new approach is much better right…? Well, actually, we didn’t think so.
+The implementation is a lot more complicated and convoluted than we ever
+imagined a “simple” `<Link>` component to be.
+
+External links were now identified based on the value of `href`, resulting in an
+extra `externalIcon` prop to override this behaviour. For example, the “Powered
+By Vercel” badge in the footer is an external link but should not display the
+icon.
+
+At this point, we were suitably fed up of the extra complexity we were bringing
+into this codebase, but the real breaking point was yet to come…
+
+## [Adding links to blog headings](#adding-links-to-blog-headings)
+
+This breaking point came when we started work on adding anchor links to blog
+headings. Once again, Astro comes to the rescue by making it relatively painless
+to configure and set up anchor links.
+
+Astro supports plugins within the
+[rehype](https://docs.astro.build/en/guides/markdown-content/#adding-remark-and-rehype-plugins)
+ecosystem, meaning we can import
+[rehype-autolink-headings](https://github.com/rehypejs/rehype-autolink-headings)
+and have headings automatically wrapped, prepended, appended, etc with anchor
+tags.
+
+Unfortunately, much to our disappointment, rehype was unable to inject the
+anchor tags into the headings because our own `<Link>` component was being applied
+afterwards, removing the crucial CSS classes needed to style the headings.
+
+Looking back, we’re quite happy that rehype didn’t support this as it only would
+have resulted in more overrides and complexity. The component was originally
+designed to unify our approach but with so many overrides, it ended up evolving
+into nothing but a pretty big headache.
+
+It hurt knowing that we engineered ourselves into this little corner of
+complexity and that our problems would practically vanish if the external link
+icon was removed, therefore removing the need for a `<Link>` component too.
+
+## [Ambiguity around the external link icon](#ambiguity-around-the-external-link-icon)
+
+Leaving the technical complexity aside for one moment, an important question we
+didn’t ask ourselves at the beginning was “What does the external link icon
+*really* mean?”
+
+This kind of iconography has existed for a long time and while we personally
+thought the meaning of the icon was clear, it turns out not everyone thinks
+about it the same way we do.
+
+Does it indicate an external link – *like we used it on this website* – or would
+it indicate that the link – *no matter the domain* – opens in a new tab – or…
+*both*?
+
+There are numerous forums online ~~debating~~ discussing what this icon’s
+behaviour should be. One of the most interesting sources of information we found
+in favour of removing it was from the UK government, who decided to remove the
+icon from their design system back in 2016:
+
+> We’d assumed that there was a clear need for the external link icon, but in 4
+> years we’ve seen no evidence that backs this up […]
+>
+> We drew on the experience of the design and research communities in government
+> and asked them if they’d ever observed users making use of the icon, which they
+> hadn’t. […]
+>
+> ~ Tim Paul on [designnotes.blog.gov.uk](https://designnotes.blog.gov.uk/2016/11/28/removing-the-external-link-icon-from-gov-uk/)
+
+Similarly, the [United States Web Design System
+(USWDS)](https://designsystem.digital.gov/) team carried out a [research
+study](https://github.com/uswds/uswds/wiki/2021-07-29-External-Link-Indicator-Research-Findings)
+involving users being exposed to consistent usage of an external link icon and
+arrived at the following conclusions:
+
+> Users didn’t consistently understand the external link icon or the “Exit” badge. […]
+>
+> Users are more likely to ignore link icons and badges than think about their
+> meaning. Majority of the participants didn’t mention the external link
+> indicators when asked to read aloud the paragraph that contained external links. […]
+>
+> ~ USWDS team via [External Link Indicator Research Findings](https://github.com/uswds/uswds/wiki/2021-07-29-External-Link-Indicator-Research-Findings)
+
+The more we researched, the more we understood what we had to do.
+
+## [Saying farewell](#saying-farewell)
+
+At last, we’ve arrived at present day.
+
+With the release of this blog post, the external link icon has been removed and
+the custom `<Link>` component has been deleted. Normal `<a>` tags are used
+throughout the codebase and the CSS is defined globally, allowing it to be
+overridden at a local level.
+
+\_typography.scss
+
+```
+a {
+
+text-decoration: none;
+
+color: var(--blue);
+
+&:hover,
+
+&:focus {
+
+text-decoration: underline;
+
+}
+
+}
+```
+
+There are some life lessons here about avoiding unnecessary complexity and
+actually understanding user behaviour, but we’ll leave you to come to your own
+conclusions.
+
+Farewell little `↗`, you will be missed.
+
+Hero image by [Denys Nevozhai](https://unsplash.com/photos/aerial-photography-of-concrete-roads-7nrsVjvALnA) modified with [lutgen-rs](https://github.com/ozwaldorf/lutgen-rs).
+
+Want to keep up-to-date? Subscribe to our [RSS Feed](/rss.xml)
+
+**Project**
+
+* [Ports](/ports)
+* [Palette](/palette)
+* [Community](/community)
+* [Blog](/blog)
+* [Open Collective](https://opencollective.com/catppuccin)
+* [GitHub Sponsors](https://github.com/sponsors/catppuccin)
+
+**Social**
+
+* [GitHub](https://github.com/catppuccin)
+* [Discord](https://discord.com/servers/catppuccin-907385605422448742)
+* [Mastodon](https://fosstodon.org/%40catppuccin)
+* [Twitter](https://twitter.com/catppuccintheme)
+* [Bluesky](https://bsky.app/profile/catppuccin.com)
+* [Spotify](https://open.spotify.com/user/31elbnluryieb6lh33o4oluv4uqy?si=90eab9fb20d1485a)
+
+**Catppuccin**
+
+•
+
+/ˌkætpʊˈtʃiːn/
+
+catppuccin.com is built and maintained by the community at [catppuccin/website](https://github.com/catppuccin/website).
+
+© 2026 • [Licensing](/licensing)
+
+Enable JavaScript to change the theme.

@@ -39,7 +39,8 @@ Noctalia 5.6.0**, sobre Intel Sandy Bridge, 1440×900, fish, kitty/alacritty y N
 | 12 | [Hoja de ruta personalizada](investigacion/12-hoja-de-ruta-personalizada.md) | Quick wins, fases, checklist, qué NO hacer |
 | 13 | [Glosario](investigacion/13-glosario.md) | Términos de ricing, Wayland, Hyprland |
 | 14 | [Herramientas GUI de ricing](investigacion/14-herramientas-gui-de-ricing.md) | hyprmod, wpgtk, Themix, Kvantum, Azote… |
-| 15 | [Crear tu propia GUI](investigacion/15-crear-tu-propia-gui.md) | Python + GTK4/libadwaita, arquitectura, código, i18n |
+| 15 | [Crear tu propia GUI](investigacion/15-crear-tu-propia-gui.md) | Python + GTK4/libadwaita, backups automáticos, código, i18n |
+| 16 | [Archivo web oficial](investigacion/16-archivo-web-oficial.md) | 744 páginas de documentación oficial, criterios y fallos |
 
 ## 📁 Estructura del repositorio
 
@@ -52,6 +53,7 @@ ricing/
 ├── configuracion-actual/        # copia de los dotfiles del sistema (sin secretos)
 ├── recursos/
 │   └── hypr-rice-gui/main.py    # prototipo funcional de GUI (GTK4)
+├── archivo-web/                 # 744 páginas oficiales archivadas (ver INDICE.md)
 ├── repositorios/                # clones de referencia (ver su README)
 ├── apendices/                   # inventarios y scripts de auditoría/conversión
 ├── .staging/                    # artefactos crudos descargados (ignorado en git)
@@ -67,7 +69,8 @@ ricing/
    Cada archivo lleva frontmatter con `url`, `title`, `fetched_at` y `fetcher`.
 4. **Síntesis** en `investigacion/`, distinguiendo **[HECHO]**, **[OPINIÓN]** e
    **[INCIERTO]** y citando `sources/`.
-5. **Prototipo** ejecutable en `recursos/hypr-rice-gui/main.py`.
+5. **Prototipo** ejecutable en `recursos/hypr-rice-gui/main.py`, con **backups automáticos**
+   (`backup_manager.py`): antes de cada cambio, temporizados, con SHA-256, retención y restauración.
 
 ## 🛠️ Usar el prototipo de GUI
 

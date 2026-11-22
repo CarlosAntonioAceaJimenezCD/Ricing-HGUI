@@ -1,0 +1,65 @@
+Fastfetch supports the following display detection methods. Which one answered is reported by the Display module as `platformApi`.
+
+## Linux and FreeBSD
+
+The methods are tried in order, and the first one that reports at least one display wins:
+
+1. **wayland** — via `libwayland-client`. Supports the most features, including per-monitor refresh rates. It cannot detect the name of the WM / DE, which is filled in separately from environment variables and the process list.
+    * Reported as `wayland-base`, `wayland-zxdg`, `wayland-wpcolor`, `wayland-zxdg+wpcolor`, or `wayland-kde` when the KDE output device protocol is available.
+    * On GNOME and Cinnamon the monitor configuration is read from the compositor over D-Bus as well, and the displays it answered for report `wayland-mutter` instead. See [Mutter and Muffin](#mutter-and-muffin).
+2. **xcb-randr** — via `libxcb-randr`.
+    * Reported as `xcb-randr-mode` when the current mode was found in the mode list, and `xcb-randr-crtc` when only the CRTC size is known, in which case no refresh rate is reported. An `emu` infix (`xcb-randr-emu-mode`, `xcb-randr-emu-crtc`) means the values come from an emulated RandR, as under XWayland.
+    * `xcb-randr-monitor` and `xcb-randr-screen` are the fallbacks used when the per-output data is not usable.
+3. **xlib-randr** — via `libXrandr`. Reported as `xlib-randr-crtc`, `xlib-randr-mode`, `xlib-randr-monitor` or `xlib-randr-screen`, with the same `emu` infix.
+4. **libdrm** — display server independent, tried when none of the above reported a display.
+    * Reported as `libdrm`.
+5. **sysfs-drm** — `/sys/class/drm/`, used when `libdrm` is unavailable or failed.
+    * Reported as `sysfs-drm`.
+6. **kenv** — FreeBSD only. Reads `screen.width` and `screen.height` from the kernel environment.
+    * Reported as `kenv`.
+
+### Mutter and Muffin
+
+GNOME (gnome-shell, Mutter) and Cinnamon (cinnamon, Muffin) publish their monitor configuration on the session bus, as `org.gnome.Mutter.DisplayConfig` and `org.cinnamon.Muffin.DisplayConfig`. When one of those interfaces answers, the `wayland` method reads it, and the displays it describes report `wayland-mutter` as `platformApi`. This route is Linux only, and needs a build with the `DBus` feature, which `fastfetch --list-features` reports.
+
+What it adds over the `wl_output` route:
+
+* The primary monitor and the built-in / external split come from the compositor instead of being guessed. Each logical monitor carries a primary flag, and each monitor carries `is-builtin`, which is authoritative where the type is otherwise guessed from the connector name.
+* The raw EDID comes from `GetResources()` — `GetCurrentState()` does not expose it — and fills in the monitor model name, serial number, manufacture date, and preferred resolution and refresh rate.
+* HDR state comes from the monitor's `color-mode` and `supported-color-modes` properties: `BT2100` means HDR is on, or is only supported when it is in the list but not the current one. The EDID answers only where the properties say nothing.
+* The `wl_output` name is no longer matched against the DRM connectors, since the connector names arrive with the configuration itself. A monitor whose EDID cannot be read therefore keeps its connector name as the display name instead of falling back to that match.
+
+None of this has to be available. A build without D-Bus, a compositor that does not expose the interface, or a reply that cannot be read leaves the previous behavior in place: the `wayland-*` values above, with the primary monitor read from `monitors.xml` on GNOME or `cinnamon-monitors.xml` on Cinnamon.
+
+Use `--ds-force-drm` to skip wayland and X11 and go straight to DRM:
+
+| Value | Description |
+|-------|-------------|
+| `false` | The default. Tries `wayland`, then `x11`, then `drm` |
+| `true` | Tries `libdrm` first, then `sysfs` if `libdrm` fails |
+| `sysfs-only` | Uses `/sys/class/drm` only |
+
+## macOS
+
+Displays are read from the `CoreGraphics` framework, which is what `platformApi` reports. `--ds-force-drm` has no effect.
+
+## Windows
+
+Displays are read through `GDI`, which is what `platformApi` reports. `--ds-force-drm` has no effect.
+
+## Android
+
+Wayland, XCB and XRandR are tried first, exactly as on Linux, which is what covers Termux with an X server. When none of them reports a display, the Android display service is queried directly, and one text route sits behind it as a fallback:
+
+1. **binder** — `getDisplayIds()` followed by one `getDisplayInfo()` per id, sent to the `display` service (`android.hardware.display.IDisplayManager`) over `/dev/binder`. It needs no permission and starts no child process, and it is the only route an app UID can use on Android 11 and 12 at all, where `cmd display get-displays` does not exist and `dumpsys display` is behind `android.permission.DUMP`. `platformApi` reports `binder`.
+2. **cmd** — `/system/bin/cmd display get-displays`, which prints the same `DisplayInfo` records as text. It only answers when binder declines, which is when the device's `/system/framework/framework.jar` cannot be read or its `DisplayInfo` layout is not one the walk knows. `platformApi` reports `cmd`.
+
+The `dumpsys display` route and the vendor-specific `getprop` route that used to sit behind both are gone — binder covers every release they did, and the `cmd` fallback covers the case binder cannot parse. A device whose layout neither route can read reports no display rather than a number read out of the middle of another field.
+
+What the binder route has to earn is the parse. The reply is a Java `Parcelable` whose field set moves with every release and every vendor fork, so the record is never read at a fixed offset: the write order is recovered from the device's own `/system/framework/framework.jar`, from the `iget` order of `DisplayInfo.writeToParcel`, and the walk follows it field by field, anchoring every nested `Parcelable` on its class name. A field the running release does not write is simply not in the sequence, which is what makes every release's layout readable without a version check. A layout the parser does not recognise — a jar it cannot read, or a field whose framing it does not know — fails the route, and the `cmd` fallback then answers instead.
+
+Timed on one device, the module took 16.0–26.5 ms through `cmd display get-displays` and 2.8–3.2 ms through binder. Treat that as an order of magnitude rather than a benchmark — the absolute number moves a lot with what else the device is doing. What binder buys is the fork; most of what is left is reading the jar. The fallback is only paid when binder fails, so a working binder route never forks at all.
+
+## Haiku
+
+Displays are read from the Haiku screen API, which is what `platformApi` reports as `BScreen`.

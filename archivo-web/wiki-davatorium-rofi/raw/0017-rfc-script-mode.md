@@ -1,0 +1,1 @@
+See `rofi-script` manpage.

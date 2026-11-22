@@ -1,0 +1,26 @@
+[
+  {
+    "url": "https://aylur.github.io/config/utils",
+    "error": "HTTP 404, 9379 bytes, curl=0 "
+  },
+  {
+    "url": "https://aylur.github.io/config/widgets",
+    "error": "HTTP 404, 9379 bytes, curl=0 "
+  },
+  {
+    "url": "https://aylur.github.io/config/services",
+    "error": "HTTP 404, 9379 bytes, curl=0 "
+  },
+  {
+    "url": "https://aylur.github.io/config/examples",
+    "error": "HTTP 404, 9379 bytes, curl=0 "
+  },
+  {
+    "url": "https://aylur.github.io/ags-docs/home-manager",
+    "error": "HTTP 404, 9743 bytes, curl=0 "
+  },
+  {
+    "url": "https://aylur.github.io",
+    "error": "HTTP 404, 9379 bytes, curl=0 "
+  }
+]

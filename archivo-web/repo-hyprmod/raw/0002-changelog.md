@@ -1,0 +1,187 @@
+# Changelog
+
+All notable changes to HyprMod will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- Mirror preset on the Monitors page: turns every monitor on and has the others mirror the focused one (#90)
+
+### Fixed
+
+- The Mirror dropdown keeps its target after a mirror is applied. Hyprland reports the target as a monitor ID, which replaced the connector name on the next read from the compositor, so the dropdown fell back to "None" and the line to save pointed at `0`. Requires hyprland-monitors 0.9.2 and hyprland-state 0.4.9 (https://github.com/BlueManCZ/hyprland-monitors/pull/6)
+
+## [0.6.0] - 2026-11-14
+
+### Added
+
+- Settings Hyprland 0.57 introduced: blur variants with the parameters of the selected variant, window wobble, layer surface behavior, tablet input, swallowing the click that focuses a window, centering a dragged window, cursor warp on monitor change, and asynchronous commits (#106)
+- Inner glow, new render scheduling, FP16 buffers and shader blur blending, which older Hyprland versions already had, can be configured (#106)
+
+### Changed
+
+- The option catalog for Hyprland 0.57 is bundled, so option types, defaults and ranges match a 0.57 compositor without a download. Requires hyprland-schema 0.8.2 (https://github.com/BlueManCZ/hyprland-schema/pull/7)
+- "Follow focus" on the Scrolling page is a choice of three modes on Hyprland 0.57, which turned the setting from on/off into off, follow on focus, and follow on focus with a click always scrolling. It stays a switch on older versions (#109)
+
+### Fixed
+
+- A `hyprland.conf` that Hyprland 0.57 no longer reads can be recovered. Upgrading without a `hyprland.lua` makes Hyprland generate one and ignore the old config. HyprMod took that for a finished Lua setup: it hid the migration and offered to add itself to the generated file. It now offers the migration even if the banner was dismissed before, backs up every file it replaces, and reloads on the recovered configuration (#110)
+- Tap to click and tap and drag can be changed in Lua mode again. They were sent under their dashed names (`tap-to-click`), which Hyprland's Lua API rejects with "unknown config key". Requires hyprland-config 0.9.21 and hyprland-state 0.4.8 (#102)
+- A setting whose default is an empty value, such as the pointer acceleration profile, can be set back to that default in Lua mode. Hyprland's Lua API has no value for it, so picking "Default" failed with "eval rejected" and a saved config carried `accel_profile = ""`. The key is now left out of the saved config, and HyprMod reloads Hyprland to bring the default back as soon as no other change is unsaved. Resetting the setting, discarding it and undo work the same way. Requires hyprland-config 0.9.21 (#108)
+- The touchpad settings and the Gestures page no longer disappear on laptops whose built-in touchpad Hyprland lists under a hardware ID (`pnp0c50:0b-0911:5288`) with no "touchpad" in its name. Requires hyprland-state 0.4.8 (https://github.com/BlueManCZ/hyprland-state/pull/5)
+- Switching a display from Mirror back to Extend takes effect right away in Lua mode. Hyprland kept the previous mirror target until the next config reload. Requires hyprland-monitors 0.9.1 and hyprland-state 0.4.8 (https://github.com/BlueManCZ/hyprland-monitors/pull/2)
+- A monitor whose description contains `#` keeps its mode, position and scale on save. Everything after the `#` was read as a comment. Requires hyprland-monitors 0.9.1 and hyprland-config 0.9.21 (https://github.com/BlueManCZ/hyprland-monitors/issues/3)
+- Migrating to Lua keeps `sendshortcut` and `sendkeystate` keybinds. They were left in the manual-conversion block, so the binds were lost. Requires hyprland-config 0.9.21 (https://github.com/BlueManCZ/hyprland-config/pull/13)
+- A Lua config that loops over `hl.get_devices()` or another query result is read in full. Everything after the loop was dropped. Requires hyprland-config 0.9.20 (https://github.com/BlueManCZ/hyprland-config/pull/8)
+
+## [0.5.0] - 2026-10-07
+
+### Added
+
+- Plugins page for configuring Hyprland plugins: a schema-driven UI for natively supported plugins (starting with Hypr Dynamic Cursors) plus a list editor for arbitrary `plugin { … }` settings, with live-apply, detection of plugin settings from your existing config, and a prompt to add `hyprpm reload` to autostart when a supported plugin is not loaded (#60)
+- The window rule dialog supports multiple actions per rule: actions are a dynamic list of blocks that can be added and removed individually, instead of a single action per rule; anonymous rules with multiple effects now also load as one rule instead of splitting into separate entries (#57, #58)
+- The keybind dialog's "Run command" action can pick from installed apps: a search button next to the Command field opens the same app picker used by autostart entries, filling the field with the selected app's command
+
+### Changed
+
+- The window rule dialog autofills new condition rows from the last picked window: after picking a window, "+ Condition" pre-fills the matching value, and changing a condition's type from the dropdown updates the value to match the picked window (#56)
+
+### Fixed
+
+- A Norwegian keyboard layout is saved and applied correctly in Lua mode. Its xkb code is `no`, which is also one of Hyprland's boolean words, so HyprMod wrote `kb_layout = false` and the compositor rejected it with "string type requires a string". Every string-typed setting whose value starts with `no`, `on` or `off` was affected, and an already-correct layout was rewritten on the next save of any unrelated setting. Requires hyprland-config 0.9.19 (#96)
+- Opaque Lua callbacks, custom dispatchers, and parsed bind variants the editor cannot safely represent are now read-only. Editing one previously selected the first available action and could save an empty `exec` command, silently breaking the shortcut (#88)
+- A described keybind from a Lua config shows its real action again. Omarchy's `SUPER + B` read as `Browser`, the description Hyprland reports ahead of the dispatcher, so HyprMod had no command to show or edit. Requires hyprland-config 0.9.18 (#88)
+- A Lua config that prints something no longer stops HyprMod from starting. The reader took the config's stdout output as part of its own data and failed to parse it, so the first launch showed nothing and every launch after that showed an empty window. A config HyprMod genuinely cannot read now gets a window saying what the parser rejected, with a retry, instead of a traceback in the terminal. Requires hyprland-config 0.9.17 (#87)
+- The Mode picked for a "Toggle fullscreen" keybind is saved again in Lua mode. Every mode emitted `hl.dsp.window.fullscreen()`, so a bind set to Maximize toggled full screen instead. The "No gaps" mode is gone from the picker: Hyprland has read every mode but Maximize as full screen since 0.43, so it never did anything. Requires hyprland-config 0.9.16 (#86)
+- Editing a window rule to drop an action, or narrowing its conditions so a window no longer matches, now releases the windows it was applied to. HyprMod also set each effect as a per-window property in Lua mode, and those outrank the rule and survive a config reload. Requires hyprland-state 0.4.7 (#79)
+- A window rule with more than one action now applies all of them when pushed to the running compositor, instead of only the first. Requires hyprland-config 0.9.15 (#79)
+- Saving now reloads the compositor when window or layer rules changed, so deleting, reordering, or discarding a rule takes effect instead of waiting for the next HyprMod launch. Hyprland's autoreload never saw the write: it watches the config file's inode, and an atomic save replaces it (#79)
+- Re-running `install.sh` updates HyprMod itself again, not just its dependencies. It ran `uv tool upgrade`, which re-resolves dependencies but can keep the git commit already installed; it now reinstalls from the source URL (#79)
+- Setting a rotated monitor back to Normal now works in Lua mode; the display stayed rotated and the Transform dropdown snapped back to the old angle. Hyprland's Lua config keeps the previous value for any key left out of an applied monitor line, and the line omitted `transform` when it was 0. Clearing a Bit Depth or Color Management override was broken the same way. Requires hyprland-monitors 0.9.0 and hyprland-state 0.4.6 (#82)
+- pycairo is declared as a direct dependency, so packagers no longer end up with an install where the monitor layout preview, the bezier curve editor, and the animation preview are blank. PyGObject needs pycairo to hand a drawing context to Python, and distro packages of PyGObject list pycairo as optional, so drawing failed with nothing shown to the user. An install that is still missing the bindings now says so in a dialog at startup instead of just drawing empty boxes (#78)
+- Recording a media, brightness, or other `XF86` key in the keybind dialog no longer produces a bind Hyprland rejects with "Unknown keysym"; GDK reports these keysyms without their `XF86` prefix (`AudioRaiseVolume`), which is not a name xkb resolves, so the prefix is now restored before the key reaches the config (#69)
+- Recording a shortcut whose key sits on a shifted or AltGr level no longer produces a bind that never fires; Hyprland matches binds against the base-level keysym, so the captured key is now resolved with every modifier cleared instead of only `SHIFT`, fixing AltGr+Q on a Czech layout being recorded as `MOD5, backslash` where Hyprland only ever looks for `q` (#69)
+- Recording a shortcut while a secondary keyboard layout is active no longer produces a bind that never fires; unless `resolve_binds_by_sym` is set, Hyprland resolves binds through the first layout in `input:kb_layout` regardless of which one is active, so on `cz,us` the number row key recorded as `2` from the us layout is now recorded as `ecaron` (#73)
+- The "Resize window" keybind action now takes a width and a height with a relative/exact mode picker, instead of a free-text argument field. It sits among direction-picker actions, so the old field invited a direction letter that Hyprland cannot resize by and the bind failed to apply. Percentage values keep the text field, since they have no spin-button form (#70)
+- Ten keybind actions that had no Lua translation, among them "Move window or group", "Pass key to window" and "Lock all groups", no longer fail with "No Lua mapping" in Lua mode; requires hyprland-config 0.9.13 (#74)
+- The installed desktop entry launches from app menus and docks again: `Exec` now points at the absolute path of the hyprmod binary, since GUI launchers often start without `~/.local/bin` on `$PATH` (#67)
+- Window rules with multiple effects no longer lose every effect after the first when saved in Lua mode; rule lines are now normalized so the Lua serializer emits all effects (#60)
+- Changing a condition from a boolean type (like `xwayland`) to a text type (like `initial_class`) no longer leaves the literal string `"false"` in the value field (#56)
+
+## [0.4.0] - 2026-07-01
+
+### Added
+
+- Command-line profile switching (#50): `hyprmod profile apply <name>` switches profiles without opening the window (bindable to a keybind or scriptable), `hyprmod profile next` / `previous` cycle through them alphabetically (wrapping around, great for a single keybind), and `hyprmod profile list` shows the saved profiles with the active one marked. The profile list, in the app and on the command line, is now ordered alphabetically
+- Multiple keyboard layouts (#44): the Keyboard layouts row opens a dialog to add, reorder, edit, and remove input sources (a layout plus its variant), written to `kb_layout` and `kb_variant`
+
+### Changed
+
+- The Gestures page is hidden when there's no touchpad or touchscreen, since its workspace-swipe options need one to do anything. With only one device present, the page stays and the unusable subsection greys out
+
+### Fixed
+
+- Changing the active or inactive window border color in Lua mode no longer fails with an `invalid color` error; a single-color border was sent to Hyprland with a redundant `0deg` angle that its Lua config manager rejected (#43)
+- Migrating a `hyprland.conf` to Lua no longer drops or breaks keybinds: concatenated and mixed-case modifiers (`SUPERSHIFT`, `Alt`) now decompose into canonical tokens, and nested `match { … }` blocks in block-form `windowrule`/`layerrule` nest correctly instead of being rejected (#45)
+- Disabling a monitor no longer makes it vanish from the Monitors page; hyprmod now reads disabled outputs too, so a turned-off monitor stays listed and can be switched back on (https://github.com/BlueManCZ/hyprland-socket/pull/2)
+- Re-enabling a disabled monitor no longer overlaps or snaps onto another monitor, comes back at its preferred mode when Hyprland reports `0x0` after a reboot, and no longer crashes the Monitors page with `scales must not be empty` (#46)
+- Workspace rules in generated Lua configs now write the workspace selector as a string (`workspace = "1"` instead of `workspace = 1`); `hl.workspace_rule` declares the field as a string, and the integer form relied on Lua's implicit coercion and was flagged by lua-language-server (#48)
+- "Refresh monitors" no longer discards unsaved monitor changes and clears the pending-changes indicator
+- The workspace rule dialog's appearance overrides are now single "Use global / On / Off" dropdowns; the previous override-switch-plus-value-switch pair could keep showing "On" after the value was switched off
+- Binds using the `global` dispatcher (app-registered global shortcuts, e.g. `bind = SUPER, period, global, caelestia:emoji`) no longer fail to apply in Lua mode; the dispatcher had no Lua mapping (#49)
+- The first-run setup dialog no longer reappears when HyprMod's include line lives in a sourced sub-file rather than directly in `hyprland.lua` / `hyprland.conf`; detection now follows the whole `source` / `require` / `dofile` chain instead of inspecting only the top-level entrypoint (#51)
+- Migrating to Lua no longer breaks keybinds that use a modifier variable (`$shiftMod = $mainMod SHIFT`); the variable now joins its modifiers with `+` instead of leaking a space-separated `SUPER SHIFT` blob that Hyprland reads as a single unknown keysym (#52)
+- Migrating to Lua no longer breaks workspace `layoutopt` rules; `layoutopt:direction:right` now becomes a nested `layout_opts` table instead of a flat string that `hl.workspace_rule` rejects (#53)
+
+## [0.3.0] - 2026-05-25
+
+### Added
+
+- Lua config support — read and edit `hyprland.lua` directly, with live preview against Hyprland 0.55+'s Lua runtime
+- "Migrate to Lua…" wizard and main-window banner (Hyprland 0.55+) — converts your active `hyprland.conf` to `hyprland.lua`, rewrites the entrypoint include, and is dismissible
+- Per-monitor "Identify by description" toggle — emits `monitor=desc:…` instead of `monitor=DP-1, …` so the saved configuration follows the physical monitor across port changes (#26)
+- Per-monitor HDR controls — expanded Color Management presets (Auto/sRGB/Adobe/Wide/EDID/HDR/HDR EDID), SDR Brightness/Saturation sliders, advanced SDR/HDR luminance sliders, lock-step luminance controls, and safe defaults for first-time HDR setup (#29)
+- Workspaces page — manage `workspace` rules with live preview and live IPC apply (#31)
+- Deprecation assistant — detect and migrate deprecated Hyprland syntax with explicit user confirmation and timestamped backups
+- Convenience installer (`install.sh`) and `hyprmod --install` / `--uninstall` flags — `pipx`/`uv tool` installs now register a desktop launcher entry and icon under `$XDG_DATA_HOME`, with first-launch self-registration as a fallback
+- Optional Name and Enabled fields in the window and layer rule dialogs for Hyprland's block-form / Lua named rules
+- "Report a bug" link in Help menu and error toasts — opens prefilled GitHub issues with HyprMod version, Hyprland version, config language, and install method
+
+### Changed
+
+- Bind dialog's Manual Edit modifier picker is a compact two-row chip strip instead of stacked switch rows
+- Options unavailable on the running Hyprland version are hidden instead of greyed-out; group headers collapse when every row in the group is unavailable
+- Profiles transcode on activation — saving in Hyprlang then activating in Lua (or vice-versa) just works
+- HyprMod no longer auto-migrates deprecated syntax silently on save; migrations are surfaced via the new deprecation assistant and require explicit user confirmation
+
+### Fixed
+
+- Keybinds using the Hyper modifier (and `CAPS`/`MOD2`/`MOD3`/`MOD5`) are now displayed and recorded correctly — previously `Caps Lock + G` under `caps:hyper` rendered as `+ G` and Record captured only `G` (#27)
+- Toggling "Numlock by default" wrote an invalid `input:kb_numlock` option that Hyprland rejected on reload; the option is now written as `input:numlock_by_default` per the schema (#34)
+- Rules from your managed config no longer leak into the read-only "external rules" list when `hyprland-gui.conf` is reached through a symlinked path (typical dotfiles setup)
+- Named window and layer rules (block-form `windowrule { name = … }` or Lua `name = "…"`) are now recognized and editable instead of being silently dropped (#37)
+- Autostart page surfaces `exec` / `exec-once` entries defined in your `hyprland.conf` (or any file it sources) as read-only rows alongside the managed ones, matching the existing behavior of the Env Variables, Window Rules, and Layer Rules pages (#37)
+- Lua migration preserves Hyprlang `$var` references as named Lua locals instead of inlining their values or emitting literal `"$var"` strings that Hyprland rejected on reload (#38)
+- Deleting or disabling a window rule with `float`, `tile`, `pin`, `fullscreen`, or `maximize` now reverts the effect on matching open windows instead of waiting for the next Hyprland reload
+- Per-monitor VRR `Off` now writes `vrr, 0` and actually disables VRR; a new `Use global` option preserves the previous omit-the-clause behavior (#39)
+- Window and layer rules now apply correctly on Hyprland < 0.53 and < 0.54, which expect the pre-v3 `windowrulev2` / `layerrule = effect, namespace` grammar; the v3 `match:` form hyprmod previously always emitted was rejected with `Invalid rulev2 found` (#41)
+
+## [0.2.0] - 2026-05-07
+
+### Added
+
+- Window Rules page — manage `windowrule` entries with a window picker, curated action dropdown, and live preview
+- Layer Rules page — manage `layerrule` entries with curated presets and live preview
+- Autostart page — manage `exec` and `exec-once` entries with an app picker
+- Env Variables page — manage `env` entries with POSIX name validation
+- Pending Changes page — review every unsaved edit across the app in one place
+- Mouse-drag (`bindm`) keybinds with dispatcher, category, and preset support (#20)
+- Profile cards show the last-modified date alongside the option count
+
+### Changed
+
+- Sidebar reorganized by task
+- Dwindle, Master, and Scrolling merged into a single Layouts page
+- Profiles page redesigned — active profile promoted to a hero card with the saved-profiles list below
+- Saving keeps the active profile in sync automatically; use the save split button's "without updating profile" option to intentionally diverge
+
+### Fixed
+
+- Gradient border colors written without `0x` prefix on save, causing Hyprland to reject the config on reload (#21)
+- Keybind recorder captured the shifted keysym (e.g. `exclam` for `Shift+1`) instead of the unshifted one Hyprland expects when `SHIFT` is in the modifier mask (#22)
+
+## [0.1.0] - 2026-04-21
+
+Initial release.
+
+### Added
+
+- Native GTK4/libadwaita settings app for Hyprland with live preview via IPC
+- Config isolation — HyprMod writes only to its own `hyprland-gui.conf`; the user's `hyprland.conf` is never modified
+- Undo/redo with Ctrl+Z
+- Profiles — save, name, and share complete configurations as `.conf` files
+- Config DNA — a unique visual fingerprint per profile
+- Bezier curve editor with draggable control points, live animation preview, and a preset library
+- Monitor configuration with per-monitor resolution, refresh rate, position, scale, transform, and mirroring. VRR, HDR, and 10-bit detection
+- Keybind editor with modifier toggles, interactive key capture, and dispatcher selection
+- Cursor theme picker with live previews
+- Master, Dwindle, and Scrolling layout options
+- Global search across all options (Ctrl+F) with highlight-pulse navigation
+- Configurable config path and an auto-save toggle
+- About dialog with version info and debug details
+- Keyboard shortcuts overlay
+- In-app link to report issues on GitHub
+- Version-aware schema resolution — loads the option catalog matching the running Hyprland version, falling back to the bundled schema on mismatch
+- Automatic migration of deprecated Hyprland syntax on save
+- Desktop integration: application icon, `.desktop` file, and AppStream metainfo
+
+[0.6.0]: https://github.com/BlueManCZ/hyprmod/releases/tag/v0.6.0
+[0.5.0]: https://github.com/BlueManCZ/hyprmod/releases/tag/v0.5.0
+[0.4.0]: https://github.com/BlueManCZ/hyprmod/releases/tag/v0.4.0
+[0.3.0]: https://github.com/BlueManCZ/hyprmod/releases/tag/v0.3.0
+[0.2.0]: https://github.com/BlueManCZ/hyprmod/releases/tag/v0.2.0
+[0.1.0]: https://github.com/BlueManCZ/hyprmod/releases/tag/v0.1.0

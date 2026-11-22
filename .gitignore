@@ -1,6 +1,9 @@
-# Entornos y artefactos de descarga (no versionar)
+# Entornos y artefactos temporales de descarga (no versionar)
 .tools/
 .staging/
+.wikis/
+.repos-docs/
+.urlistas/
 __pycache__/
 *.pyc
 

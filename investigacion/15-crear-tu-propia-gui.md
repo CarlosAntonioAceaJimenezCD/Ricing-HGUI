@@ -104,6 +104,52 @@ blur = {
 
 Así la GUI no parsea Lua: **genera** un módulo Lua que tu config ya entiende.
 
+### 3.2 Backups automáticos (requisito obligatorio)
+
+La GUI **debe** hacer backups automáticos: antes de cada cambio, de forma
+periódica mientras está abierta, y con posibilidad de restaurar. El prototipo ya
+incluye `backup_manager.py` con este diseño:
+
+```mermaid
+flowchart LR
+    A[Cambio en la GUI] --> B[Backup antes-de-aplicar]
+    C[Temporizador GLib<br/>cada N minutos] --> D[Backup auto]
+    E[Usuario: Crear ahora] --> F[Backup manual]
+    B --> G[tar.gz + manifest.json<br/>SHA-256 por archivo]
+    D --> G
+    F --> G
+    G --> H[Retención: conservar últimos N]
+    H --> I[Restaurar con backup pre-restore]
+```
+
+| Característica | Implementación |
+|---|---|
+| **Qué se respalda** | `~/.config/hypr`, `noctalia/config.toml`, `kitty`, `alacritty`, `gtk-3.0`, `fish/config.fish`, `color-schemes` |
+| **Cuándo** | Antes de cada "Aplicar", cada N minutos (por defecto 15), y bajo demanda |
+| **Dónde** | `~/.local/share/hypr-rice-gui/backups/` |
+| **Formato** | `backup-YYYYmmdd-HHMMSS-<motivo>.tar.gz` con `manifest.json` y `data/` |
+| **Integridad** | SHA-256 por archivo; `verify_backup()` detecta cambios |
+| **Retención** | `keep_last` (por defecto 10); borra los antiguos automáticamente |
+| **Seguridad** | Antes de restaurar hace un backup `pre-restore`; excluye `fish_variables`, keyrings y cachés |
+| **Configuración** | `~/.local/share/hypr-rice-gui/settings.json` (switch, intervalo, retención) |
+| **GUI** | Página "Backups automáticos" con switch, intervalo, retención, historial, crear y restaurar |
+
+API del módulo:
+
+```python
+import backup_manager as bm
+
+bm.create_backup(reason="manual")     # devuelve el manifiesto
+bm.list_backups()                     # historial
+bm.verify_backup("backup-....tar.gz") # (bool, mensaje)
+bm.restore_backup("backup-....tar.gz")# (bool, mensaje)
+```
+
+> **HECHO:** el código está en `recursos/hypr-rice-gui/backup_manager.py` y se
+> integró en `main.py` (temporizador `GLib.timeout_add_seconds`, limpieza al cerrar
+> la ventana y backup antes de `save_state`). Probado: creación, listado,
+> verificación y restauración exitosas.
+
 ## 4. Plan de trabajo en 6 pasos
 
 ### Paso 0 — Aprende del código real (30 min)
@@ -333,4 +379,5 @@ Recomendación práctica:
 - Fuentes: [hyprmod](../sources/2026-11-21-gui-hyprmod.md),
   [Noctalia README](../sources/2026-11-21-noctalia-readme.md),
   [Hyprland Lua utilities](../sources/2026-11-21-hyprland-lua-utilities.md).
-- Esqueleto ejecutable: [`recursos/hypr-rice-gui/main.py`](../recursos/hypr-rice-gui/main.py).
+- Esqueleto ejecutable: [`main.py`](../recursos/hypr-rice-gui/main.py) y
+  [`backup_manager.py`](../recursos/hypr-rice-gui/backup_manager.py) (backups automáticos).
