@@ -34,13 +34,16 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("GLib", "2.0")
-from gi.repository import Adw, GLib, Gtk  # noqa: E402
+gi.require_version("Gdk", "4.0")
+from gi.repository import Adw, Gdk, GLib, Gtk  # noqa: E402
 
 import backup_manager as bm  # noqa: E402
 import config_model as cm  # noqa: E402
 import keybinds as kb  # noqa: E402
 import monitors as mon  # noqa: E402
 import wallpapers as wp  # noqa: E402
+import wallpaper_engine as we  # noqa: E402
+import sharing as sh  # noqa: E402
 
 gettext.bindtextdomain("hypr-rice-gui", os.path.expanduser("~/.local/share/locale"))
 gettext.textdomain("hypr-rice-gui")
@@ -457,22 +460,30 @@ def on_activate(app: Adw.Application) -> None:
     key_entry = Gtk.Entry()
     key_entry.set_placeholder_text(_("SUPER + CTRL + K"))
     key_entry.set_size_request(220, -1)
-    row_key = Adw.ActionRow(title=_("Tecla"), subtitle=_("Modificadores + tecla o code:N"))
-    row_key.add_suffix(key_entry)
+    row_key = Adw.ActionRow(title=_("Tecla"), subtitle=_("Pulsa «Capturar» o escribe SUPER + K"))
+    key_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+    key_box.append(key_entry)
+    key_box.append(make_button(_("Capturar tecla…"), lambda _b: capture_key()))
+    row_key.add_suffix(key_box)
     kb_group.add(row_key)
 
-    kind_combo = Gtk.ComboBoxText()
-    for opt in (_("Comando (exec)"), _("Expresión Lua")):
-        kind_combo.append_text(opt)
-    kind_combo.set_active(0)
-    row_kind = Adw.ActionRow(title=_("Tipo de acción"))
-    row_kind.add_suffix(kind_combo)
+    # La acción se elige en un menú en lenguaje natural; el usuario NO escribe Lua.
+    action_combo = Gtk.ComboBoxText()
+    for opt in (
+        _("Ejecutar un programa"), _("Cerrar la ventana"),
+        _("Alternar ventana flotante"), _("Pantalla completa"),
+        _("Enviar mensaje a Noctalia"), _("Avanzado (expresión Lua)"),
+    ):
+        action_combo.append_text(opt)
+    action_combo.set_active(0)
+    row_kind = Adw.ActionRow(title=_("Qué debe hacer"), subtitle=_("Elige una opción, sin código"))
+    row_kind.add_suffix(action_combo)
     kb_group.add(row_kind)
 
     action_entry = Gtk.Entry()
-    action_entry.set_placeholder_text(_("kitty  ·  hl.dsp.window.close()"))
+    action_entry.set_placeholder_text(_("Ej.: kitty  ·  launcher  ·  volume-up"))
     action_entry.set_size_request(300, -1)
-    row_action = Adw.ActionRow(title=_("Acción"), subtitle=_("Comando o expresión hl.dsp.*"))
+    row_action = Adw.ActionRow(title=_("Datos de la acción"), subtitle=_("Programa, mensaje o parámetro"))
     row_action.add_suffix(action_entry)
     kb_group.add(row_action)
 
@@ -496,10 +507,45 @@ def on_activate(app: Adw.Application) -> None:
     kb_status = Gtk.Label(label=_("Selecciona un atajo o escribe uno nuevo"), wrap=True)
     editing: dict[str, str] = {"old_key": ""}
 
+    def capture_key() -> None:
+        """Diálogo modal que captura una combinación de teclas real desde GTK."""
+        dialog = Gtk.Window(title=_("Pulsa una tecla…"), transient_for=win,
+                            default_width=360, default_height=120)
+        label = Gtk.Label(label=_("Pulsa la combinación (ej. SUPER + K)…"))
+        dialog.set_child(label)
+
+        controller = Gtk.EventControllerKey()
+
+        def on_key(_ctrl, keyval: int, _keycode: int, state: int) -> bool:
+            name = Gdk.keyval_name(keyval) or str(keyval)
+            # Ignorar modificadores sueltos: no son atajos completos.
+            if name in {"Control_L", "Control_R", "Alt_L", "Alt_R",
+                        "Super_L", "Super_R", "Shift_L", "Shift_R"}:
+                return True
+            mods = []
+            if state & Gdk.ModifierType.CONTROL_MASK:
+                mods.append("CTRL")
+            if state & Gdk.ModifierType.ALT_MASK:
+                mods.append("ALT")
+            if state & Gdk.ModifierType.SUPER_MASK:
+                mods.append("SUPER")
+            if state & Gdk.ModifierType.SHIFT_MASK:
+                mods.append("SHIFT")
+            key_entry.set_text(" + ".join(mods + [name]))
+            kb_status.set_label(_("Tecla capturada: ") + key_entry.get_text())
+            dialog.close()
+            return True
+
+        controller.connect("key-pressed", on_key)
+        dialog.add_controller(controller)
+        dialog.present()
+
     def refresh_binds() -> None:
         kb_list.remove_all()
         for b in kb.enriched_binds():
-            label = f"{b['mods']} + {b['key']}"
+            # Usar la clave exacta del config cuando existe (evita errores al
+            # desvincular: hl.unbind es sensible a mayúsculas y al texto exacto).
+            label = b.get("source_key") or f"{b['mods']} + {b['key']}"
             subtitle = b.get("source_action") or b["dispatcher"]
             row = Adw.ActionRow(title=label, subtitle=subtitle[:80])
             row.set_name(label)
@@ -510,7 +556,7 @@ def on_activate(app: Adw.Application) -> None:
         if row is None:
             return
         label = row.get_name()
-        editing["old_key"] = label.split(" + ")[-1]
+        editing["old_key"] = label  # clave COMPLETA, igual que la espera hl.unbind
         key_entry.set_text(label)
         source_action = ""
         for b in kb.enriched_binds():
@@ -526,13 +572,19 @@ def on_activate(app: Adw.Application) -> None:
 
     def save_bind(_btn: Gtk.Button) -> None:
         key = key_entry.get_text().strip()
-        action = action_entry.get_text().strip()
-        if not key or not action:
-            kb_status.set_label(_("Faltan tecla o acción"))
+        param = action_entry.get_text().strip()
+        choice = action_combo.get_active()
+        if not key:
+            kb_status.set_label(_("Falta la tecla"))
+            return
+        # Las acciones habituales NO se escriben en Lua: se traducen desde el menú.
+        kind, action = kb.action_from_ui(choice, param)
+        if choice in (0, 4, 5) and not param:
+            kb_status.set_label(_("Esta acción necesita un comando o parámetro"))
             return
         entry = {
             "key": key,
-            "kind": "exec" if kind_combo.get_active() == 0 else "lua",
+            "kind": kind,
             "action": action,
             "description": desc_entry.get_text().strip(),
             "repeat": repeat_sw.get_active(),
@@ -629,7 +681,8 @@ def on_activate(app: Adw.Application) -> None:
     w_page.add(w_group)
 
     provider_combo = Gtk.ComboBoxText()
-    for p in (_("Local (CachyOS)"), _("Wallhaven")):
+    for p in (_("Local (CachyOS)"), _("Wallhaven"), _("Unsplash (clave)"),
+              _("Pexels (clave)"), _("Wallpaper Engine")):
         provider_combo.append_text(p)
     provider_combo.set_active(0)
     row_provider = Adw.ActionRow(title=_("Proveedor"))
@@ -642,6 +695,13 @@ def on_activate(app: Adw.Application) -> None:
     row_search = Adw.ActionRow(title=_("Búsqueda"))
     row_search.add_suffix(search_entry)
     w_group.add(row_search)
+
+    api_entry = Gtk.Entry()
+    api_entry.set_placeholder_text(_("Clave de Unsplash (opcional, no se guarda)"))
+    api_entry.set_width_chars(34)
+    row_api = Adw.ActionRow(title=_("Clave API"), subtitle=_("Unsplash / Pexels; nunca se almacena"))
+    row_api.add_suffix(api_entry)
+    w_group.add(row_api)
 
     results_list = Gtk.ListBox()
     results_scroll = Gtk.ScrolledWindow()
@@ -669,10 +729,41 @@ def on_activate(app: Adw.Application) -> None:
     def do_search(_btn: Gtk.Button) -> None:
         nonlocal results
         results_list.remove_all()
-        if provider_combo.get_active() == 0:
+        # AUDITORÍA: si el usuario eligió monitor, sus especificaciones
+        # (resolución y proporción) se aplican como filtro automático.
+        width = height = 0
+        name = connector_combo.get_active_text()
+        if connector_combo.get_active() > 0 and name:
+            for m in detected:
+                if m["name"] == name:
+                    width, height = m["width"], m["height"]
+                    break
+        filtro = ""
+        if width and height:
+            filtro = _("{w}x{h} · proporción {r}").format(
+                w=width, h=height, r=wp.ratio_filter(width, height))
+
+        provider = provider_combo.get_active()
+        query = search_entry.get_text().strip() or "wallpaper"
+        if provider == 0:
             items = wp.local_wallpapers()
+        elif provider == 1:
+            items = wp.search_wallhaven(query, width=width, height=height)
+        elif provider == 4:
+            items = we.list_wallpapers()
+            if not items:
+                info = we.detect()
+                w_status.set_label(_("Wallpaper Engine no detectado. ") + info.get("note", ""))
+                we.open_store()
+                return
         else:
-            items = wp.search_wallhaven(search_entry.get_text().strip() or "wallpaper")
+            key = api_entry.get_text().strip()
+            if not key:
+                w_status.set_label(_("Este proveedor necesita una clave API (no se guarda)"))
+                return
+            items = (wp.search_unsplash(query, key, width=width, height=height)
+                     if provider == 2 else
+                     wp.search_pexels(query, key, width=width, height=height))
         results = {i: it for i, it in enumerate(items)}
         for i, it in enumerate(items):
             row = Adw.ActionRow(title=it.get("title", it.get("id", "")),
@@ -680,7 +771,8 @@ def on_activate(app: Adw.Application) -> None:
             row.set_name(str(i))
             row.set_activatable(True)
             results_list.append(row)
-        w_status.set_label(_("{n} resultado(s)").format(n=len(items)))
+        sufijo = _(" · filtro automático: ") + filtro if filtro else ""
+        w_status.set_label(_("{n} resultado(s)").format(n=len(items)) + sufijo)
 
     def download_apply(_btn: Gtk.Button) -> None:
         row = results_list.get_selected_row()
@@ -708,6 +800,123 @@ def on_activate(app: Adw.Application) -> None:
     w_group.add(w_actions)
     w_outer.append(w_status)
 
+    # ============ Pestaña 9: Web / Compartir ============
+    s_outer, s_page = new_tab(stack, "web", _("Web / Compartir"))
+    s_group = Adw.PreferencesGroup(
+        title=_("Descubrir y compartir rices"),
+        description=_("GitHub, Gists y Dotfyle. Publicar requiere un token que no se guarda."),
+    )
+    s_page.add(s_group)
+
+    source_combo = Gtk.ComboBoxText()
+    for src in (_("GitHub · repositorios"), _("GitHub · Gists"), _("Dotfyle · destacados")):
+        source_combo.append_text(src)
+    source_combo.set_active(0)
+    row_source = Adw.ActionRow(title=_("Fuente"))
+    row_source.add_suffix(source_combo)
+    s_group.add(row_source)
+
+    web_search = Gtk.Entry()
+    web_search.set_placeholder_text(_("Ej. hyprland dotfiles  ·  topic:hyprland rice"))
+    web_search.set_size_request(300, -1)
+    row_wsearch = Adw.ActionRow(title=_("Búsqueda"))
+    row_wsearch.add_suffix(web_search)
+    s_group.add(row_wsearch)
+
+    web_list = Gtk.ListBox()
+    web_scroll = Gtk.ScrolledWindow()
+    web_scroll.set_child(web_list)
+    web_scroll.set_min_content_height(190)
+    web_scroll.set_max_content_height(300)
+    web_scroll.set_min_content_width(560)
+    s_group.add(web_scroll)
+
+    web_status = Gtk.Label(label=_("Busca para ver resultados"), wrap=True)
+    web_results: dict[int, dict] = {}
+
+    def web_do_search(_btn: Gtk.Button) -> None:
+        nonlocal web_results
+        web_list.remove_all()
+        q = web_search.get_text().strip()
+        opt = source_combo.get_active()
+        if opt == 0:
+            items = sh.search_repos(q)
+        elif opt == 1:
+            items = sh.search_gists(q)
+        else:
+            items = sh.dotfyle_featured()
+        web_results = {i: it for i, it in enumerate(items)}
+        for i, it in enumerate(items):
+            row = Adw.ActionRow(title=it["name"], subtitle=f"★ {it['stars']} · {it['description'][:70]}")
+            row.set_name(str(i))
+            row.set_activatable(True)
+            web_list.append(row)
+        web_status.set_label(_("{n} resultado(s)").format(n=len(items)))
+
+    def web_url() -> str:
+        row = web_list.get_selected_row()
+        if row is None:
+            return ""
+        item = web_results.get(int(row.get_name()), {})
+        return item.get("url", "")
+
+    def web_open(_btn: Gtk.Button) -> None:
+        url = web_url()
+        if not url:
+            web_status.set_label(_("Selecciona un resultado"))
+            return
+        ok, msg = sh.open_browser(url)
+        web_status.set_label((_("Abriendo: ") if ok else _("Error: ")) + url + " " + msg)
+
+    def web_readme(_btn: Gtk.Button) -> None:
+        row = web_list.get_selected_row()
+        if row is None:
+            web_status.set_label(_("Selecciona un resultado"))
+            return
+        item = web_results[int(row.get_name())]
+        repo = "/".join(item["url"].rstrip("/").split("/")[-2:])
+        show_text_window(win, _("README · ") + repo, sh.get_readme(repo))
+
+    def web_import(_btn: Gtk.Button) -> None:
+        url = web_url()
+        if not url:
+            web_status.set_label(_("Selecciona un resultado"))
+            return
+        ok, msg = sh.import_repo(url)
+        web_status.set_label((_("Importado: ") if ok else _("Error: ")) + msg)
+
+    token_entry = Gtk.Entry()
+    token_entry.set_placeholder_text(_("ghp_…  (no se guarda)"))
+    token_entry.set_visibility(False)
+    row_token = Adw.ActionRow(title=_("Token de GitHub"), subtitle=_("Solo para publicar; se olvida al cerrar"))
+    row_token.add_suffix(token_entry)
+    s_group.add(row_token)
+
+    gist_desc = Gtk.Entry()
+    gist_desc.set_placeholder_text(_("Descripción del Gist"))
+    row_gdesc = Adw.ActionRow(title=_("Descripción"))
+    row_gdesc.add_suffix(gist_desc)
+    s_group.add(row_gdesc)
+
+    def make_bundle(_btn: Gtk.Button) -> None:
+        ok, msg = sh.create_bundle()
+        web_status.set_label((_("ZIP creado: ") if ok else _("Error: ")) + msg)
+
+    def publish(_btn: Gtk.Button) -> None:
+        ok, msg = sh.publish_gist(token_entry.get_text().strip(),
+                                  gist_desc.get_text().strip(), True)
+        web_status.set_label((_("Publicado: ") if ok else _("Error: ")) + msg)
+        if ok:
+            token_entry.set_text("")  # no conservar el token en memoria de la UI
+
+    web_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
+    for label, cb in [(_("Buscar"), web_do_search), (_("Abrir"), web_open),
+                      (_("Ver README"), web_readme), (_("Importar repo"), web_import),
+                      (_("Crear ZIP"), make_bundle), (_("Publicar Gist"), publish)]:
+        web_actions.append(make_button(label, cb))
+    s_group.add(web_actions)
+    s_outer.append(web_status)
+
     # ============ Común ============
     def persist_settings(*_args) -> None:
         s = bm.get_settings()
@@ -733,6 +942,7 @@ def on_activate(app: Adw.Application) -> None:
     win.set_content(root)
 
     refresh_history()
+    refresh_binds()      # informe de debug: cargar atajos al arrancar
     refresh_monitors()
     refresh_connectors()
     _ready["value"] = True

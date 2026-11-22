@@ -18,6 +18,7 @@ Proveedores:
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import urllib.parse
 from pathlib import Path
@@ -51,12 +52,36 @@ def local_wallpapers() -> list[dict[str, Any]]:
     return items[:80]
 
 
-def search_wallhaven(query: str, limit: int = 16) -> list[dict[str, Any]]:
-    params = urllib.parse.urlencode({
-        "q": query, "categories": "111", "purity": "100",
-        "sorting": "relevance", "atleast": "1440x900",
-    })
-    raw = _curl(f"https://wallhaven.cc/api/v1/search?{params}")
+def ratio_filter(width: int, height: int) -> str:
+    """Reduce la resolución del monitor a una proporción tipo '8x5' (Wallhaven)."""
+    from math import gcd
+    if not width or not height:
+        return ""
+    g = gcd(int(width), int(height)) or 1
+    return f"{int(width) // g}x{int(height) // g}"
+
+
+def matches_ratio(resolution: str, width: int, height: int, tolerance: float = 0.02) -> bool:
+    """Comprueba que una resolución 'WxH' respete la proporción del monitor."""
+    m = re.match(r"(\d+)\s*[xX]\s*(\d+)", resolution or "")
+    if not m or not width or not height:
+        return True  # sin datos, no filtramos
+    w, h = int(m.group(1)), int(m.group(2))
+    return abs((w / h) - (width / height)) <= tolerance * (width / height)
+
+
+def search_wallhaven(query: str, limit: int = 16, width: int = 0, height: int = 0) -> list[dict[str, Any]]:
+    params = {
+        "q": query, "categories": "111", "purity": "100", "sorting": "relevance",
+    }
+    if width and height:
+        # AUDITORÍA: filtro automático por monitor → sólo fondos de la misma
+        # proporción y resolución mínima nativa. Evita recortes raros.
+        params["ratios"] = ratio_filter(width, height)
+        params["atleast"] = f"{width}x{height}"
+    else:
+        params["atleast"] = "1440x900"
+    raw = _curl(f"https://wallhaven.cc/api/v1/search?{urllib.parse.urlencode(params)}")
     try:
         data = json.loads(raw).get("data", [])
     except (ValueError, AttributeError):
@@ -73,6 +98,47 @@ def search_wallhaven(query: str, limit: int = 16) -> list[dict[str, Any]]:
             "provider": "Wallhaven",
         })
     return out
+
+
+def search_unsplash(query: str, api_key: str, limit: int = 10,
+                    width: int = 0, height: int = 0) -> list[dict[str, Any]]:
+    """Unsplash con clave opcional del usuario (nunca se guarda)."""
+    if not api_key.strip():
+        return []
+    params = {"query": query or "wallpaper", "per_page": limit}
+    if width and height:
+        params.update({"w": width, "h": height, "fit": "crop"})
+    raw = _curl(f"https://api.unsplash.com/search/photos?{urllib.parse.urlencode(params)}",
+                headers=[f"Authorization: Client-ID {api_key.strip()}"])
+    try:
+        items = json.loads(raw).get("results", [])
+    except (ValueError, AttributeError):
+        return []
+    return [{"id": i.get("id", ""), "title": (i.get("alt_description") or "Unsplash")[:50],
+             "resolution": f"{i.get('width', 0)}x{i.get('height', 0)}",
+             "thumb": "", "url": i.get("urls", {}).get("full", ""),
+             "path": "", "provider": "Unsplash"} for i in items]
+
+
+def search_pexels(query: str, api_key: str, limit: int = 10,
+                  width: int = 0, height: int = 0) -> list[dict[str, Any]]:
+    """Pexels (clave opcional del usuario). Respeta la proporción del monitor."""
+    if not api_key.strip():
+        return []
+    params = {"query": query or "wallpaper", "per_page": limit}
+    if width and height:
+        params.update({"width": width, "height": height})
+    raw = _curl(f"https://api.pexels.com/v1/search?{urllib.parse.urlencode(params)}",
+                headers=[f"Authorization: {api_key.strip()}"])
+    try:
+        items = json.loads(raw).get("photos", [])
+    except (ValueError, AttributeError):
+        return []
+    return [{"id": str(i.get("id", "")), "title": (i.get("alt") or "Pexels")[:50],
+             "resolution": f"{i.get('width', 0)}x{i.get('height', 0)}",
+             "thumb": i.get("src", {}).get("tiny", ""),
+             "url": i.get("src", {}).get("original", ""),
+             "path": "", "provider": "Pexels"} for i in items]
 
 
 def download(item: dict[str, Any]) -> tuple[bool, str]:

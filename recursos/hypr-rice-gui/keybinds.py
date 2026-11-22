@@ -113,9 +113,48 @@ def enriched_binds() -> list[dict[str, Any]]:
         match = source.get(b["key"].lower())
         if match:
             b["source_action"] = match["action"]
+            # Clave EXACTA del config (p. ej. "SUPER + Q"), mejor que la
+            # reconstruida desde modmask, que puede decodificar mal los bits.
+            b["source_key"] = match["key"]
         else:
             b["source_action"] = b["dispatcher"] + (" " + str(b["arg"]) if b["arg"] else "")
     return result
+
+
+def action_from_ui(choice: int, param: str) -> tuple[str, str]:
+    """Traduce una opción legible de la GUI a (kind, acción Lua).
+
+    AUDITORÍA: el usuario nunca escribe Lua para las acciones habituales;
+    sólo la opción "avanzada" permite una expresión cruda.
+    """
+    p = param.strip().replace('"', '\\"')
+    options = {
+        0: ("exec", f'hl.dsp.exec_cmd("{p}")'),
+        1: ("lua", "hl.dsp.window.close()"),
+        2: ("lua", 'hl.dsp.window.float({ action = "toggle" })'),
+        3: ("lua", "hl.dsp.window.fullscreen()"),
+        4: ("exec", f'hl.dsp.exec_cmd("noctalia msg {p}")'),
+        5: ("lua", param.strip()),
+    }
+    return options.get(choice, options[0])
+
+
+def action_to_ui(action: str) -> tuple[int, str]:
+    """Convierte una acción existente en (índice de opción, parámetro)."""
+    a = action.strip()
+    m = re.search(r'hl\.dsp\.exec_cmd\("?noctalia msg ([^")]+)"?\)', a)
+    if m:
+        return 4, m.group(1).strip()
+    m = re.search(r'hl\.dsp\.exec_cmd\("([^"]*)"\)', a)
+    if m:
+        return 0, m.group(1)
+    if "window.close" in a:
+        return 1, ""
+    if "window.float" in a:
+        return 2, ""
+    if "fullscreen" in a:
+        return 3, ""
+    return 5, a
 
 
 def stored() -> list[dict[str, str]]:
