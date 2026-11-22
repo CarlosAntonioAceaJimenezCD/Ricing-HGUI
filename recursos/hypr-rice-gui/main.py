@@ -185,17 +185,45 @@ def on_activate(app: Adw.Application) -> None:
     def refresh_history() -> None:
         history_list.remove_all()
         for b in bm.list_backups():
+            tipo = "🔒 inicial" if bm.is_protected(b["name"]) else ("parcial" if b.get("partial") else "completo")
             row = Adw.ActionRow(
                 title=b["created_at"].replace("T", " ")[:19],
-                subtitle=f"{b['reason']} · {b['file_count']} archivos · {bm.dna_of_backup(b['name']) or ''}",
+                subtitle=f"{b['reason']} · {tipo} · {b['file_count']} archivos · {bm.dna_of_backup(b['name']) or ''}",
             )
             row.set_name(b["name"])
             row.set_activatable(True)
             history_list.append(row)
+        refresh_compare()
         if not bm.list_backups():
             detail.set_label(_("Sin backups todavía"))
 
     history_list.connect("row-selected", on_row_selected)
+
+    compare_combo = Gtk.ComboBoxText()
+    row_cmp = Adw.ActionRow(title=_("Comparar con"), subtitle=_("Elige otro punto para ver diferencias"))
+    row_cmp.add_suffix(compare_combo)
+    hg.add(row_cmp)
+
+    def refresh_compare() -> None:
+        compare_combo.remove_all()
+        for b in bm.list_backups():
+            compare_combo.append_text(b["name"])
+
+    def compare_backups(_btn: Gtk.Button) -> None:
+        a = selected.get("name")
+        b_idx = compare_combo.get_active()
+        if not a or b_idx < 0:
+            backup_status.set_label(_("Selecciona dos backups"))
+            return
+        other = bm.list_backups()[b_idx]["name"]
+        d = bm.compare_backups(a, other)
+        if not (d["added"] or d["removed"] or d["modified"]):
+            backup_status.set_label(_("Sin cambios entre los dos backups (se conserva el más reciente)"))
+            return
+        backup_status.set_label(
+            _("Cambios: {a} añadidos, {r} eliminados, {m} modificados").format(
+                a=len(d["added"]), r=len(d["removed"]), m=len(d["modified"]))
+            + " · " + ", ".join(d["modified"][:3]))
 
     def create_now(_btn: Gtk.Button) -> None:
         bm.create_backup(reason="manual")
@@ -242,7 +270,8 @@ def on_activate(app: Adw.Application) -> None:
 
     hist_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6, margin_top=8)
     for label, cb in [(_("Crear ahora"), create_now), (_("Ver archivo"), view_file),
-                      (_("Comparar"), compare), (_("Restaurar"), restore), (_("Borrar"), delete)]:
+                      (_("Vs. actual"), compare), (_("Comparar backups"), compare_backups),
+                      (_("Restaurar"), restore), (_("Borrar"), delete)]:
         hist_actions.append(make_button(label, cb))
     hg.add(hist_actions)
     box_hist.append(detail)
@@ -1032,6 +1061,7 @@ def on_activate(app: Adw.Application) -> None:
     root.append(stack)
     win.set_content(root)
 
+    bm.ensure_initial_backup()  # backup inicial completo y protegido (una sola vez)
     refresh_history()
     reload_binds()       # informe de debug: cargar atajos al arrancar
     refresh_monitors()

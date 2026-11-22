@@ -129,6 +129,10 @@ flowchart LR
 | **Cuándo** | Antes de cada "Aplicar", cada N minutos (por defecto 15), y bajo demanda |
 | **Dónde** | `~/.local/share/hypr-rice-gui/backups/` |
 | **Formato** | `backup-YYYYmmdd-HHMMSS-<motivo>.tar.gz` con `manifest.json` y `data/` |
+| **Backup inicial** | `ensure_initial_backup()` lo crea **completo y protegido** al iniciar; nunca se sobrescribe ni entra en retención |
+| **Backups parciales** | Los posteriores sólo incluyen archivos con SHA-256 distinto al backup anterior; si no hay cambios **no se crea backup** y se elimina el duplicado más antiguo |
+| **Comparador** | `compare_backups()` / `backups_identical()` informan de añadidos, eliminados, modificados e iguales entre cualquier par |
+| **Restauración** | Por cadena: base completa + parciales hasta el punto elegido, con backup `pre-restore` previo |
 | **Integridad** | SHA-256 por archivo; `verify_backup()` detecta cambios |
 | **Retención** | `keep_last` (por defecto 10); borra los antiguos automáticamente |
 | **Seguridad** | Antes de restaurar hace un backup `pre-restore`; excluye `fish_variables`, keyrings y cachés |

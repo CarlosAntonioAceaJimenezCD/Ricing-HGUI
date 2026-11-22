@@ -107,19 +107,104 @@ def _relative(path: Path) -> str:
     return str(path).lstrip("/")
 
 
+def is_protected(name: str) -> bool:
+    """El backup inicial nunca se elimina ni se sobrescribe."""
+    m = get_backup_details(name) or {}
+    return bool(m.get("protected")) or m.get("reason") == "inicial"
+
+
 def _enforce_retention(keep_last: int) -> None:
-    backups = sorted(BACKUP_DIR.glob("backup-*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
-    for old in backups[max(1, keep_last):]:
+    """Aplica retención, pero JAMAIS toca el backup inicial protegido."""
+    backups = [p for p in sorted(BACKUP_DIR.glob("backup-*.tar.gz"),
+                                 key=lambda p: p.stat().st_mtime, reverse=True)
+               if not is_protected(p.name)]
+    for old in backups[max(0, keep_last - 1):]:
         old.unlink(missing_ok=True)
 
 
+# --------------------------------------------------------------------------- comparador
+def _hash_map(manifest: dict) -> dict[str, str]:
+    return {r["path"]: r["sha256"] for r in manifest.get("files", [])}
+
+
+def baseline_hashes(name: str) -> dict[str, str]:
+    """Hashes acumulados de un backup y toda su cadena de parciales."""
+    acc: dict[str, str] = {}
+    chain: list[dict] = []
+    seen = set()
+    cur = name
+    while cur and cur not in seen:
+        seen.add(cur)
+        m = get_backup_details(cur)
+        if not m:
+            break
+        chain.append(m)
+        cur = m.get("base", "")
+    for m in reversed(chain):
+        acc.update(_hash_map(m))
+    return acc
+
+
+def compare_backups(name_a: str, name_b: str) -> dict:
+    """Compara dos backups (o sus líneas de base) y dice qué cambió."""
+    a, b = baseline_hashes(name_a), baseline_hashes(name_b)
+    return {
+        "added": sorted(set(b) - set(a)),
+        "removed": sorted(set(a) - set(b)),
+        "modified": sorted(k for k in set(a) & set(b) if a[k] != b[k]),
+        "same": sorted(k for k in set(a) & set(b) if a[k] == b[k]),
+    }
+
+
+def backups_identical(name_a: str, name_b: str) -> bool:
+    d = compare_backups(name_a, name_b)
+    return not (d["added"] or d["removed"] or d["modified"])
+
+
+def delete_oldest_identical(new_name: str) -> str:
+    """Si el nuevo backup no aporta cambios, borra el más antiguo de la pareja."""
+    others = [p for p in BACKUP_DIR.glob("backup-*.tar.gz")
+              if p.name != new_name and not is_protected(p.name)]
+    for old in sorted(others, key=lambda p: p.stat().st_mtime):
+        if backups_identical(new_name, old.name):
+            old.unlink(missing_ok=True)
+            return old.name
+    return ""
+
+
+def ensure_initial_backup() -> dict | None:
+    """Crea (una sola vez) el backup inicial completo y protegido al iniciar."""
+    for p in BACKUP_DIR.glob("backup-*.tar.gz"):
+        m = get_backup_details(p.name) or {}
+        if m.get("reason") == "inicial":
+            return m
+    return create_backup(reason="inicial", full=True)
+
+
 # --------------------------------------------------------------------------- create
-def create_backup(reason: str = "manual", targets: Iterable[Path] | None = None) -> dict | None:
-    """Crea un backup tar.gz y devuelve su manifiesto, o None si no hay nada que copiar."""
+def create_backup(reason: str = "manual", targets: Iterable[Path] | None = None,
+                  full: bool = False) -> dict | None:
+    """Crea un backup.
+
+    AUDITORÍA / AHORRO DE ESPACIO:
+      - full=True → copia TODA la config (sólo el backup inicial).
+      - full=False → backup PARCIAL: sólo archivos cuyo SHA-256 difiere del
+        backup anterior (o de su cadena). Si no hay cambios, NO se crea nada.
+      - El backup inicial se marca `protected` y se excluye de retención y
+        de deduplicación: siempre queda disponible.
+    """
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-    files = _iter_files(tuple(targets) if targets is not None else DEFAULT_TARGETS)
-    if not files:
+    all_files = _iter_files(tuple(targets) if targets is not None else DEFAULT_TARGETS)
+    if not all_files:
         return None
+
+    previous = ""
+    if not full:
+        others = sorted(BACKUP_DIR.glob("backup-*.tar.gz"),
+                        key=lambda p: p.stat().st_mtime, reverse=True)
+        if others:
+            previous = others[0].name
+    baseline = baseline_hashes(previous) if previous else {}
 
     now = datetime.now().astimezone()
     stamp = now.strftime("%Y%m%d-%H%M%S")
@@ -130,19 +215,23 @@ def create_backup(reason: str = "manual", targets: Iterable[Path] | None = None)
     tmp.mkdir(parents=True)
 
     records = []
-    for src in files:
+    for src in all_files:
         rel = _relative(src)
+        digest = _sha256(src)
+        # En parciales, omitir archivos idénticos a la línea base.
+        if not full and baseline.get(rel) == digest:
+            continue
         dest = tmp / "data" / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         try:
             shutil.copy2(src, dest)
         except OSError:
             continue
-        records.append({
-            "path": rel,
-            "sha256": _sha256(dest),
-            "size": dest.stat().st_size,
-        })
+        records.append({"path": rel, "sha256": digest, "size": dest.stat().st_size})
+
+    if not records:
+        shutil.rmtree(tmp, ignore_errors=True)
+        return None  # nada cambió: no se gasta espacio
 
     manifest = {
         "created_at": now.isoformat(),
@@ -151,6 +240,9 @@ def create_backup(reason: str = "manual", targets: Iterable[Path] | None = None)
         "file_count": len(records),
         "dna": dna_from_records(records),
         "files": records,
+        "protected": bool(full),
+        "partial": not full,
+        "base": "" if full else previous,
     }
     touch_identity(manifest["dna"])
     (tmp / MANIFEST).write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -159,8 +251,12 @@ def create_backup(reason: str = "manual", targets: Iterable[Path] | None = None)
     with tarfile.open(archive, "w:gz") as tar:
         tar.add(tmp / MANIFEST, arcname=MANIFEST)
         tar.add(tmp / "data", arcname="data")
-
     shutil.rmtree(tmp, ignore_errors=True)
+
+    if not full:
+        deleted = delete_oldest_identical(archive.name)
+        if deleted:
+            print(f"[backup] sin cambios reales: eliminado {deleted}")
     _enforce_retention(get_settings().get("keep_last", 10))
     manifest["archive"] = archive.name
     manifest["archive_size"] = archive.stat().st_size
@@ -359,43 +455,64 @@ def delete_backup(name: str) -> tuple[bool, str]:
 
 # --------------------------------------------------------------------------- restore
 def restore_backup(name: str) -> tuple[bool, str]:
-    """Restaura un backup. Antes hace un backup de seguridad del estado actual."""
-    archive = BACKUP_DIR / name
-    ok, msg = verify_backup(name)
-    if not ok:
-        return False, f"backup inválido: {msg}"
+    """Restaura un backup (parcial o completo) reconstruyendo su cadena.
+
+    AUDITORÍA: un backup parcial sólo contiene los archivos que cambiaron
+    respecto a su base. Para restaurarlo se aplica primero la base y luego
+    cada parcial en orden cronológico, hasta llegar al solicitado.
+    Antes de sobrescribir se crea un backup de seguridad (también parcial).
+    """
+    target = get_backup_details(name)
+    if not target:
+        return False, "backup inexistente"
 
     create_backup(reason="pre-restore")
-    tmp = BACKUP_DIR / f".restore-{Path(name).stem}"
-    if tmp.exists():
-        shutil.rmtree(tmp)
-    tmp.mkdir(parents=True)
 
-    try:
-        with tarfile.open(archive, "r:gz") as tar:
-            for member in tar.getmembers():
-                target = (tmp / member.name).resolve()
-                if not str(target).startswith(str(tmp.resolve())):
-                    return False, "ruta insegura en el archivo"
-            tar.extractall(tmp)
+    # Cadena base -> ... -> destino
+    chain: list[str] = []
+    cur = name
+    seen = set()
+    while cur and cur not in seen:
+        seen.add(cur)
+        m = get_backup_details(cur)
+        if not m:
+            return False, f"falla en la cadena: {cur}"
+        chain.append(cur)
+        cur = m.get("base", "")
+    chain.reverse()
 
-        data = tmp / "data"
-        restored = 0
-        for src in data.rglob("*"):
-            if not src.is_file():
-                continue
-            rel = src.relative_to(data)
-            dest = Path("/") / rel
-            if _excluded(dest):
-                continue
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dest)
-            restored += 1
-        return True, f"restaurados {restored} archivos"
-    except (OSError, tarfile.TarError) as e:
-        return False, str(e)[:160]
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+    applied = 0
+    for archive_name in chain:
+        ok, msg = verify_backup(archive_name)
+        if not ok:
+            return False, f"backup inválido {archive_name}: {msg}"
+        tmp = BACKUP_DIR / f".restore-{Path(archive_name).stem}"
+        if tmp.exists():
+            shutil.rmtree(tmp)
+        tmp.mkdir(parents=True)
+        try:
+            with tarfile.open(BACKUP_DIR / archive_name, "r:gz") as tar:
+                for member in tar.getmembers():
+                    dest_path = (tmp / member.name).resolve()
+                    if not str(dest_path).startswith(str(tmp.resolve())):
+                        return False, "ruta insegura en el archivo"
+                tar.extractall(tmp)
+            data = tmp / "data"
+            for src in data.rglob("*"):
+                if not src.is_file():
+                    continue
+                rel = src.relative_to(data)
+                dest = Path("/") / rel
+                if _excluded(dest):
+                    continue
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dest)
+                applied += 1
+        except (OSError, tarfile.TarError) as e:
+            return False, str(e)[:160]
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+    return True, f"restaurados {applied} archivos ({len(chain)} niveles)"
 
 
 # --------------------------------------------------------------------------- scheduling
