@@ -21,6 +21,7 @@ así añadir una opción nueva no requiere reescribir widgets.
 from __future__ import annotations
 
 import json
+import math
 import re
 import subprocess
 import tomllib
@@ -204,8 +205,44 @@ def _lua_value(v: Any) -> str:
     if isinstance(v, bool):
         return "true" if v else "false"
     if isinstance(v, (int, float)):
-        return str(v)
-    return '"' + str(v).replace('"', '\\"') + '"'
+        # AUDITORÍA: NaN/Infinity no existen en Lua: `active_opacity = nan`
+        # rompía hl.config y, con él, la sesión completa al recargar.
+        return str(v) if math.isfinite(v) else "0"
+    s = str(v if v is not None else "")
+    return ('"' + s.replace("\\", "\\\\").replace('"', '\\"')
+            .replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t") + '"')
+
+
+def clean_value(opt: Option | None, value: Any) -> Any:
+    """Sanea un valor según la declaración de la opción (rango/tipo/enum).
+
+    AUDITORÍA: la GUI usa sliders/combos, pero un JSON editado a mano, un
+    valor NaN o un enum inesperado podían generar Lua inválido. Se recorta al
+    rango declarado y se descartan los enums desconocidos (None = omitir).
+    """
+    if opt is None or value is None:
+        return None
+    try:
+        if opt.kind == "bool":
+            if isinstance(value, str):
+                return value.strip().lower() in {"1", "true", "yes", "on"}
+            return bool(value)
+        if opt.kind in {"int", "float"}:
+            n = float(value)
+            if not math.isfinite(n):
+                n = float(opt.minimum if opt.minimum is not None else 0)
+            if opt.minimum is not None:
+                n = max(n, float(opt.minimum))
+            if opt.maximum is not None:
+                n = min(n, float(opt.maximum))
+            return int(n) if opt.kind == "int" else n
+        if opt.kind == "enum":
+            s = str(value)
+            return s if (not opt.choices or s in opt.choices) else None
+        s = str(value)
+        return s.replace("\n", " ").replace("\r", " ").replace("\0", "")
+    except (TypeError, ValueError, OverflowError):
+        return None
 
 
 def _lua_table(d: dict, indent: int = 0) -> str:
@@ -224,9 +261,12 @@ def build_hypr_config(values: dict[str, Any]) -> str:
     tree: dict = {}
     for oid, value in values.items():
         opt = by_id(oid)
-        if opt is None or opt.source != "hyprland" or value is None:
+        if opt is None or opt.source != "hyprland":
             continue
-        tree = _deep_merge(tree, _nest(opt.path, value))
+        clean = clean_value(opt, value)
+        if clean is None:
+            continue
+        tree = _deep_merge(tree, _nest(opt.path, clean))
     return "hl.config({\n" + _lua_table(tree, 1) + "\n})"
 
 
@@ -247,9 +287,10 @@ def persist(values: dict[str, Any]) -> None:
     noct_values = {}
     for oid, value in values.items():
         opt = by_id(oid)
-        if opt is None or value is None:
+        clean = clean_value(opt, value)
+        if opt is None or clean is None:
             continue
-        (noct_values if opt.source == "noctalia" else hypr_values)[oid] = value
+        (noct_values if opt.source == "noctalia" else hypr_values)[oid] = clean
 
     if hypr_values:
         tree: dict = {}
@@ -266,30 +307,51 @@ def persist(values: dict[str, Any]) -> None:
 
 
 def _persist_noctalia(values: dict[str, Any]) -> None:
-    text = NOCTALIA_FILE.read_text(encoding="utf-8")
-    lines = text.splitlines()
+    """Actualiza config.toml sin borrar secciones ajenas.
+
+    AUDITORÍA: antes fallaba con FileNotFoundError si Noctalia no estaba
+    instalado y sólo reemplazaba claves ya existentes. Ahora crea la sección
+    y/o la clave cuando faltan y nunca lanza excepciones a la GUI.
+    """
+    try:
+        lines = NOCTALIA_FILE.read_text(encoding="utf-8").splitlines() if NOCTALIA_FILE.exists() else []
+    except OSError:
+        return
     for oid, value in values.items():
         opt = by_id(oid)
+        if opt is None:
+            continue
         section, _, key = opt.path.rpartition(".")
+        if not section or not key:
+            continue
         header = f"[{section}]"
         try:
             start = lines.index(header)
         except ValueError:
-            continue
+            lines += ["", header]
+            start = len(lines) - 1
         end = next((i for i in range(start + 1, len(lines))
-                    if lines[i].startswith("[")), len(lines))
+                    if lines[i].lstrip().startswith("[")), len(lines))
         for i in range(start + 1, end):
             if re.match(rf"^\s*{re.escape(key)}\s*=", lines[i]):
                 lines[i] = f"{key} = {_toml_value(value)}"
                 break
-    NOCTALIA_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        else:
+            lines.insert(end, f"{key} = {_toml_value(value)}")
+    try:
+        NOCTALIA_FILE.parent.mkdir(parents=True, exist_ok=True)
+        NOCTALIA_FILE.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
+    except OSError:
+        pass
 
 
 def _toml_value(v: Any) -> str:
     if isinstance(v, bool):
         return "true" if v else "false"
     if isinstance(v, str):
-        return f'"{v}"'
+        esc = (v.replace("\\", "\\\\").replace('"', '\\"')
+               .replace("\n", "\\n").replace("\r", "\\r"))
+        return f'"{esc}"'
     return str(v)
 
 
@@ -324,17 +386,20 @@ def snapshot() -> dict[str, Any]:
             continue
         # normalizar ':' del path devuelto al formato con puntos del modelo
         key = path.replace(":", ".")
-        if "int" in obj:
-            by_path[key] = int(obj["int"])
-        elif "float" in obj:
-            by_path[key] = float(obj["float"])
-        elif "bool" in obj:
-            by_path[key] = bool(obj["bool"])
-        elif "str" in obj:
-            by_path[key] = obj["str"]
-        elif "css" in obj:
-            nums = re.findall(r"-?\d+", str(obj["css"]))
-            by_path[key] = int(nums[0]) if nums else 0
+        try:
+            if "int" in obj:
+                by_path[key] = int(obj["int"])
+            elif "float" in obj:
+                by_path[key] = float(obj["float"])
+            elif "bool" in obj:
+                by_path[key] = bool(obj["bool"])
+            elif "str" in obj:
+                by_path[key] = obj["str"]
+            elif "css" in obj:
+                nums = re.findall(r"-?\d+", str(obj["css"]))
+                by_path[key] = int(nums[0]) if nums else 0
+        except (TypeError, ValueError, OverflowError):
+            continue
 
     # Noctalia: una sola lectura/escritura del TOML para todas sus opciones.
     noct_data: dict[str, Any] = {}

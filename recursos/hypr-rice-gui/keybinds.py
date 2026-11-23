@@ -43,6 +43,49 @@ MODS = [
 ]
 
 
+# ------------------------------------------------------------------- saneamiento
+# AUDITORÍA: todas las cadenas que llegan a `hyprctl eval` o al módulo Lua
+# generado pasan por aquí. Un id de tecla con `")` o un description con salto
+# de línea podía cerrar la llamada y ejecutar código arbitrario.
+def lua_string(value: Any) -> str:
+    """Devuelve `value` como cadena Lua de una sola línea, escapada."""
+    s = str(value if value is not None else "")
+    return (s.replace("\\", "\\\\").replace('"', '\\"')
+             .replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t"))
+
+
+def clean_key(key: Any) -> str:
+    """Valida una combinación de teclas; devuelve '' si no es utilizable."""
+    if not isinstance(key, str):
+        return ""
+    parts = [p.strip() for p in key.split("+")]
+    if not parts or any(not p for p in parts):
+        return ""
+    for p in parts:
+        if any(c in p for c in ('"', "\\", "\n", "\r", "\t", "\0")):
+            return ""
+    return " + ".join(parts)
+
+
+def clean_action(action: Any, kind: str = "exec") -> str:
+    """Valida la acción. El modo 'lua' permite expresiones, pero de una línea."""
+    if not isinstance(action, str):
+        return ""
+    a = action.strip()
+    if not a or any(c in a for c in ("\n", "\r", "\0")):
+        return ""
+    if kind == "exec":
+        return a
+    if kind != "lua":
+        return ""
+    return a
+
+
+def clean_text(value: Any) -> str:
+    """Texto para comentarios del Lua generado (sin saltos de línea)."""
+    return " ".join(str(value if value is not None else "").split())
+
+
 def hyprctl(*args: str) -> str:
     try:
         return subprocess.run(["hyprctl", *args], capture_output=True,
@@ -57,21 +100,32 @@ def list_binds() -> list[dict[str, Any]]:
         data = json.loads(out)
     except (ValueError, TypeError):
         return []
+    # AUDITORÍA: `hyprctl binds -j` puede devolver un objeto, no una lista,
+    # cuando la sesión aún no está lista. Iterar un dict daba AttributeError.
+    if not isinstance(data, list):
+        return []
     result = []
     for b in data:
-        mods = [name for bit, name in MODS if b.get("modmask", 0) & bit]
+        if not isinstance(b, dict):
+            continue
+        try:
+            mask = int(b.get("modmask", 0) or 0)
+        except (TypeError, ValueError):
+            mask = 0
+        mods = [name for bit, name in MODS if mask & bit]
         # AUDITORÍA: Hyprland 0.57 reporta key="" y un `keycode` para los binds
         # creados con code:N (el fix AZERTY del usuario). Sin esto, 44 atajos
         # aparecían como "SUPER + SHIFT + " repetidos.
-        key = b.get("key", "")
+        key = b.get("key") or ""
         if not key and b.get("keycode"):
             key = f"code:{b['keycode']}"
+        key = clean_key(key) or "(desconocida)"
         result.append({
             "key": key,
             "mods": " + ".join(mods) if mods else "(sin modifier)",
-            "dispatcher": b.get("dispatcher", ""),
-            "arg": b.get("arg", ""),
-            "description": b.get("description", ""),
+            "dispatcher": str(b.get("dispatcher") or ""),
+            "arg": str(b.get("arg") or ""),
+            "description": str(b.get("description") or ""),
             "repeat": b.get("repeat", False),
             "locked": b.get("locked", False),
             "raw": b,
@@ -224,21 +278,21 @@ def action_from_ui(choice: int, param: str) -> tuple[str, str]:
     AUDITORÍA: el usuario nunca escribe Lua para las acciones habituales;
     sólo la opción "avanzada" permite una expresión cruda.
     """
-    p = param.strip().replace('"', '\\"')
+    p = str(param or "").strip().replace('"', '\\"')
     options = {
         0: ("exec", f'hl.dsp.exec_cmd("{p}")'),
         1: ("lua", "hl.dsp.window.close()"),
         2: ("lua", 'hl.dsp.window.float({ action = "toggle" })'),
         3: ("lua", "hl.dsp.window.fullscreen()"),
         4: ("exec", f'hl.dsp.exec_cmd("noctalia msg {p}")'),
-        5: ("lua", param.strip()),
+        5: ("lua", str(param or "").strip()),
     }
     return options.get(choice, options[0])
 
 
 def action_to_ui(action: str) -> tuple[int, str]:
     """Convierte una acción existente en (índice de opción, parámetro)."""
-    a = action.strip()
+    a = str(action or "").strip()
     m = re.search(r'hl\.dsp\.exec_cmd\("?noctalia msg ([^")]+)"?\)', a)
     if m:
         return 4, m.group(1).strip()
@@ -256,7 +310,7 @@ def action_to_ui(action: str) -> tuple[int, str]:
 
 def normalize_key(key: str) -> str:
     """Clave canónica para comparar solapes (ordena modificadores y baja a minúsculas)."""
-    parts = [p.strip().lower() for p in (key or "").split("+") if p.strip()]
+    parts = [p.strip().lower() for p in str(key or "").split("+") if p.strip()]
     return "+".join(sorted(parts))
 
 
@@ -304,10 +358,10 @@ def describe(action: str, dispatcher: str = "") -> tuple[str, str]:
     Acepta tanto el texto de binds.lua como el dispatcher opaco de hyprctl
     ('HL.Dispatcher(close) 10'), para que NINGÚN atajo diga sólo "ejecutar".
     """
-    a = (action or "").strip()
+    a = str(action or "").strip()
     low = a.lower()
     if not a and dispatcher:
-        a = dispatcher
+        a = str(dispatcher).strip()
         low = a.lower()
 
     # Dispatchers de hyprctl (cuando no hay texto fuente disponible).
@@ -484,12 +538,30 @@ def notify_conflict(key: str, matches: list[dict[str, str]]) -> None:
 
 
 def stored() -> list[dict[str, str]]:
-    if DATA.exists():
-        try:
-            return json.loads(DATA.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            return []
-    return []
+    """Lee keybinds.json tolerando JSON corrupto o estructuras inesperadas."""
+    if not DATA.exists():
+        return []
+    try:
+        data = json.loads(DATA.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    if not isinstance(data, list):
+        return []
+    out = []
+    for e in data:
+        if not isinstance(e, dict):
+            continue
+        key = clean_key(e.get("key"))
+        if not key:
+            continue  # una entrada sin tecla no es recuperable
+        e["key"] = key
+        if e.get("old_key"):
+            e["old_key"] = clean_key(e["old_key"]) or ""
+        e["kind"] = e.get("kind") if e.get("kind") in {"exec", "lua"} else "exec"
+        e["action"] = str(e.get("action") or "")
+        e["description"] = clean_text(e.get("description"))
+        out.append(e)
+    return out
 
 
 def _write_stored(entries: list[dict[str, str]]) -> None:
@@ -500,37 +572,62 @@ def _write_stored(entries: list[dict[str, str]]) -> None:
 
 def _lua_action(kind: str, action: str) -> str:
     if kind == "exec":
-        escaped = action.replace("\\", "\\\\").replace('"', '\\"')
-        return f'hl.dsp.exec_cmd("{escaped}")'
-    return action  # expresión Lua cruda, p. ej. hl.dsp.window.close()
+        return f'hl.dsp.exec_cmd("{lua_string(action)}")'
+    # Expresión Lua cruda (opción "avanzada" de la GUI): se conserva, pero
+    # clean_action() ya garantizó que ocupa una sola línea.
+    return str(action or "")
+
+
+def validate_entry(entry: Any) -> tuple[dict[str, Any] | None, str]:
+    """Normaliza una entrada de atajo. Nunca lanza excepciones a la GUI."""
+    if not isinstance(entry, dict):
+        return None, "entrada de atajo no válida"
+    key = clean_key(entry.get("key"))
+    if not key:
+        return None, "la tecla está vacía o contiene caracteres no válidos"
+    kind = entry.get("kind", "exec")
+    if kind not in {"exec", "lua"}:
+        kind = "exec"
+    action = clean_action(entry.get("action", ""), kind)
+    if not action:
+        return None, "la acción está vacía o contiene saltos de línea"
+    old = clean_key(entry.get("old_key", "")) if entry.get("old_key") else ""
+    clean = dict(entry)
+    clean.update({"key": key, "kind": kind, "action": action, "old_key": old,
+                  "description": clean_text(entry.get("description"))})
+    return clean, ""
 
 
 def apply_bind(entry: dict[str, str]) -> tuple[bool, str]:
     """Aplica un atajo en vivo; si old_key existe, desvincula primero."""
-    old = (entry.get("old_key") or "").strip()
+    clean, error = validate_entry(entry)
+    if clean is None:
+        return False, error
+    old = clean["old_key"]
     if old:
-        esc = old.replace("\\", "\\\\").replace('"', '\\"')
-        hyprctl("eval", f'hl.unbind("{esc}")')
-    key = entry["key"].replace("\\", "\\\\").replace('"', '\\"')
-    action = _lua_action(entry.get("kind", "exec"), entry.get("action", ""))
+        hyprctl("eval", f'hl.unbind("{lua_string(old)}")')
+    action = _lua_action(clean["kind"], clean["action"])
     flags = []
-    if entry.get("repeat"):
+    if clean.get("repeat"):
         flags.append("repeat = true")
-    if entry.get("locked"):
+    if clean.get("locked"):
         flags.append("locked = true")
     opts = ", { " + ", ".join(flags) + " }" if flags else ""
-    res = hyprctl("eval", f'hl.bind("{key}", {action}{opts})')
+    res = hyprctl("eval", f'hl.bind("{lua_string(clean["key"])}", {action}{opts})')
     return (res.strip().lower() == "ok"), res.strip() or "sin respuesta"
 
 
 def add_or_update(entry: dict[str, str]) -> tuple[bool, str]:
-    ok, msg = apply_bind(entry)
+    clean, error = validate_entry(entry)
+    if clean is None:
+        return False, error
+    ok, msg = apply_bind(clean)
     if not ok:
         return False, msg
     entries = stored()
-    key = entry["key"]
+    key = clean["key"]
     entries = [e for e in entries if e.get("key") != key and e.get("old_key") != key]
-    entries.append(entry)
+    entries.append(clean)
     _write_stored(entries)
     return True, "atajo aplicado y guardado"
 
@@ -541,8 +638,7 @@ def set_disabled(key: str, disabled: bool) -> tuple[bool, str]:
     entry = next((e for e in entries if e.get("key") == key), None)
     if disabled:
         # Quitar el bind en vivo; conservar el entry para poder reactivarlo.
-        esc = key.replace("\\", "\\\\").replace('"', '\\"')
-        res = hyprctl("eval", f'hl.unbind("{esc}")')
+        res = hyprctl("eval", f'hl.unbind("{lua_string(key)}")')
         if entry:
             entry["disabled"] = True
         else:
@@ -561,8 +657,7 @@ def set_disabled(key: str, disabled: bool) -> tuple[bool, str]:
 
 def delete(key: str) -> tuple[bool, str]:
     """Elimina el atajo en vivo y guarda una supresión para que no reaparezca al reiniciar."""
-    esc = key.replace("\\", "\\\\").replace('"', '\\"')
-    res = hyprctl("eval", f'hl.unbind("{esc}")')
+    res = hyprctl("eval", f'hl.unbind("{lua_string(key)}")')
     entries = [e for e in stored() if e.get("key") != key]
     # Si el atajo venía de binds.lua, necesitamos un hl.unbind persistente.
     entries.append({"key": key, "kind": "exec", "action": "", "description": "eliminado",
@@ -579,17 +674,26 @@ def _generate_lua(entries: list[dict[str, str]]) -> None:
         "",
     ]
     for i, e in enumerate(entries, 1):
-        old = e.get("old_key", "")
-        lines.append(f"-- [{i}] {e.get('description', '') or e['key']}")
+        if not isinstance(e, dict):
+            continue
+        key = clean_key(e.get("key")) or "unknown"
+        old = clean_key(e.get("old_key", "")) if e.get("old_key") else ""
+        lines.append(f"-- [{i}] {clean_text(e.get('description')) or key}")
         # Un atajo desactivado/eliminado se representa sólo con hl.unbind.
         if e.get("disabled") or not e.get("action"):
-            target = old or e["key"]
-            lines.append(f'hl.unbind("{target}")  -- desactivado/eliminado')
+            target = old or key
+            lines.append(f'hl.unbind("{lua_string(target)}")  -- desactivado/eliminado')
             lines.append("")
             continue
         if old:
-            lines.append(f'hl.unbind("{old}")')
-        lines.append(f'hl.bind("{e["key"]}", {_lua_action(e.get("kind", "exec"), e.get("action", ""))})')
+            lines.append(f'hl.unbind("{lua_string(old)}")')
+        kind = e.get("kind") if e.get("kind") in {"exec", "lua"} else "exec"
+        action = clean_action(e.get("action", ""), kind)
+        if not action:
+            lines.append(f'hl.unbind("{lua_string(key)}")  -- acción no válida')
+            lines.append("")
+            continue
+        lines.append(f'hl.bind("{lua_string(key)}", {_lua_action(kind, action)})')
         lines.append("")
     LUA_MODULE.parent.mkdir(parents=True, exist_ok=True)
     LUA_MODULE.write_text("\n".join(lines) + "\n", encoding="utf-8")

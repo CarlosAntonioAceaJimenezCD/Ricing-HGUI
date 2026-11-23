@@ -87,6 +87,20 @@ require("config.ui-bindings")
 > El prototipo escribe `ui-settings.lua`, `ui-bindings.lua` y `config.toml` con
 > backups previos. Revisa los diff antes de conservarlos.
 
+### 🧪 Pruebas de estrés
+
+`recursos/hypr-rice-gui/pruebas/` contiene dos arneses aislados con **61 casos
+extremos** (entradas absurdas, inyección Lua, path traversal, TAR hostil,
+sintaxis validada con `luac -p`). No tocan la configuración real.
+
+```bash
+cd recursos/hypr-rice-gui/pruebas
+python3 harness.py && python3 round2.py
+```
+
+Resultado: **61/61 sin excepciones**; `hyprland --verify-config` → `config ok`.
+Detalle y límites: [pruebas/README.md](recursos/hypr-rice-gui/pruebas/README.md).
+
 ---
 
 ## 🧠 Arquitectura

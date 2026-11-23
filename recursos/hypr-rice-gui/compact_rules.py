@@ -75,7 +75,9 @@ def _migrate(rules: list[dict[str, Any]], monitors: list[str] | None = None) -> 
 def load(monitors: list[str] | None = None) -> list[dict[str, Any]]:
     if DATA.exists():
         try:
-            return _migrate(json.loads(DATA.read_text(encoding="utf-8")), monitors)
+            data = json.loads(DATA.read_text(encoding="utf-8"))
+            if isinstance(data, list) and all(isinstance(r, dict) for r in data):
+                return _migrate(data, monitors)
         except (OSError, ValueError):
             pass
     return defaults(monitors)
@@ -86,46 +88,94 @@ def _code_lua() -> str:
     return "(d==0 and 19 or (9+d))"
 
 
+# ------------------------------------------------------------------- saneamiento
+def _lua_str(value: Any) -> str:
+    """Cadena Lua de una sola línea (nombres de monitor/mods vienen del JSON)."""
+    return (str(value if value is not None else "").replace("\\", "\\\\")
+            .replace('"', '\\"').replace("\n", "\\n").replace("\r", "\\r"))
+
+
+def _safe_int(value: Any, default: int, low: int = 1, high: int = 10) -> int:
+    try:
+        return max(low, min(int(value), high))
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_mods(value: Any) -> str:
+    """Sólo modificadores conocidos, en orden canónico y sin caracteres Lua."""
+    found = []
+    for token in str(value or "").upper().replace("+", " ").split():
+        canonical = "CTRL" if token == "CONTROL" else token
+        if canonical in {"SUPER", "CTRL", "ALT", "SHIFT", "HYPER", "MEGA"} and canonical not in found:
+            found.append(canonical)
+    order = ["CTRL", "ALT", "SHIFT", "SUPER", "HYPER", "MEGA"]
+    return " + ".join(m for m in order if m in found)
+
+
+def _bounds(rule: dict[str, Any]) -> tuple[int, int]:
+    start = _safe_int(rule.get("start"), 1)
+    end = _safe_int(rule.get("end"), start)
+    return start, max(start, end)
+
+
+def _rule_targets(rule: dict[str, Any], monitors: list[str] | None,
+                  variants: bool = False) -> list[str]:
+    mods = _safe_mods(rule.get("mods"))
+    if not mods:
+        return []
+    names = set()
+    base = [mods]
+    if variants and "CTRL" in mods:
+        base.append(mods.replace("CTRL", "CONTROL"))  # binds.lua usa CONTROL
+    start, end = _bounds(rule)
+    family = rule.get("family")
+    if family in ("focus_mon", "move_mon"):
+        count = max(1, min(len(monitors or ["VGA-1"]), 10)) if monitors else 1
+        end = min(end, count)
+        start = min(start, count)
+    for v in base:
+        for i in range(start, end + 1):
+            names.add(f"{v} + code:{19 if i % 10 == 0 else 9 + i % 10}")
+    return sorted(names)
+
+
 def rule_lua(rule: dict[str, Any], monitors: list[str] | None = None) -> str:
     """Devuelve una línea Lua válida, autocontenida, para la familia."""
-    mods = rule["mods"]
-    action = rule["action"]
-    start, end = int(rule["start"]), int(rule["end"])
-    if rule["family"] in ("focus_mon", "move_mon"):
-        names = ", ".join(f'"{m}"' for m in (monitors or ["VGA-1"])[:end])
-        return (f"local ms={{{names}}}; for i=1,#ms do hl.bind(\"{mods} + \".."
+    rule = rule if isinstance(rule, dict) else {}
+    mods = _safe_mods(rule.get("mods"))
+    action = str(rule.get("action") or "").strip().replace("\n", " ").replace("\r", " ")
+    if not mods or not action:
+        return "-- regla compacta ignorada: mods o acción vacíos"
+    start, end = _bounds(rule)
+    if rule.get("family") in ("focus_mon", "move_mon"):
+        names = (monitors or ["VGA-1"])[:end]
+        names = [str(m) for m in names]
+        if not names:
+            return "-- regla compacta ignorada: sin monitores"
+        joined = ", ".join(f'"{_lua_str(m)}"' for m in names)
+        return (f"local ms={{{joined}}}; for i=1,#ms do hl.bind(\"{_lua_str(mods)} + \".."
                 f"(i%10==0 and 'code:19' or ('code:'..(9+i%10))), {action}) end")
-    return (f"for i={start},{end} do local d=i%10; hl.bind(\"{mods} + \".."
+    return (f"for i={start},{end} do local d=i%10; hl.bind(\"{_lua_str(mods)} + \".."
             f"(\"code:\"..{_code_lua()}), {action}) end")
 
 
 def all_target_keys(rules: list[dict[str, Any]], monitors: list[str] | None = None) -> list[str]:
-    keys = []
-    for r in rules:
-        end = int(r["end"])
-        for i in range(int(r["start"]), end + 1):
-            d = i % 10
-            code = 19 if d == 0 else 9 + d
-            keys.append(f"{r['mods']} + code:{code}")
-    return sorted(set(keys))
+    keys: set[str] = set()
+    for r in (rules if isinstance(rules, list) else []):
+        keys.update(_rule_targets(r, monitors))
+    return sorted(keys)
 
 
 def build_script(rules: list[dict[str, Any]], monitors: list[str] | None = None) -> str:
     lines = ["-- Generado por Ricing HGUI · reglas compactas (NO EDITAR A MANO)",
              "-- Añadir require(\"config.ui-workspace-rules\") en hyprland.lua tras binds.lua."]
-    keys = all_target_keys(rules, monitors)
-    for r in rules:
-        mods = r["mods"]
-        variants = {mods}
-        if "CTRL" in mods:
-            variants.add(mods.replace("CTRL", "CONTROL"))  # binds.lua usa CONTROL
-        targets = sorted({
-            f"{v} + code:{19 if i % 10 == 0 else 9 + i % 10}"
-            for v in variants
-            for i in range(int(r["start"]), int(r["end"]) + 1)
-        })
-        for k in targets:
-            lines.append(f'hl.unbind("{k}")' + ("  -- regla desactivada" if not r.get("enabled", True) else ""))
+    for r in (rules if isinstance(rules, list) else []):
+        if not isinstance(r, dict):
+            continue
+        for k in _rule_targets(r, monitors, variants=True):
+            lines.append(f'hl.unbind("{_lua_str(k)}")' +
+                         ("  -- regla desactivada" if not r.get("enabled", True) else ""))
         if r.get("enabled", True):
             lines.append(rule_lua(r, monitors))
     return "\n".join(lines) + "\n"

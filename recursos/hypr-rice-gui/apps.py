@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import re
+import shlex
 import shutil
 import subprocess
 from pathlib import Path
@@ -45,8 +46,9 @@ def read_apps() -> dict[str, str]:
 
 def validate(values: dict[str, str]) -> list[str]:
     problems = []
+    values = values if isinstance(values, dict) else {}
     for role in ROLES:
-        v = (values.get(role) or "").strip()
+        v = str(values.get(role) or "").strip()
         if role != "BROWSER_SECONDARY" and not v:
             problems.append(f"{role} no puede estar vacío")
         if "\n" in v or "\r" in v:
@@ -59,36 +61,63 @@ def validate(values: dict[str, str]) -> list[str]:
 
 
 def write_apps(values: dict[str, str]) -> tuple[bool, str]:
+    """Escribe las apps en variables.lua. Nunca parta el archivo por un \n.
+
+    AUDITORÍA: si un campo contenía un salto de línea, `re.subn` insertaba
+    una línea Lua nueva y rompía la configuración. Además, un dict parcial
+    borraba los roles no enviados: ahora se fusiona con los valores actuales.
+    """
+    values = values if isinstance(values, dict) else {}
+    current = read_apps()
+    for role in ROLES:
+        if role in values:
+            current[role] = str(values[role] or "").strip()
+    hard = [p for p in validate(current) if "saltos de línea" in p or "NUL" in p]
+    if hard:
+        return False, "; ".join(hard)
+    if any("\0" in v for v in current.values()):
+        return False, "valor con carácter NUL"
     import backup_manager as bm
     bm.create_backup(reason="editar-apps-variables")
     if not VARS.exists():
         return False, "no existe variables.lua"
     text = VARS.read_text(encoding="utf-8")
     for role in ROLES:
-        value = (values.get(role) or "").strip()
-        line = f'{role} = "{_escape(value)}"'
-        text, n = re.subn(rf'(?m)^{role}\s*=\s*".*"', line, text)
+        line = f'{role} = "{_escape(current[role])}"'
+        text, n = re.subn(rf'(?m)^{role}\s*=\s*".*"', lambda m, l=line: l, text)
         if n == 0 and role == "BROWSER_SECONDARY":
             # insertar junto a BROWSER si no existe (lambda evita interpretar \\ en el reemplazo)
             text = re.sub(r'(?m)^(BROWSER\s*=.*)$',
                           lambda m: m.group(1) + "\n" + line, text, count=1)
     VARS.write_text(text, encoding="utf-8")
-    return sync_env(values)
+    return sync_env(current)
 
 
 def sync_env(values: dict[str, str]) -> tuple[bool, str]:
-    """Añade/actualiza exports para Noctalia y UWSM."""
+    """Añade/actualiza exports para Noctalia y UWSM (comandos citados)."""
     if not UWSM_ENV.exists():
         return True, "variables guardadas (sin uwsm-env)"
-    text = UWSM_ENV.read_text(encoding="utf-8")
+    values = values if isinstance(values, dict) else {}
+    try:
+        text = UWSM_ENV.read_text(encoding="utf-8")
+    except OSError:
+        return False, "no se pudo leer uwsm-env"
     for env_name, role in (("TERMINAL", "TERMINAL"), ("BROWSER", "BROWSER"), ("EDITOR", "EDITOR")):
-        value = (values.get(role) or "").split()[0] if values.get(role) else ""
-        if not value:
+        value = str(values.get(role) or "").strip()
+        if not value or "\n" in value or "\r" in value:
             continue
-        text, n = re.subn(rf'(?m)^export {env_name}=.*$', f'export {env_name}={value}', text)
+        # AUDITORÍA: antes se conservaba sólo la primera palabra (`sh -c ...`
+        # se volvía `sh`) y los backslashes se interpretaban como grupos de
+        # regex en re.subn. shlex.quote mantiene el comando completo y seguro.
+        exported = f"export {env_name}={shlex.quote(value)}"
+        text, n = re.subn(rf'(?m)^export {env_name}=.*$',
+                          lambda m, e=exported: e, text)
         if n == 0:
-            text += f'\nexport {env_name}={value}\n'
-    UWSM_ENV.write_text(text, encoding="utf-8")
+            text += "\n" + exported + "\n"
+    try:
+        UWSM_ENV.write_text(text, encoding="utf-8")
+    except OSError:
+        return False, "no se pudo escribir uwsm-env"
     return True, "variables y entorno guardados (el entorno se aplica al reiniciar sesión)"
 
 
@@ -99,7 +128,9 @@ def ensure_secondary_bind(values: dict[str, str] | None = None) -> tuple[bool, s
     if not BINDS.exists():
         return False, "no existe binds.lua"
     text = BINDS.read_text(encoding="utf-8")
-    if "BROWSER_SECONDARY" in text and "hl.bind" in text:
+    # AUDITORÍA: un comentario que mencionaba BROWSER_SECONDARY daba falso
+    # positivo y el bind nunca se añadía. Sólo cuenta una línea activa.
+    if re.search(r"(?m)^\s*hl\.bind\([^\n]*BROWSER_SECONDARY", text):
         return True, "bind secundario ya presente"
     text = text.rstrip() + "\n\n-- Navegador secundario (gestionado por Ricing HGUI)\n" + SECONDARY_LINE + "\n"
     BINDS.write_text(text, encoding="utf-8")
@@ -108,6 +139,9 @@ def ensure_secondary_bind(values: dict[str, str] | None = None) -> tuple[bool, s
 
 def apply_live(values: dict[str, str]) -> tuple[bool, str]:
     """Rebindea los launchers con los valores resueltos (sin reload)."""
+    values = values if isinstance(values, dict) else {}
+    if any("\n" in str(v or "") or "\r" in str(v or "") for v in values.values()):
+        return False, "valor con salto de línea"
     launch = "uwsm app -- "
     code = ['hl.unbind("SUPER + W")', f'hl.unbind("{SECONDARY_KEY}")']
     if values.get("BROWSER"):

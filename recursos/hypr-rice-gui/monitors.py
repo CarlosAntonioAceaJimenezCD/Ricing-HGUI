@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 import subprocess
 from pathlib import Path
@@ -29,24 +30,40 @@ def list_monitors() -> list[dict[str, Any]]:
         data = json.loads(out)
     except (OSError, subprocess.SubprocessError, ValueError):
         return []
+    if not isinstance(data, list):
+        return []
+
+    def _num(value: Any, cast, default):
+        try:
+            n = cast(value)
+            return n if math.isfinite(float(n)) else default
+        except (TypeError, ValueError, OverflowError):
+            return default
+
     result = []
     for m in data:
+        if not isinstance(m, dict):
+            continue
+        ws = m.get("activeWorkspace")
+        ws = ws if isinstance(ws, dict) else {}
+        pos = m.get("position")
+        pos = pos if isinstance(pos, list) else [0, 0]
         result.append({
-            "id": m.get("id"),
-            "name": m.get("name", ""),
-            "description": m.get("description", ""),
-            "make": m.get("make", ""),
-            "model": m.get("model", ""),
-            "serial": m.get("serial", ""),
-            "width": m.get("width", 0),
-            "height": m.get("height", 0),
-            "refresh": round(float(m.get("refreshRate", 0)), 2),
-            "scale": m.get("scale", 1),
-            "position": m.get("position", [0, 0]),
-            "vrr": m.get("vrr", False),
+            "id": _num(m.get("id"), int, 0),
+            "name": str(m.get("name") or ""),
+            "description": str(m.get("description") or ""),
+            "make": str(m.get("make") or ""),
+            "model": str(m.get("model") or ""),
+            "serial": str(m.get("serial") or ""),
+            "width": _num(m.get("width"), int, 0),
+            "height": _num(m.get("height"), int, 0),
+            "refresh": round(_num(m.get("refreshRate"), float, 0.0), 2),
+            "scale": _num(m.get("scale"), float, 1.0),
+            "position": pos,
+            "vrr": bool(m.get("vrr", False)),
             "hdr": m.get("hdr"),
-            "format": m.get("currentFormat", ""),
-            "workspace": m.get("activeWorkspace", {}).get("name", ""),
+            "format": str(m.get("currentFormat") or ""),
+            "workspace": str(ws.get("name") or ""),
         })
     return result
 
@@ -62,6 +79,10 @@ def sync_monitor_config(count: int | None = None) -> dict[str, Any]:
     """
     if count is None:
         count = len(list_monitors())
+    try:
+        count = max(0, int(count))
+    except (TypeError, ValueError):
+        count = 0
     report: dict[str, Any] = {"detectados": count, "archivos": {}, "cambios": 0}
 
     files = sorted({p for p in CONFIG_DIR.rglob("*.lua") if p.is_file()})
@@ -74,6 +95,11 @@ def sync_monitor_config(count: int | None = None) -> dict[str, Any]:
         changed = False
         commented = uncommented = 0
         for i, line in enumerate(lines):
+            # AUDITORÍA: MONITOR1..3 son DEFINICIONES en variables.lua; con
+            # count=0 se comentaban y el rice dejaba de arrancar. Nunca se
+            # tocan las definiciones, sólo las referencias en binds/reglas.
+            if re.match(r"^\s*MONITOR[1-9]\s*=", line):
+                continue
             refs = [int(n) for n in MON_REF.findall(line)]
             if not refs:
                 continue
@@ -106,15 +132,27 @@ def sync_monitor_config(count: int | None = None) -> dict[str, Any]:
 
 
 def write_variables(monitors: list[dict[str, Any]]) -> tuple[bool, str]:
-    """Actualiza MONITOR1..3 en variables.lua con los conectores detectados."""
-    if not VARIABLES.exists() or not monitors:
+    """Actualiza MONITOR1..3 en variables.lua con los conectores detectados.
+
+    AUDITORÍA: el nombre de conector viene de `hyprctl monitors -j`; un valor
+    con comillas podía inyectar código Lua en variables.lua. Se valida el
+    formato de conector y se escapa la cadena antes de escribir.
+    """
+    if not VARIABLES.exists() or not isinstance(monitors, list) or not monitors:
         return False, "sin archivo o sin monitores"
+    names = []
+    for m in monitors[:3]:
+        name = str(m.get("name") or "") if isinstance(m, dict) else ""
+        if not re.fullmatch(r"[A-Za-z0-9._-]+", name):
+            return False, f"nombre de monitor no válido: {name[:40]!r}"
+        names.append(name)
     text = VARIABLES.read_text(encoding="utf-8")
-    names = [m["name"] for m in monitors[:3]]
     for i in range(1, 4):
         value = names[i - 1] if i <= len(names) else ""
-        text, n = re.subn(rf'(?m)^MONITOR{i}\s*=\s*".*"', f'MONITOR{i} = "{value}"', text)
+        esc = value.replace("\\", "\\\\").replace('"', '\\"')
+        line = f'MONITOR{i} = "{esc}"'
+        text, n = re.subn(rf'(?m)^MONITOR{i}\s*=\s*".*"', lambda m, l=line: l, text)
         if n == 0:
-            text += f'\nMONITOR{i} = "{value}"\n'
+            text += "\n" + line + "\n"
     VARIABLES.write_text(text, encoding="utf-8")
     return True, ", ".join(names)

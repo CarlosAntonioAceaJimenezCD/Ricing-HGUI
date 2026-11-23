@@ -27,6 +27,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import tarfile
 from datetime import datetime, timedelta
@@ -64,8 +65,10 @@ def get_settings() -> dict:
     settings = dict(DEFAULT_SETTINGS)
     if SETTINGS_FILE.exists():
         try:
-            settings.update(json.loads(SETTINGS_FILE.read_text(encoding="utf-8")))
-        except (OSError, ValueError):
+            data = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                settings.update(data)
+        except (OSError, ValueError, TypeError):
             pass
     return settings
 
@@ -85,12 +88,14 @@ def _iter_files(targets: Iterable[Path]) -> list[Path]:
     for target in targets:
         if not target.exists():
             continue
+        if target.is_symlink():
+            continue  # nunca copiar destinos de enlaces simbólicos
         if target.is_file():
             if not _excluded(target):
                 found.append(target)
         else:
             for p in target.rglob("*"):
-                if p.is_file() and not _excluded(p):
+                if p.is_file() and not p.is_symlink() and not _excluded(p):
                     found.append(p)
     return sorted(set(found))
 
@@ -107,6 +112,39 @@ def _relative(path: Path) -> str:
     return str(path).lstrip("/")
 
 
+def _archive_path(name: Any) -> Path | None:
+    """AUDITORÍA: barrera contra path traversal en TODOS los nombres de backup.
+
+    Un nombre como `../FUERA.tar.gz` llegaba a BACKUP_DIR / name y borraba un
+    archivo fuera del directorio. Sólo se aceptan nombres simples con el
+    patrón backup-*.tar.gz y se verifica el directorio resultante.
+    """
+    if not isinstance(name, str):
+        return None
+    base = Path(name).name
+    if base != name or not base.startswith("backup-") or not base.endswith(".tar.gz"):
+        return None
+    try:
+        candidate = (BACKUP_DIR / base).resolve()
+        if candidate.parent != BACKUP_DIR.resolve():
+            return None
+    except OSError:
+        return None
+    return candidate
+
+
+def _safe_reason(reason: Any) -> str:
+    """El motivo se usa en el nombre de archivo: sólo caracteres seguros."""
+    return re.sub(r"[^A-Za-z0-9._-]", "-", str(reason or "manual"))[:40] or "manual"
+
+
+def _safe_int(value: Any, default: int, low: int = 1, high: int = 1000) -> int:
+    try:
+        return max(low, min(int(value), high))
+    except (TypeError, ValueError):
+        return default
+
+
 def is_protected(name: str) -> bool:
     """El backup inicial nunca se elimina ni se sobrescribe."""
     m = get_backup_details(name) or {}
@@ -114,17 +152,21 @@ def is_protected(name: str) -> bool:
 
 
 def _enforce_retention(keep_last: int) -> None:
-    """Aplica retención, pero JAMAIS toca el backup inicial protegido."""
+    """Aplica retención, pero JAMÁS toca el backup inicial protegido."""
+    keep = _safe_int(keep_last, 10, 1, 100)
     backups = [p for p in sorted(BACKUP_DIR.glob("backup-*.tar.gz"),
                                  key=lambda p: p.stat().st_mtime, reverse=True)
                if not is_protected(p.name)]
-    for old in backups[max(0, keep_last - 1):]:
+    for old in backups[max(0, keep - 1):]:
         old.unlink(missing_ok=True)
 
 
 # --------------------------------------------------------------------------- comparador
 def _hash_map(manifest: dict) -> dict[str, str]:
-    return {r["path"]: r["sha256"] for r in manifest.get("files", [])}
+    files = manifest.get("files", [])
+    return {r["path"]: r["sha256"] for r in files
+            if isinstance(r, dict) and isinstance(r.get("path"), str)
+            and isinstance(r.get("sha256"), str)}
 
 
 def baseline_hashes(name: str) -> dict[str, str]:
@@ -208,7 +250,7 @@ def create_backup(reason: str = "manual", targets: Iterable[Path] | None = None,
 
     now = datetime.now().astimezone()
     stamp = now.strftime("%Y%m%d-%H%M%S")
-    name = f"backup-{stamp}-{reason}"
+    name = f"backup-{stamp}-{_safe_reason(reason)}"
     tmp = BACKUP_DIR / f".tmp-{name}"
     if tmp.exists():
         shutil.rmtree(tmp)
@@ -273,6 +315,8 @@ def list_backups() -> list[dict]:
                 if f is None:
                     continue
                 m = json.loads(f.read())
+            if not isinstance(m, dict):
+                continue
         except (OSError, tarfile.TarError, ValueError):
             continue
         items.append({
@@ -286,8 +330,8 @@ def list_backups() -> list[dict]:
 
 
 def verify_backup(name: str) -> tuple[bool, str]:
-    archive = BACKUP_DIR / name
-    if not archive.exists():
+    archive = _archive_path(name)
+    if archive is None or not archive.exists():
         return False, "no existe"
     try:
         with tarfile.open(archive, "r:gz") as tar:
@@ -295,13 +339,17 @@ def verify_backup(name: str) -> tuple[bool, str]:
             if f is None:
                 return False, "sin manifiesto"
             m = json.loads(f.read())
+            if not isinstance(m, dict) or not isinstance(m.get("files", []), list):
+                return False, "manifiesto no válido"
             for rec in m.get("files", []):
+                if not isinstance(rec, dict) or not isinstance(rec.get("path"), str):
+                    return False, "registro no válido"
                 member = tar.extractfile(f"data/{rec['path']}")
                 if member is None:
                     return False, f"falta {rec['path']}"
-                if hashlib.sha256(member.read()).hexdigest() != rec["sha256"]:
+                if hashlib.sha256(member.read()).hexdigest() != rec.get("sha256", ""):
                     return False, f"hash distinto: {rec['path']}"
-    except (OSError, tarfile.TarError, ValueError) as e:
+    except (OSError, tarfile.TarError, ValueError, KeyError, TypeError) as e:
         return False, str(e)[:120]
     return True, f"{m.get('file_count', 0)} archivos íntegros"
 
@@ -314,7 +362,9 @@ def dna_from_records(records: list[dict]) -> str:
     dependa del orden de lectura del sistema de archivos. Cambia si cambia el
     contenido, pero NO si cambia solo la fecha de modificación.
     """
-    payload = "".join(f"{r['path']}:{r['sha256']}\n" for r in sorted(records, key=lambda x: x["path"]))
+    valid = [r for r in records if isinstance(r, dict)
+             and isinstance(r.get("path"), str) and isinstance(r.get("sha256"), str)]
+    payload = "".join(f"{r['path']}:{r['sha256']}\n" for r in sorted(valid, key=lambda x: x["path"]))
     digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:8].upper()
     return f"DNA-{digest[:4]}-{digest[4:]}"
 
@@ -340,7 +390,8 @@ def dna_of_backup(name: str) -> str | None:
 def load_identities() -> dict:
     if IDENTITIES_FILE.exists():
         try:
-            return json.loads(IDENTITIES_FILE.read_text(encoding="utf-8"))
+            data = json.loads(IDENTITIES_FILE.read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else {}
         except (OSError, ValueError):
             return {}
     return {}
@@ -399,25 +450,29 @@ def find_backups_by_dna(dna: str) -> list[str]:
 # --------------------------------------------------------------------------- history / inspect
 def get_backup_details(name: str) -> dict | None:
     """Devuelve el manifiesto completo de un backup (para inspeccionarlo)."""
-    archive = BACKUP_DIR / name
-    if not archive.exists():
+    archive = _archive_path(name)
+    if archive is None or not archive.exists():
         return None
     try:
         with tarfile.open(archive, "r:gz") as tar:
             f = tar.extractfile(MANIFEST)
             if f is None:
                 return None
-            return json.loads(f.read())
+            data = json.loads(f.read())
+            return data if isinstance(data, dict) else None
     except (OSError, tarfile.TarError, ValueError):
         return None
 
 
 def read_file_from_backup(name: str, rel_path: str) -> str | None:
     """Lee un archivo de texto dentro de un backup sin extraerlo."""
-    archive = BACKUP_DIR / name
+    archive = _archive_path(name)
+    rel = str(rel_path or "")
+    if archive is None or ".." in Path(rel).parts or Path(rel).is_absolute():
+        return None
     try:
         with tarfile.open(archive, "r:gz") as tar:
-            member = tar.extractfile(f"data/{rel_path.lstrip('/')}")
+            member = tar.extractfile(f"data/{rel.lstrip('/')}")
             if member is None:
                 return None
             return member.read().decode("utf-8", errors="replace")
@@ -431,21 +486,33 @@ def compare_with_current(name: str) -> dict:
     changed: list[str] = []
     missing: list[str] = []
     same: list[str] = []
-    for rec in manifest.get("files", []):
-        path = Path("/") / rec["path"]
+    for rec in manifest.get("files", []) if isinstance(manifest.get("files", []), list) else []:
+        if not isinstance(rec, dict) or not isinstance(rec.get("path"), str):
+            continue
+        rel = rec["path"]
+        if ".." in Path(rel).parts:
+            continue
+        path = Path("/") / rel
         if not path.exists():
-            missing.append(rec["path"])
-        elif _sha256(path) != rec["sha256"]:
-            changed.append(rec["path"])
+            missing.append(rel)
         else:
-            same.append(rec["path"])
+            try:
+                digest = _sha256(path)
+            except OSError:
+                missing.append(rel)
+                continue
+            (changed if digest != rec.get("sha256") else same).append(rel)
     return {"changed": changed, "missing": missing, "same": same}
 
 
 def delete_backup(name: str) -> tuple[bool, str]:
-    archive = BACKUP_DIR / name
+    archive = _archive_path(name)
+    if archive is None:
+        return False, "nombre de backup no válido"
     if not archive.exists():
         return False, "no existe"
+    if is_protected(name):
+        return False, "el backup inicial está protegido"
     try:
         archive.unlink()
         return True, "eliminado"
@@ -463,7 +530,7 @@ def restore_backup(name: str) -> tuple[bool, str]:
     Antes de sobrescribir se crea un backup de seguridad (también parcial).
     """
     target = get_backup_details(name)
-    if not target:
+    if not target or _archive_path(name) is None:
         return False, "backup inexistente"
 
     create_backup(reason="pre-restore")
@@ -486,17 +553,29 @@ def restore_backup(name: str) -> tuple[bool, str]:
         ok, msg = verify_backup(archive_name)
         if not ok:
             return False, f"backup inválido {archive_name}: {msg}"
+        safe_archive = _archive_path(archive_name)
+        if safe_archive is None:
+            return False, f"nombre de backup no válido en la cadena: {archive_name[:40]!r}"
         tmp = BACKUP_DIR / f".restore-{Path(archive_name).stem}"
         if tmp.exists():
             shutil.rmtree(tmp)
         tmp.mkdir(parents=True)
         try:
-            with tarfile.open(BACKUP_DIR / archive_name, "r:gz") as tar:
+            root = tmp.resolve()
+            with tarfile.open(safe_archive, "r:gz") as tar:
+                members = []
                 for member in tar.getmembers():
-                    dest_path = (tmp / member.name).resolve()
-                    if not str(dest_path).startswith(str(tmp.resolve())):
+                    # Sólo ficheros/directorios regulares: los symlinks podrían
+                    # apuntar a secretos fuera del backup.
+                    if not (member.isfile() or member.isdir()):
+                        continue
+                    dest_path = (root / member.name).resolve()
+                    # `startswith` aceptaba `.restore-X-evil`: se exige contención
+                    # real con is_relative_to.
+                    if not dest_path.is_relative_to(root):
                         return False, "ruta insegura en el archivo"
-                tar.extractall(tmp)
+                    members.append(member)
+                tar.extractall(tmp, members=members, filter="data")
             data = tmp / "data"
             for src in data.rglob("*"):
                 if not src.is_file():
@@ -522,8 +601,12 @@ def next_due() -> datetime | None:
     if not s.get("auto_backup", True):
         return None
     backups = list_backups()
-    auto = [b for b in backups if b["reason"] in {"auto", "inicio"}]
+    auto = [b for b in backups if b.get("reason") in {"auto", "inicio"}]
     if not auto:
         return datetime.now().astimezone()
-    last = datetime.fromisoformat(auto[0]["created_at"])
-    return last + timedelta(minutes=int(s.get("interval_minutes", 15)))
+    try:
+        last = datetime.fromisoformat(auto[0].get("created_at", ""))
+        minutes = _safe_int(s.get("interval_minutes", 15), 15, 1, 1440)
+    except (TypeError, ValueError, KeyError):
+        return datetime.now().astimezone()
+    return last + timedelta(minutes=minutes)

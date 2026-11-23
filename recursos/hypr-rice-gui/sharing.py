@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import urllib.parse
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -57,12 +58,19 @@ def search_repos(query: str, limit: int = 15) -> list[dict[str, Any]]:
     raw = _curl(f"{API}/search/repositories?q={quote(q)}&sort=stars&per_page={limit}",
                 headers=["Accept: application/vnd.github+json"])
     try:
-        items = json.loads(raw).get("items", [])
+        payload = json.loads(raw)
+        items = payload.get("items", []) if isinstance(payload, dict) else []
     except (ValueError, AttributeError):
-        return []
-    return [{"name": i["full_name"], "stars": i["stargazers_count"],
-             "description": i.get("description") or "", "url": i["html_url"]}
-            for i in items]
+        items = []
+    out = []
+    for i in (items if isinstance(items, list) else []):
+        if not isinstance(i, dict) or not i.get("full_name") or not i.get("html_url"):
+            continue
+        out.append({"name": str(i["full_name"]),
+                    "stars": i.get("stargazers_count", 0),
+                    "description": str(i.get("description") or ""),
+                    "url": str(i["html_url"])})
+    return out
 
 
 def search_gists(query: str, limit: int = 10) -> list[dict[str, Any]]:
@@ -71,12 +79,19 @@ def search_gists(query: str, limit: int = 10) -> list[dict[str, Any]]:
     raw = _curl(f"{API}/search/gists?q={quote(query or 'hyprland')}&per_page={limit}",
                 headers=["Accept: application/vnd.github+json"])
     try:
-        items = json.loads(raw).get("items", [])
+        payload = json.loads(raw)
+        items = payload.get("items", []) if isinstance(payload, dict) else []
     except (ValueError, AttributeError):
-        return []
-    return [{"name": (i.get("description") or i["id"])[:60], "stars": 0,
-             "description": ", ".join(i.get("files", {}).keys())[:80], "url": i["html_url"]}
-            for i in items]
+        items = []
+    out = []
+    for i in (items if isinstance(items, list) else []):
+        if not isinstance(i, dict) or not i.get("id") or not i.get("html_url"):
+            continue
+        files = i.get("files") if isinstance(i.get("files"), dict) else {}
+        out.append({"name": str(i.get("description") or i["id"])[:60], "stars": 0,
+                    "description": ", ".join(map(str, files.keys()))[:80],
+                    "url": str(i["html_url"])})
+    return out
 
 
 def dotfyle_featured() -> list[dict[str, Any]]:
@@ -89,6 +104,9 @@ def dotfyle_featured() -> list[dict[str, Any]]:
 
 def get_readme(repo_full_name: str) -> str:
     """Devuelve el README de un repo para previsualizarlo en la GUI."""
+    repo_full_name = str(repo_full_name or "")
+    if not re.fullmatch(r"[\w.-]+/[\w.-]+", repo_full_name):
+        return "(repo no válido)"
     for branch in ("main", "master"):
         for name in ("README.md", "readme.md", "README.rst"):
             txt = _curl(f"https://raw.githubusercontent.com/{repo_full_name}/{branch}/{name}")
@@ -98,6 +116,9 @@ def get_readme(repo_full_name: str) -> str:
 
 
 def open_browser(url: str) -> tuple[bool, str]:
+    url = str(url or "")
+    if urllib.parse.urlparse(url).scheme.lower() not in {"http", "https"}:
+        return False, "URL no válida"
     try:
         proc = subprocess.run(["xdg-open", url], capture_output=True, text=True, timeout=8)
         return proc.returncode == 0, proc.stderr.strip()[:120]
@@ -106,16 +127,31 @@ def open_browser(url: str) -> tuple[bool, str]:
 
 
 def import_repo(url: str) -> tuple[bool, str]:
-    """Clona shallow un repo de referencia a ~/ricing/repositorios/importados."""
-    name = url.rstrip("/").rsplit("/", 1)[-1].removesuffix(".git")
-    if not re.fullmatch(r"[\w.-]+", name):
+    """Clona shallow un repo de referencia a ~/ricing/repositorios/importados.
+
+    AUDITORÍA: `file://`, `ext::sh ...` y los argumentos que empiezan por `-`
+    se pasaban directamente a `git clone` (ejecución de comandos y lectura de
+    archivos locales). Sólo se aceptan URLs http(s) con un nombre de repo
+    seguro; `--` cierra las opciones del comando.
+    """
+    url = str(url or "").strip()
+    try:
+        parsed = urllib.parse.urlparse(url)
+    except ValueError:
+        return False, "URL no válida"
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        return False, "sólo se permiten repos http(s)"
+    if parsed.username or parsed.password:
+        return False, "la URL no debe incluir credenciales"
+    name = parsed.path.rstrip("/").rsplit("/", 1)[-1].removesuffix(".git")
+    if not re.fullmatch(r"[\w.-]+", name) or name in {".", ".."}:
         return False, "nombre de repo inválido"
     IMPORTADOS.mkdir(parents=True, exist_ok=True)
     dest = IMPORTADOS / name
     if dest.exists():
         return True, str(dest)
     try:
-        proc = subprocess.run(["git", "clone", "--depth", "1", url, str(dest)],
+        proc = subprocess.run(["git", "clone", "--depth", "1", "--", url, str(dest)],
                               capture_output=True, text=True, timeout=180)
         return proc.returncode == 0, str(dest) if proc.returncode == 0 else proc.stderr.strip()[:160]
     except (OSError, subprocess.SubprocessError) as e:
@@ -130,13 +166,20 @@ def create_bundle() -> tuple[bool, str]:
     count = 0
     with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as z:
         for base in BUNDLE_PATHS:
-            if not base.exists():
+            if isinstance(base, str):
+                base = Path(base)
+            if not base.exists() or base.is_symlink():
                 continue
-            files = [base] if base.is_file() else [p for p in base.rglob("*") if p.is_file()]
+            files = ([base] if base.is_file()
+                     else [p for p in base.rglob("*") if p.is_file() and not p.is_symlink()])
             for p in files:
                 if any(x in p.parts for x in EXCLUDED):
                     continue
-                z.write(p, p.relative_to(Path.home()).as_posix())
+                try:
+                    arc = p.relative_to(Path.home()).as_posix()
+                except ValueError:
+                    arc = p.relative_to(base.parent).as_posix()
+                z.write(p, arc)
                 count += 1
         z.writestr("LEEME.txt",
                    "Rice exportado por Ricing HGUI\n"
@@ -147,8 +190,10 @@ def create_bundle() -> tuple[bool, str]:
 
 def publish_gist(token: str, description: str, public: bool) -> tuple[bool, str]:
     """Publica los archivos del bundle en un Gist. El token NO se persiste."""
+    token = token.strip() if isinstance(token, str) else ""
     if not token.startswith(("ghp_", "github_pat_")):
         return False, "token no válido"
+    description = str(description or "")
     bundle = sorted(OUT.glob("rice-*.zip"), key=lambda p: p.stat().st_mtime, reverse=True)
     if not bundle:
         return False, "genera primero el ZIP"
@@ -162,7 +207,7 @@ def publish_gist(token: str, description: str, public: bool) -> tuple[bool, str]
                 files[n.replace("/", "__")] = {"content": data.decode("utf-8")}
             except UnicodeDecodeError:
                 continue
-    payload = json.dumps({"description": description or "Rice Hyprland + Noctalia",
+    payload = json.dumps({"description": description[:200] or "Rice Hyprland + Noctalia",
                           "public": bool(public), "files": files})
     # curl con POST requiere -X y --data; se construye aparte.
     try:
@@ -174,8 +219,10 @@ def publish_gist(token: str, description: str, public: bool) -> tuple[bool, str]
             "--data", payload, f"{API}/gists",
         ], capture_output=True, text=True, timeout=50)
         data = json.loads(proc.stdout)
+        if not isinstance(data, dict):
+            return False, "respuesta inesperada de GitHub"
         if data.get("html_url"):
-            return True, data["html_url"]
-        return False, data.get("message", "error al publicar")[:160]
+            return True, str(data["html_url"])
+        return False, str(data.get("message", "error al publicar"))[:160]
     except (OSError, subprocess.SubprocessError, ValueError) as e:
         return False, str(e)[:160]
