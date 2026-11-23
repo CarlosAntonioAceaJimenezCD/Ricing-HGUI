@@ -26,9 +26,16 @@ FAMILIES = {
     "focus_same": ("Workspace de este monitor", "SUPER", 'hl.dsp.focus({workspace="m~"..i})'),
     "focus_abs": ("Workspace absoluto", "SUPER + CTRL", "hl.dsp.focus({workspace=i})"),
     "focus_mon": ("Monitor", "SUPER + ALT", "hl.dsp.focus({monitor=ms[i]})"),
-    "move_follow": ("Mover ventana al workspace (seguir)", "SUPER + SHIFT + CTRL", 'hl.dsp.window.move({workspace="m~"..i})'),
+    # Intercambio respecto al esquema anterior:
+    #   SUPER + SHIFT + N        -> mover la ventana al workspace N (antes SHIFT+CTRL)
+    #   SUPER + SHIFT + CTRL + N -> mover la ventana al monitor N   (antes SHIFT)
+    "move_follow": ("Mover ventana al workspace (seguir)", "SUPER + SHIFT", 'hl.dsp.window.move({workspace="m~"..i})'),
     "move_nofollow": ("Mover ventana al workspace (sin seguir)", "SUPER + SHIFT + ALT", 'hl.dsp.window.move({workspace="m~"..i, follow=false})'),
+    "move_mon": ("Mover ventana al monitor", "SUPER + SHIFT + CTRL", "hl.dsp.window.move({monitor=ms[i]})"),
 }
+
+# Mods del esquema anterior, para migrar JSON ya guardados sin perder start/end/enabled.
+OLD_MOVE_MODS = "SUPER + SHIFT + CTRL"
 
 
 def num_wpm() -> int:
@@ -45,16 +52,30 @@ def defaults(monitors: list[str] | None = None) -> list[dict[str, Any]]:
     n = num_wpm()
     out = []
     for fid, (label, mods, action) in FAMILIES.items():
-        end = len(monitors) if fid == "focus_mon" and monitors else n
+        end = len(monitors) if fid in ("focus_mon", "move_mon") and monitors else n
         out.append({"id": fid, "label": label, "mods": mods, "family": fid,
                     "action": action, "start": 1, "end": end, "enabled": True})
     return out
 
 
+def _migrate(rules: list[dict[str, Any]], monitors: list[str] | None = None) -> list[dict[str, Any]]:
+    """Adapta JSON del esquema anterior (mover a workspace en SHIFT+CTRL)."""
+    for rule in rules:
+        if rule.get("id") == "move_follow" and rule.get("mods") == OLD_MOVE_MODS:
+            rule["mods"] = FAMILIES["move_follow"][1]
+    if not any(rule.get("id") == "move_mon" for rule in rules):
+        label, mods, action = FAMILIES["move_mon"]
+        rules.append({"id": "move_mon", "label": label, "mods": mods,
+                      "family": "move_mon", "action": action,
+                      "start": 1, "end": len(monitors) if monitors else 1,
+                      "enabled": True})
+    return rules
+
+
 def load(monitors: list[str] | None = None) -> list[dict[str, Any]]:
     if DATA.exists():
         try:
-            return json.loads(DATA.read_text(encoding="utf-8"))
+            return _migrate(json.loads(DATA.read_text(encoding="utf-8")), monitors)
         except (OSError, ValueError):
             pass
     return defaults(monitors)
@@ -70,7 +91,7 @@ def rule_lua(rule: dict[str, Any], monitors: list[str] | None = None) -> str:
     mods = rule["mods"]
     action = rule["action"]
     start, end = int(rule["start"]), int(rule["end"])
-    if rule["family"] == "focus_mon":
+    if rule["family"] in ("focus_mon", "move_mon"):
         names = ", ".join(f'"{m}"' for m in (monitors or ["VGA-1"])[:end])
         return (f"local ms={{{names}}}; for i=1,#ms do hl.bind(\"{mods} + \".."
                 f"(i%10==0 and 'code:19' or ('code:'..(9+i%10))), {action}) end")

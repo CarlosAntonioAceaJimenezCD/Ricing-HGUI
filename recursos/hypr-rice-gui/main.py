@@ -875,7 +875,6 @@ def on_activate(app: Adw.Application) -> None:
     app_actions.append(make_button(_("Recargar Hyprland"), lambda _b: ap_status.set_label(
         str(ap.reload_hyprland()[1]))))
     app_group.add(app_actions)
-    app_outer.append(ap_status)
     ap_status.set_label(_("Navegador secundario: SUPER + SHIFT + W · cambios en el entorno requieren reiniciar sesión"))
 
     # ============ Pestaña 7: Monitores ============

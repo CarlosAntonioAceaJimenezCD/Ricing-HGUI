@@ -32,7 +32,7 @@ gestiona **keybindings**, detecta **monitores**, busca **wallpapers** y permite
 
 ### Pestañas de la GUI
 
-`Backups` · `Historial` · `Identidad` · `Opciones` · `Keybinds` · `Monitores` · `Wallpapers` · `Web / Compartir`
+`Backups` · `Historial` · `Identidad` · `Opciones` · `Keybinds` · `Aplicaciones` · `Monitores` · `Wallpapers` · `Web / Compartir`
 
 - **Opciones**: 46 parámetros reales con tipo, rango y ruta (`general.gaps_in`,
   `decoration.blur.passes`, `misc.vrr`, `theme.mode`…). Sliders para *intensidad*,
@@ -42,14 +42,28 @@ gestiona **keybindings**, detecta **monitores**, busca **wallpapers** y permite
   SHA-256, verificación y restauración; el botón *Guardar* sólo persiste.
 - **Historial**: cualquier punto en el pasado; ver archivo, comparar, restaurar o borrar.
 - **Identidad**: huella `DNA-XXXX-XXXX` con etiquetas y notas; agrupa backups iguales.
-- **Keybinds**: ver los ~84 atajos activos, capturar teclas, editar con un menú en
+- **Keybinds**: ver los ~108 atajos activos, capturar teclas, editar con un menú en
   lenguaje natural (sin Lua), desactivar sin borrar, reactivar y eliminar.
+- **Aplicaciones**: navegador principal y secundario, terminal, gestor de archivos,
+  editor y calculadora; escribe `variables.lua`, sincroniza `uwsm-env` y añade el
+  atajo del navegador secundario (`SUPER + SHIFT + W`).
 - **Monitores**: autodetección con `hyprctl monitors -j`; escribe `MONITOR1..3`.
 - **Wallpapers**: Wallhaven, Unsplash, Pexels, archivos locales y Wallpaper Engine.
   **Filtro automático por monitor**: proportionally + resolución nativa (p. ej.
   1440×900 → `ratios=8x5`, `atleast=1440x900`) para que el fondo nunca se vea raro.
 - **Web / Compartir**: buscar rices en GitHub/Gists/Dotfyle, ver README, importar
   repos, generar ZIP sin secretos y publicar a Gist con token opcional.
+
+### Esquema de atajos de workspaces
+
+| Atajo | Acción |
+|---|---|
+| `SUPER + 1…0` | Enfocar el workspace N de este monitor |
+| `SUPER + ALT + 1…3` | Enfocar el monitor N |
+| `SUPER + CTRL + 1…0` | Enfocar el workspace absoluto N |
+| `SUPER + SHIFT + 1…0` | **Mover la ventana al workspace N (siguiendo)** |
+| `SUPER + SHIFT + CTRL + 1…3` | **Mover la ventana al monitor N** |
+| `SUPER + SHIFT + ALT + 1…0` | Mover la ventana al workspace N sin seguir |
 
 ---
 
